@@ -1,0 +1,41 @@
+[
+  {
+    "strasse": "Gerbestrasse 22",
+    "ort": "3550 Langnau i. E.",
+    "namen": [
+      "Pneu Service Heinz Gerber",
+      "Herr Daniel Burkhalter",
+      "Herr Novotny Leos",
+      "Herr Krisztian Gombas"
+    ]
+  },
+  {
+    "strasse": "Herrengässli 1",
+    "ort": "3532 Zäziwil",
+    "namen": [
+      "Frau Annemarie Kammermann",
+      "Laura und Andreas Mumenthaler",
+      "Herr Andreas Minder",
+      "Herr Markus Gehri"
+    ]
+  },
+  {
+    "strasse": "Gotthelfstrasse 12",
+    "ort": "3432 Lützelflüh",
+    "namen": [
+      "Herr Patrick Neuhaus",
+      "Frau Selina Schär, Herr Tim Rothenbühler",
+      "Jakob GmbH"
+    ]
+  },
+  {
+    "strasse": "Hausmattweg 3",
+    "ort": "3323 Bäriswil",
+    "namen": [
+      "Herr Filipe Machado",
+      "Nick und Georgia Neuhaus",
+      "Frau Narissara Chiankrathok",
+      "Frau Rachel Schumacher, Herr Philip Erard"
+    ]
+  }
+]
