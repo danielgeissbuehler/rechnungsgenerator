@@ -10,5 +10,17 @@
     "bank_strasse": "Grabenstrasse 7",
     "bank_ort": "3132 Riggisberg",
     "iban": "CH93 0637 4730 0382 2750 4"
+  },
+  {
+    "name": "firmenname",
+    "header_name": "firmenname in GROSSBUCHSTABEN",
+    "header_email": "firmen email in GROSSBUCHSTABEN",
+    "absender_name": "firmenname",
+    "absender_strasse": "firmen adresse strasse",
+    "absender_ort": "firma plz ort",
+    "bank_name": "bank für zahlung",
+    "bank_strasse": "bank strasse für zahlung",
+    "bank_ort": "bank plz ort für zalung",
+    "iban": "iban"
   }
 ]
