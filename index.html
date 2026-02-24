@@ -14,11 +14,11 @@
 body { font-family:'Open Sans',sans-serif; background:#1a1a1a; color:#eee; display:flex; height:100vh; overflow:hidden; }
 
 /* ══ EDITOR ══ */
-#editor { width:390px; min-width:350px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid #333; flex-shrink:0; }
+#editor { width:460px; min-width:420px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid #333; flex-shrink:0; }
 #editor h1 { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#555; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #333; }
 
 .section-block { margin-bottom:10px; border:1px solid #333; border-radius:6px; overflow:hidden; }
-.section-header { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#2a2a2a; cursor:pointer; user-select:none; font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#aaa; transition:background .15s; }
+.section-header { display:flex; align-items:center; justify-content:space-between; padding:6px 12px; background:#2a2a2a; cursor:pointer; user-select:none; font-size:10px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#aaa; transition:background .15s; }
 .section-header:hover { background:#303030; }
 .toggle-icon { font-size:10px; transition:transform .2s; color:#666; }
 .section-header.open .toggle-icon { transform:rotate(180deg); }
@@ -51,15 +51,24 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .meta-row-editor { display:grid; grid-template-columns:1fr 1fr; gap:6px; border:1px solid #333; border-radius:4px; padding:8px; background:#222; }
 .meta-row-editor small { grid-column:1/-1; font-size:9px; color:#555; letter-spacing:.5px; text-transform:uppercase; }
 
+/* Fixed meta fields */
+.meta-field-row { display:flex; flex-direction:column; gap:4px; border:1px solid #2a2a2a; border-radius:4px; padding:7px 8px; background:#222; }
+.meta-field-toggle { display:flex; align-items:center; gap:6px; }
+.meta-field-toggle input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
+.meta-field-toggle label { font-size:9px; color:#555; text-transform:uppercase; letter-spacing:.8px; cursor:pointer; margin:0; }
+.meta-field-inputs { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.meta-field-row.mf-hidden .meta-field-inputs { opacity:.35; }
+
 #positions-list { display:flex; flex-direction:column; gap:6px; }
-.pos-row { display:grid; grid-template-columns:1fr 60px 50px 24px; gap:4px; align-items:end; }
-.pos-row input { font-size:11px; }
+.pos-row { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; align-items:end; }
+.pos-row input { font-size:11.5px; }
+.pos-row input[type="number"] { text-align:right; }
 
 .btn-remove { background:#3a2020; border:1px solid #5a2a2a; border-radius:4px; color:#e66; cursor:pointer; font-size:14px; line-height:1; padding:4px 5px; transition:background .15s; }
 .btn-remove:hover { background:#5a2020; }
 .btn-add { background:#1e3a2a; border:1px solid #2a5a3a; border-radius:4px; color:#5d9; cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.8px; padding:7px 10px; text-transform:uppercase; width:100%; transition:background .15s; }
 .btn-add:hover { background:#264a34; }
-.pos-labels { display:grid; grid-template-columns:1fr 60px 50px 24px; gap:4px; }
+.pos-labels { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; }
 .pos-labels span { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#666; }
 
 .toggle-row { display:flex; align-items:center; gap:8px; }
@@ -316,7 +325,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     margin-bottom: calc((var(--preview-scale, 0.4) - 1) * 1123px);
   }
 
-  .pos-row { grid-template-columns: 1fr 55px 44px 24px; }
+  .pos-row { grid-template-columns: 1fr 82px 66px 24px; }
 }
 
 @media print {
@@ -361,12 +370,12 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
   <!-- HEADER -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Absender / Header
         <span class="vis-toggle" id="vis-header" onclick="event.stopPropagation();toggleVis('header')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
+    <div class="section-body">
       <div><label>Firmenname</label><input type="text" id="f-company" value="G INVESTMENTS &amp; REAL ESTATES AG" placeholder="G INVESTMENTS &amp; REAL ESTATES AG" oninput="render()"></div>
       <div><label>E-Mail</label><input type="text" id="f-email" value="ADMIN@G-INVESTMENTS-REALESTATES.CH" placeholder="ADMIN@G-INVESTMENTS-REALESTATES.CH" oninput="render()"></div>
     </div>
@@ -374,12 +383,12 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
   <!-- TRENNLINIE HEADING — FIX #3 -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Titeltext und Trennlinie
         <span class="vis-toggle" id="vis-heading" onclick="event.stopPropagation();toggleVis('heading')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
+    <div class="section-body">
       <div><label>Grosser Text (rechts neben der Linie, Caps)</label>
         <input type="text" id="f-heading" value="RECHNUNG" placeholder="z.B. RECHNUNG" oninput="render()">
       </div>
@@ -409,42 +418,94 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
   <!-- RECHNUNGSTELLER -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Absender
         <span class="vis-toggle" id="vis-steller" onclick="event.stopPropagation();toggleVis('steller')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
+    <div class="section-body">
+      <div class="contact-picker-wrap" id="company-picker-wrap" style="display:none">
+        <label>Firma wählen</label>
+        <select id="company-select" onchange="applyCompany()">
+          <option value="">— Firma wählen —</option>
+        </select>
+        <div class="picker-divider">oder manuell</div>
+      </div>
       <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Absender" oninput="render()"></div>
       <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Absender" oninput="render()"></div>
       <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Absender" oninput="render()"></div>
     </div>
   </div>
 
-  <!-- META — dynamic rows, 0–5 -->
+  <!-- META — fixed fields with show/hide -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Datum &amp; Zeitraum
         <span class="vis-toggle" id="vis-meta" onclick="event.stopPropagation();toggleVis('meta')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
-      <div class="pos-labels" style="grid-template-columns:1fr 1fr 24px">
-        <span>Titel</span><span>Wert</span><span></span>
+    <div class="section-body">
+      <div class="meta-field-row" id="mfr-0">
+        <div class="meta-field-toggle">
+          <input type="checkbox" id="mf-show-0" checked onchange="toggleMetaField(0);render()">
+          <label for="mf-show-0">Einblenden</label>
+        </div>
+        <div class="meta-field-inputs">
+          <input type="text" id="mf-label-0" value="DATUM" oninput="render()">
+          <input type="text" id="mf-value-0" oninput="render()">
+        </div>
       </div>
-      <div id="meta-list"></div>
-      <button class="btn-add" id="btn-add-meta" onclick="addMetaRow()">+ Zeile hinzufügen</button>
+      <div class="meta-field-row" id="mfr-1">
+        <div class="meta-field-toggle">
+          <input type="checkbox" id="mf-show-1" onchange="toggleMetaField(1);render()">
+          <label for="mf-show-1">Einblenden</label>
+        </div>
+        <div class="meta-field-inputs">
+          <input type="text" id="mf-label-1" value="ZEITRAUM" oninput="render()">
+          <input type="text" id="mf-value-1" value="" placeholder="TT.MM.JJJJ – TT.MM.JJJJ" oninput="render()">
+        </div>
+      </div>
+      <div class="meta-field-row" id="mfr-2">
+        <div class="meta-field-toggle">
+          <input type="checkbox" id="mf-show-2" onchange="toggleMetaField(2);render()">
+          <label for="mf-show-2">Einblenden</label>
+        </div>
+        <div class="meta-field-inputs">
+          <input type="text" id="mf-label-2" value="ZAHLBAR BIS" oninput="render()">
+          <input type="text" id="mf-value-2" placeholder="TT.MM.JJJJ" oninput="render()">
+        </div>
+      </div>
+      <div class="meta-field-row" id="mfr-3">
+        <div class="meta-field-toggle">
+          <input type="checkbox" id="mf-show-3" onchange="toggleMetaField(3);render()">
+          <label for="mf-show-3">Einblenden</label>
+        </div>
+        <div class="meta-field-inputs">
+          <input type="text" id="mf-label-3" value="REFERENZ" oninput="render()">
+          <input type="text" id="mf-value-3" placeholder="Wert" oninput="render()">
+        </div>
+      </div>
+      <div class="meta-field-row" id="mfr-4">
+        <div class="meta-field-toggle">
+          <input type="checkbox" id="mf-show-4" onchange="toggleMetaField(4);render()">
+          <label for="mf-show-4">Einblenden</label>
+        </div>
+        <div class="meta-field-inputs">
+          <input type="text" id="mf-label-4" value="KUNDEN-NR." oninput="render()">
+          <input type="text" id="mf-value-4" placeholder="Wert" oninput="render()">
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- TITEL -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Titel
         <span class="vis-toggle" id="vis-titel" onclick="event.stopPropagation();toggleVis('titel')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
+    <div class="section-body">
       <div><label>Titel (Freitext, mehrzeilig möglich)</label>
         <textarea id="f-titel" rows="2" placeholder="Titel" oninput="render()">TITEL</textarea>
       </div>
@@ -573,12 +634,12 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
   <!-- BANK / FOOTER -->
   <div class="section-block">
-    <div class="section-header open" onclick="toggleSection(this)">
+    <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Bank / Footer
         <span class="vis-toggle" id="vis-bank" onclick="event.stopPropagation();toggleVis('bank')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
-    <div class="section-body open">
+    <div class="section-body">
       <div><label>Bank Name</label><input type="text" id="f-bank-name" value="Spar+Leihkasse Riggisberg AG" placeholder="Name Bank" oninput="render()"></div>
       <div><label>Bank Strasse</label><input type="text" id="f-bank-adresse" value="Grabenstrasse 7" placeholder="Strasse Bank" oninput="render()"></div>
       <div><label>IBAN</label><input type="text" id="f-iban" value="CH93 0637 4730 0382 2750 4" placeholder="CH45 3453 4345 3301 24" oninput="render()"></div>
@@ -592,7 +653,6 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
 <script>
 const positions = [];
-const metaRows  = [];
 const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true };
 
 // ── CONTACTS ─────────────────────────────────────────────────
@@ -660,6 +720,66 @@ function applyContact() {
   render();
 }
 
+// ── COMPANIES ─────────────────────────────────────────────────
+const DEFAULT_COMPANIES = [
+  {
+    name: "G Investments & Real Estates AG",
+    header_name: "G INVESTMENTS & REAL ESTATES AG",
+    header_email: "ADMIN@G-INVESTMENTS-REALESTATES.CH",
+    absender_name: "G Investments & Real Estates AG",
+    absender_strasse: "Stygweg 21",
+    absender_ort: "3504 Oberhünigen",
+    bank_name: "Spar+Leihkasse Riggisberg AG",
+    bank_strasse: "Grabenstrasse 7",
+    bank_ort: "3132 Riggisberg",
+    iban: "CH93 0637 4730 0382 2750 4"
+  }
+];
+
+let companies = [];
+
+async function loadCompanies() {
+  try {
+    const res = await fetch('company.json');
+    companies = res.ok ? await res.json() : DEFAULT_COMPANIES;
+  } catch (e) {
+    companies = DEFAULT_COMPANIES;
+  }
+  buildCompanyPicker();
+}
+
+function buildCompanyPicker() {
+  if (!companies.length) return;
+  const wrap = document.getElementById('company-picker-wrap');
+  const sel  = document.getElementById('company-select');
+  wrap.style.display = 'flex';
+  companies.forEach((c, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  // Auto-apply first company on load
+  sel.value = '0';
+  applyCompany();
+}
+
+function applyCompany() {
+  const sel = document.getElementById('company-select');
+  if (sel.value === '') return;
+  const c = companies[Number(sel.value)];
+  document.getElementById('f-company').value      = c.header_name;
+  document.getElementById('f-email').value        = c.header_email;
+  document.getElementById('f-stell-name').value   = c.absender_name;
+  document.getElementById('f-stell-adresse').value= c.absender_strasse;
+  document.getElementById('f-stell-ort').value    = c.absender_ort;
+  document.getElementById('f-bank-name').value    = c.bank_name;
+  document.getElementById('f-bank-adresse').value = c.bank_strasse;
+  document.getElementById('f-bank-strasse').value = c.bank_ort;
+  document.getElementById('f-iban').value         = c.iban;
+  render();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   rteInit();
   // Re-apply settings whenever editor gains focus (browser may reset them)
@@ -670,14 +790,23 @@ window.addEventListener('DOMContentLoaded', () => {
       document.execCommand('styleWithCSS', false, false);
     });
   }
-  addMetaRow('DATUM',       '01.01.2026',             'DATUM',       'TT.MM.JJJJ');
-  addMetaRow('ZEITRAUM',    '01.01.2026 - 31.12.2026','ZEITRAUM',    'TT.MM.JJJJ – TT.MM.JJJJ');
-  addMetaRow('ZAHLBAR BIS', '',                        'ZAHLBAR BIS', 'TT.MM.JJJJ');
+  // Set today's date in Datum field
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const todayStr = `${dd}.${mm}.${yyyy}`;
+  const datumEl = document.getElementById('mf-value-0');
+  if (datumEl) datumEl.value = todayStr;
+
+  // Apply initial hidden state for unchecked fields
+  for (let i = 0; i < 5; i++) toggleMetaField(i);
   [['Strombezug', 0.28, 330], ['Abzug akonto', 800, -1]]
     .forEach(([d,p,q]) => addPosition(d,p,q));
   render();
   updatePreviewScale();
   loadContacts();
+  loadCompanies();
 });
 
 function toggleSection(h) {
@@ -728,42 +857,25 @@ function renderPositionsList() {
 }
 
 // ── META ROWS (dynamic, 0–5) ───────────────────────────────────
-let metaId = 0;
-function addMetaRow(label='', value='', labelPh='Titel', valuePh='Wert') {
-  if (metaRows.length >= 5) return;
-  metaRows.push({ id: metaId++, label, value, labelPh, valuePh });
-  renderMetaList();
-  render();
+// ── META FIELDS (fixed, toggle show/hide) ──────────────────
+const META_COUNT = 5;
+
+function toggleMetaField(i) {
+  const row = document.getElementById(`mfr-${i}`);
+  const chk = document.getElementById(`mf-show-${i}`);
+  if (chk.checked) row.classList.remove('mf-hidden');
+  else row.classList.add('mf-hidden');
 }
-function removeMetaRow(id) {
-  metaRows.splice(metaRows.findIndex(r=>r.id===id), 1);
-  renderMetaList();
-  render();
-}
-function updateMetaRow(id, field, value) {
-  const r = metaRows.find(r=>r.id===id);
-  if (!r) return;
-  r[field] = value;
-  render();
-}
-function renderMetaList() {
-  const list = document.getElementById('meta-list');
-  list.innerHTML = '';
-  metaRows.forEach(row => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 24px;gap:4px;align-items:start;';
-    div.innerHTML = `
-      <input type="text" value="${esc(row.label)}" placeholder="${esc(row.labelPh)}"
-        oninput="updateMetaRow(${row.id},'label',this.value);render()">
-      <textarea rows="1" placeholder="${esc(row.valuePh)}"
-        oninput="updateMetaRow(${row.id},'value',this.value);render()"
-        style="min-height:34px;max-height:102px">${esc(row.value)}</textarea>
-      <button class="btn-remove" onclick="removeMetaRow(${row.id})">×</button>`;
-    list.appendChild(div);
-  });
-  // Show/hide add button based on limit
-  const btn = document.getElementById('btn-add-meta');
-  if (btn) btn.style.display = metaRows.length >= 5 ? 'none' : '';
+
+function getMetaData() {
+  const rows = [];
+  for (let i = 0; i < META_COUNT; i++) {
+    const chk   = document.getElementById(`mf-show-${i}`);
+    const label = document.getElementById(`mf-label-${i}`)?.value.trim() || '';
+    const value = document.getElementById(`mf-value-${i}`)?.value.trim() || '';
+    if (chk?.checked && label) rows.push({ label, value });
+  }
+  return rows;
 }
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -967,9 +1079,7 @@ function buildPages() {
   const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
   const useTextblock  = visibility.textblock && textblockText.length > 0;
 
-  const metaData = metaRows.map(r => ({
-    label: r.label.trim(), value: r.value.trim()
-  })).filter(r => r.label.length > 0);
+  const metaData = getMetaData();
 
   const showTitel = visibility.titel && titel.trim().length > 0;
   const total     = positions.reduce((s,p) => s + p.price * p.qty, 0);
@@ -1009,7 +1119,7 @@ function buildPages() {
     ? `<div class="emp-block">${empLines.map(esc).join('<br>')}</div>` : '';
   const stLines   = [stName, stAdresse, stOrt].filter(Boolean);
   const stellHTML = stLines.length && visibility.steller ? stLines.map(esc).join('<br>') : '';
-  const metaVisible = metaData.filter(r => r.label.length > 0);
+  const metaVisible = metaData;
   const metaColHTML = (visibility.meta && metaVisible.length > 0)
     ? `<div class="meta-col"><table class="meta-table">
         ${metaVisible.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.value)}</td></tr>`).join('')}
