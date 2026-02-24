@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rechnungs-Editor – G Investments & Real Estates AG</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --form-bg:#242424; --input-bg:#2e2e2e; --blue:#4f8ef7; }
+
+body { font-family:'Open Sans',sans-serif; background:#1a1a1a; color:#eee; display:flex; height:100vh; overflow:hidden; }
+
+/* ══ EDITOR ══ */
+#editor { width:390px; min-width:350px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid #333; flex-shrink:0; }
+#editor h1 { font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#fff; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #333; }
+
+.section-block { margin-bottom:10px; border:1px solid #333; border-radius:6px; overflow:hidden; }
+.section-header { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#2a2a2a; cursor:pointer; user-select:none; font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#aaa; transition:background .15s; }
+.section-header:hover { background:#303030; }
+.toggle-icon { font-size:10px; transition:transform .2s; color:#666; }
+.section-header.open .toggle-icon { transform:rotate(180deg); }
+.section-body { padding:14px 12px; display:none; flex-direction:column; gap:8px; background:var(--form-bg); }
+.section-body.open { display:flex; }
+
+label { font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:#777; margin-bottom:2px; display:block; }
+input[type="text"], input[type="number"], textarea {
+  width:100%; background:var(--input-bg); border:1px solid #3a3a3a; border-radius:4px;
+  color:#eee; font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px; outline:none; transition:border-color .15s;
+}
+input:focus, textarea:focus { border-color:var(--blue); }
+textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; overflow-y:auto; }
+
+.field-row { display:flex; gap:8px; }
+.field-row > * { flex:1; }
+
+.meta-row-editor { display:grid; grid-template-columns:1fr 1fr; gap:6px; border:1px solid #333; border-radius:4px; padding:8px; background:#222; }
+.meta-row-editor small { grid-column:1/-1; font-size:9px; color:#555; letter-spacing:.5px; text-transform:uppercase; }
+
+#positions-list { display:flex; flex-direction:column; gap:6px; }
+.pos-row { display:grid; grid-template-columns:1fr 60px 50px 24px; gap:4px; align-items:end; }
+.pos-row input { font-size:11px; }
+
+.btn-remove { background:#3a2020; border:1px solid #5a2a2a; border-radius:4px; color:#e66; cursor:pointer; font-size:14px; line-height:1; padding:4px 5px; transition:background .15s; }
+.btn-remove:hover { background:#5a2020; }
+.btn-add { background:#1e3a2a; border:1px solid #2a5a3a; border-radius:4px; color:#5d9; cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.8px; padding:7px 10px; text-transform:uppercase; width:100%; transition:background .15s; }
+.btn-add:hover { background:#264a34; }
+.pos-labels { display:grid; grid-template-columns:1fr 60px 50px 24px; gap:4px; }
+.pos-labels span { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#666; }
+
+.toggle-row { display:flex; align-items:center; gap:8px; }
+.toggle-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
+.toggle-row label { font-size:11px; color:#aaa; text-transform:none; letter-spacing:0; cursor:pointer; margin:0; }
+
+#btn-download { width:100%; margin-top:16px; padding:12px; background:var(--blue); border:none; border-radius:6px; color:#fff; font-family:'Open Sans',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:background .15s,transform .1s; }
+#btn-download:hover { background:#3a7ef0; }
+#btn-download:active { transform:scale(.98); }
+#btn-print { width:100%; margin-top:8px; padding:12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-family:'Open Sans',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:background .15s; }
+#btn-print:hover { background:#333; color:#fff; }
+
+.vis-toggle { display:inline-flex; align-items:center; gap:4px; margin-left:6px; font-size:9px; color:#555; cursor:pointer; background:#2a2a2a; border:1px solid #444; border-radius:3px; padding:2px 5px; text-transform:uppercase; letter-spacing:.5px; transition:background .15s; user-select:none; vertical-align:middle; }
+.vis-toggle:hover { background:#333; }
+.vis-toggle.hidden-state { color:#e66; border-color:#633; }
+.section-header-label { display:flex; align-items:center; }
+
+/* ══ PREVIEW ══ */
+#preview-wrap { flex:1; overflow-y:auto; background:#111; display:flex; flex-direction:column; align-items:center; padding:30px 20px; gap:24px; }
+
+/* A4 */
+.a4-page {
+  width: 794px;
+  height: 1123px;        /* exact — never grows */
+  background: #fff;
+  color: #2c2c2c;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  box-shadow: 0 4px 32px rgba(0,0,0,.5);
+  position: relative;
+  overflow: hidden;      /* content can never push past the page edge */
+  flex-shrink: 0;
+}
+
+/* Header */
+.page-header { padding: 40px 56px 0; text-align: right; }
+.page-header--sub { padding-bottom: 28px; }
+.page-header .company-name { font-size: 11.5px; font-weight: 400; letter-spacing: .5px; color: #2c2c2c; line-height: 1.7; }
+
+/* Footer — always pinned to bottom, white bg covers any overflow */
+.page-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 56px 28px;
+  background: #fff;
+}
+.footer-line { border: none; border-top: 1px solid #aaa; margin-bottom: 10px; }
+.footer-content { display: flex; justify-content: space-between; font-size: 10px; color: #555; line-height: 1.7; }
+.footer-bank-label { font-size: 10px; font-weight: 600; letter-spacing: .8px; color: #555; }
+.footer-iban { font-size: 10px; font-weight: 600; letter-spacing: .8px; color: #555; }
+.footer-left { display: flex; gap: 10px; }
+
+/* Content — bottom padding = footer height (~82px) + 1.5 line buffer (~29px) */
+.page-content { padding: 0 56px 120px; }
+
+/* FIX #2 & #3: separator = left 50% line + right 50% big heading */
+.separator-area { display:flex; align-items:center; margin:24px 0 28px; min-height:32px; }
+.separator-left { width:50%; flex-shrink:0; display:flex; align-items:center; }
+.separator-line { border:none; border-top:1px solid #aaa; width:100%; }
+.separator-right { flex:1; text-align:right; padding-left:12px; }
+.invoice-heading-text { font-size:38px; font-weight:300; letter-spacing:0; text-transform:uppercase; color:#2c2c2c; line-height:1.1; font-family:'Open Sans',sans-serif; }
+
+/* Layout: empfaenger full-width, then steller+meta side-by-side so meta aligns perfectly with steller */
+.emp-block { margin-bottom:63px; font-size:11.5px; line-height:1.7; color:#2c2c2c; }
+.steller-meta-row { display:flex; }
+.steller-col { flex:1; font-size:11.5px; line-height:1.7; color:#2c2c2c; margin-bottom:63px; }
+.meta-col { width:230px; flex-shrink:0; }
+
+.addresses-row { margin-bottom:24px; font-size:11.5px; line-height:1.7; color:#2c2c2c; }
+
+/* FIX #4 #5: meta table free text, wraps nicely */
+.meta-table { font-size:11px; line-height:1.6; width:100%; }
+.meta-table td { vertical-align:top; padding-bottom:2px; }
+.meta-table td:first-child { letter-spacing:.8px; text-transform:uppercase; font-size:10px; color:#555; padding-right:14px; font-weight:400; white-space:nowrap; }
+.meta-table td:last-child { text-align:right; white-space:pre-wrap; word-break:break-word; }
+
+.invoice-title { font-size:38px; font-weight:300; color:#2c2c2c; margin-bottom:28px; line-height:1.1; white-space:pre-wrap; }
+
+/* Optional text block above table */
+.text-block { font-size:11.5px; line-height:1.8; color:#2c2c2c; width:100%; margin-bottom:28px; word-break:break-word; }
+.text-block h1 { font-size:22px; font-weight:600; margin:0 0 8px; }
+.text-block h2 { font-size:17px; font-weight:600; margin:0 0 6px; }
+.text-block h3 { font-size:14px; font-weight:600; margin:0 0 4px; }
+.text-block p  { margin:0 0 6px; }
+.text-block ul, .text-block ol { margin:0 0 6px; padding-left:20px; }
+.text-block hr { border:none; border-top:1px solid #aaa; margin:10px 0; }
+
+/* Rich text editor */
+.rte-toolbar {
+  display:flex; flex-wrap:wrap; gap:2px; padding:5px 6px;
+  background:#222; border:1px solid #3a3a3a; border-bottom:none;
+  border-radius:4px 4px 0 0;
+}
+.rte-toolbar button {
+  background:#2e2e2e; border:1px solid #444; border-radius:3px;
+  color:#ccc; cursor:pointer; font-family:'Open Sans',sans-serif;
+  font-size:11px; padding:3px 7px; line-height:1.4; transition:background .1s;
+  white-space:nowrap;
+}
+.rte-toolbar button:hover { background:#3a3a3a; color:#fff; }
+.rte-toolbar button:active { background:#4f8ef7; color:#fff; border-color:#4f8ef7; }
+.rte-sep { width:1px; background:#444; margin:2px 2px; align-self:stretch; }
+
+.rte-body {
+  width:100%; min-height:120px; max-height:320px; overflow-y:auto;
+  background:var(--input-bg); border:1px solid #3a3a3a;
+  border-radius:0 0 4px 4px; color:#eee;
+  font-family:'Open Sans',sans-serif; font-size:12px;
+  padding:8px 10px; outline:none; line-height:1.6;
+  word-break:break-word;
+}
+.rte-body:focus { border-color:var(--blue); }
+.rte-body:empty::before {
+  content: attr(placeholder);
+  color: #555; pointer-events:none;
+}
+.rte-body h1 { font-size:18px; font-weight:700; margin:4px 0; }
+.rte-body h2 { font-size:14px; font-weight:700; margin:3px 0; }
+.rte-body h3 { font-size:12px; font-weight:700; margin:2px 0; }
+.rte-body ul, .rte-body ol { padding-left:18px; margin:2px 0; }
+.rte-body hr { border:none; border-top:1px solid #555; margin:6px 0; }
+
+/* Items table */
+.items-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+.items-table thead tr { border-top:1px solid #aaa; border-bottom:1px solid #aaa; }
+.items-table thead th { font-weight:700; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#2c2c2c; padding:8px 6px; text-align:left; }
+.items-table thead th.r { text-align:right; }
+.items-table tbody td { padding:8px 6px; color:#444; vertical-align:top; }
+.items-table tbody td.r { text-align:right; }
+.items-table tfoot tr { border-top:1px solid #aaa; }
+.items-table tfoot td { padding:10px 6px 0; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+.items-table tfoot td.r { text-align:right; }
+
+.inv-hidden { display:none !important; }
+
+/* Loading */
+#loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#fff; font-size:13px; letter-spacing:1px; }
+#loading.show { display:flex; }
+.spinner { width:36px; height:36px; border:3px solid #333; border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; }
+@media print {
+  #editor, #loading { display: none !important; }
+  body { display: block; background: #fff; }
+  #preview-wrap { display: block; overflow: visible; padding: 0; background: #fff; }
+  .a4-page { box-shadow: none; page-break-after: always; }
+}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><span>PDF wird erstellt…</span></div>
+
+<!-- ══ EDITOR ══ -->
+<div id="editor">
+  <h1>Rechnungs-Editor</h1>
+
+  <!-- HEADER -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Absender / Header
+        <span class="vis-toggle" id="vis-header" onclick="event.stopPropagation();toggleVis('header')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Firmenname</label><input type="text" id="f-company" value="G INVESTMENTS &amp; REAL ESTATES AG" placeholder="G INVESTMENTS &amp; REAL ESTATES AG" oninput="render()"></div>
+      <div><label>E-Mail</label><input type="text" id="f-email" value="ADMIN@G-INVESTMENTS-REALESTATES.CH" placeholder="ADMIN@G-INVESTMENTS-REALESTATES.CH" oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- TRENNLINIE HEADING — FIX #3 -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Titeltext und Trennlinie
+        <span class="vis-toggle" id="vis-heading" onclick="event.stopPropagation();toggleVis('heading')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Grosser Text (rechts neben der Linie, Caps)</label>
+        <input type="text" id="f-heading" value="RECHNUNG" placeholder="z.B. RECHNUNG" oninput="render()">
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPFÄNGER -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Rechnungsempfänger
+        <span class="vis-toggle" id="vis-empfaenger" onclick="event.stopPropagation();toggleVis('empfaenger')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Rechnungsempfänger" oninput="render()"></div>
+      <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Rechnungsempfänger" oninput="render()"></div>
+      <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Rechnungsempfänger" oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- RECHNUNGSTELLER -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Rechnungsteller
+        <span class="vis-toggle" id="vis-steller" onclick="event.stopPropagation();toggleVis('steller')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Rechnungsteller" oninput="render()"></div>
+      <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Rechnungsteller" oninput="render()"></div>
+      <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Rechnungsteller" oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- META — dynamic rows, 0–5 -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Datum &amp; Zeitraum
+        <span class="vis-toggle" id="vis-meta" onclick="event.stopPropagation();toggleVis('meta')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div class="pos-labels" style="grid-template-columns:1fr 1fr 24px">
+        <span>Titel</span><span>Wert</span><span></span>
+      </div>
+      <div id="meta-list"></div>
+      <button class="btn-add" id="btn-add-meta" onclick="addMetaRow()">+ Zeile hinzufügen</button>
+    </div>
+  </div>
+
+  <!-- TITEL -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Titel
+        <span class="vis-toggle" id="vis-titel" onclick="event.stopPropagation();toggleVis('titel')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Titel (Freitext, mehrzeilig möglich)</label>
+        <textarea id="f-titel" rows="2" placeholder="Titel" oninput="render()">TITEL</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEXTBLOCK -->
+  <div class="section-block">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header-label">Textblock (vor Tabelle)
+        <span class="vis-toggle hidden-state" id="vis-textblock" onclick="event.stopPropagation();toggleVis('textblock')">🚫 ausgeblendet</span>
+      </div><span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="rte-toolbar" id="rte-toolbar">
+        <button title="Fett" onmousedown="event.preventDefault();rteCmd('bold');render()"><b>B</b></button>
+        <button title="Kursiv" onmousedown="event.preventDefault();rteCmd('italic');render()"><i>I</i></button>
+        <button title="Unterstrichen" onmousedown="event.preventDefault();rteCmd('underline');render()"><u>U</u></button>
+        <span class="rte-sep"></span>
+        <button title="Überschrift 1" onmousedown="event.preventDefault();rteBlockBtn('h1');render()">H1</button>
+        <button title="Überschrift 2" onmousedown="event.preventDefault();rteBlockBtn('h2');render()">H2</button>
+        <button title="Überschrift 3" onmousedown="event.preventDefault();rteBlockBtn('h3');render()">H3</button>
+        <button title="Normal" onmousedown="event.preventDefault();rteBlockBtn('p');render()">¶</button>
+        <span class="rte-sep"></span>
+        <button title="Aufzählung" onmousedown="event.preventDefault();rteCmdRaw('insertUnorderedList');render()">• Liste</button>
+        <button title="Nummeriert" onmousedown="event.preventDefault();rteCmdRaw('insertOrderedList');render()">1. Liste</button>
+        <span class="rte-sep"></span>
+        <button title="Linksbündig" onmousedown="event.preventDefault();rteCmdRaw('justifyLeft');render()">⬤≡</button>
+        <button title="Zentriert" onmousedown="event.preventDefault();rteCmdRaw('justifyCenter');render()">≡≡≡</button>
+        <button title="Rechtsbündig" onmousedown="event.preventDefault();rteCmdRaw('justifyRight');render()">≡⬤</button>
+        <span class="rte-sep"></span>
+        <button title="Einzug mehr" onmousedown="event.preventDefault();rteCmdRaw('indent');render()">→|</button>
+        <button title="Einzug weniger" onmousedown="event.preventDefault();rteCmdRaw('outdent');render()">|←</button>
+        <span class="rte-sep"></span>
+        <button title="Linie einfügen" onmousedown="event.preventDefault();rteInsertHr();render()">──</button>
+      </div>
+      <div id="f-textblock"
+        contenteditable="true"
+        class="rte-body"
+        placeholder="Sehr geehrte Damen und Herren…"
+        onkeydown="rteKeydown(event,'f-textblock')"
+        oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- TABELLE -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Tabelle
+        <span class="vis-toggle" id="vis-positionen" onclick="event.stopPropagation();toggleVis('positionen')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+
+      <!-- FIX #8: Währung -->
+      <div class="field-row">
+        <div><label>Währung</label><input type="text" id="f-currency" value="CHF" placeholder="CHF" oninput="render()"></div>
+        <div></div>
+      </div>
+
+      <!-- FIX #10: Spaltenüberschriften -->
+      <div>
+        <label style="margin-bottom:6px">Spaltenüberschriften</label>
+        <div class="field-row">
+          <div><label style="font-size:9px">Spalte 1</label><input type="text" id="f-col-pos" value="POSITION" placeholder="POSITION" oninput="render()"></div>
+          <div><label style="font-size:9px">Spalte 2</label><input type="text" id="f-col-preis" value="PREIS" placeholder="PREIS" oninput="render()"></div>
+        </div>
+        <div class="field-row" style="margin-top:4px">
+          <div><label style="font-size:9px">Spalte 3</label><input type="text" id="f-col-menge" value="MENGE" placeholder="MENGE" oninput="render()"></div>
+          <div><label style="font-size:9px">Spalte 4 (+ Währung)</label><input type="text" id="f-col-total" value="TOTAL" placeholder="TOTAL" oninput="render()"></div>
+        </div>
+      </div>
+
+      <!-- FIX #7: Menge-Total -->
+      <div class="toggle-row">
+        <input type="checkbox" id="chk-qty-total" onchange="render()">
+        <label for="chk-qty-total">Summe der Menge im Total anzeigen</label>
+      </div>
+
+      <div class="pos-labels">
+        <span>Beschreibung</span><span>Preis</span><span>Menge</span><span></span>
+      </div>
+      <div id="positions-list"></div>
+      <button class="btn-add" onclick="addPosition()">+ Position hinzufügen</button>
+    </div>
+  </div>
+
+  <!-- TEXTBLOCK NACH TABELLE -->
+  <div class="section-block">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header-label">Textblock (nach Tabelle)
+        <span class="vis-toggle hidden-state" id="vis-textblock2" onclick="event.stopPropagation();toggleVis('textblock2')">🚫 ausgeblendet</span>
+      </div><span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="rte-toolbar">
+        <button title="Fett" onmousedown="event.preventDefault();rteCmd2('bold');render()"><b>B</b></button>
+        <button title="Kursiv" onmousedown="event.preventDefault();rteCmd2('italic');render()"><i>I</i></button>
+        <button title="Unterstrichen" onmousedown="event.preventDefault();rteCmd2('underline');render()"><u>U</u></button>
+        <span class="rte-sep"></span>
+        <button title="Überschrift 1" onmousedown="event.preventDefault();rteBlock2('h1');render()">H1</button>
+        <button title="Überschrift 2" onmousedown="event.preventDefault();rteBlock2('h2');render()">H2</button>
+        <button title="Überschrift 3" onmousedown="event.preventDefault();rteBlock2('h3');render()">H3</button>
+        <button title="Normal" onmousedown="event.preventDefault();rteBlock2('p');render()">¶</button>
+        <span class="rte-sep"></span>
+        <button title="Aufzählung" onmousedown="event.preventDefault();rteCmd2Raw('insertUnorderedList');render()">• Liste</button>
+        <button title="Nummeriert" onmousedown="event.preventDefault();rteCmd2Raw('insertOrderedList');render()">1. Liste</button>
+        <span class="rte-sep"></span>
+        <button title="Linksbündig" onmousedown="event.preventDefault();rteCmd2Raw('justifyLeft');render()">⬤≡</button>
+        <button title="Zentriert" onmousedown="event.preventDefault();rteCmd2Raw('justifyCenter');render()">≡≡≡</button>
+        <button title="Rechtsbündig" onmousedown="event.preventDefault();rteCmd2Raw('justifyRight');render()">≡⬤</button>
+        <span class="rte-sep"></span>
+        <button title="Einzug mehr" onmousedown="event.preventDefault();rteCmd2Raw('indent');render()">→|</button>
+        <button title="Einzug weniger" onmousedown="event.preventDefault();rteCmd2Raw('outdent');render()">|←</button>
+        <span class="rte-sep"></span>
+        <button title="Linie einfügen" onmousedown="event.preventDefault();rteInsertHr2();render()">──</button>
+      </div>
+      <div id="f-textblock2"
+        contenteditable="true"
+        class="rte-body"
+        placeholder="Zusätzlicher Text nach der Tabelle…"
+        onkeydown="rteKeydown(event,'f-textblock2')"
+        oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- BANK / FOOTER -->
+  <div class="section-block">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Bank / Footer
+        <span class="vis-toggle" id="vis-bank" onclick="event.stopPropagation();toggleVis('bank')">👁 sichtbar</span>
+      </div><span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div><label>Bank Name</label><input type="text" id="f-bank-name" value="Spar+Leihkasse Riggisberg AG" placeholder="Name Bank" oninput="render()"></div>
+      <div><label>Bank Strasse</label><input type="text" id="f-bank-adresse" value="Grabenstrasse 7" placeholder="Strasse Bank" oninput="render()"></div>
+      <div><label>IBAN</label><input type="text" id="f-iban" value="CH93 0637 4730 0382 2750 4" placeholder="CH45 3453 4345 3301 24" oninput="render()"></div>
+      <div><label>Bank PLZ / ORT</label><input type="text" id="f-bank-strasse" value="3132 Riggisberg" placeholder="PLZ / ORT Bank" oninput="render()"></div>
+    </div>
+  </div>
+
+  <button id="btn-download" onclick="downloadPDF()">⬇ PDF herunterladen</button>
+  <button id="btn-print" onclick="window.print()">🖨 Drucken</button>
+</div>
+
+<!-- ══ PREVIEW ══ -->
+<div id="preview-wrap"></div>
+
+<script>
+const positions = [];
+const metaRows  = [];
+const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true };
+
+window.addEventListener('DOMContentLoaded', () => {
+  rteInit();
+  // Re-apply settings whenever editor gains focus (browser may reset them)
+  const rteEl = document.getElementById('f-textblock');
+  if (rteEl) {
+    rteEl.addEventListener('focus', () => {
+      document.execCommand('defaultParagraphSeparator', false, 'p');
+      document.execCommand('styleWithCSS', false, false);
+    });
+  }
+  addMetaRow('DATUM',       '01.01.2026',             'DATUM',       'TT.MM.JJJJ');
+  addMetaRow('ZEITRAUM',    '01.01.2026 - 31.12.2026','ZEITRAUM',    'TT.MM.JJJJ – TT.MM.JJJJ');
+  addMetaRow('ZAHLBAR BIS', '',                        'ZAHLBAR BIS', 'TT.MM.JJJJ');
+  [['Strombezug', 0.28, 330], ['Abzug akonto', 800, -1]]
+    .forEach(([d,p,q]) => addPosition(d,p,q));
+  render();
+});
+
+function toggleSection(h) {
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+
+function toggleVis(key) {
+  visibility[key] = !visibility[key];
+  const btn = document.getElementById('vis-'+key);
+  btn.innerHTML = visibility[key] ? '👁 sichtbar' : '🚫 ausgeblendet';
+  btn.classList.toggle('hidden-state', !visibility[key]);
+  render();
+}
+
+let posId = 0;
+function addPosition(desc='', price=0, qty=1) {
+  positions.push({ id:posId++, desc, price:+price||0, qty: qty === '' ? 1 : +qty });
+  renderPositionsList();
+  render();
+}
+function removePosition(id) {
+  positions.splice(positions.findIndex(p=>p.id===id),1);
+  renderPositionsList();
+  render();
+}
+function updatePosition(id, field, value) {
+  const p = positions.find(p=>p.id===id);
+  if (!p) return;
+  if (field === 'price') p[field] = +value || 0;
+  else if (field === 'qty') p[field] = value === '' ? 0 : +value;
+  else p[field] = value;
+  render();
+}
+function renderPositionsList() {
+  const list = document.getElementById('positions-list');
+  list.innerHTML = '';
+  positions.forEach(pos => {
+    const row = document.createElement('div');
+    row.className = 'pos-row';
+    row.innerHTML = `
+      <input type="text" value="${esc(pos.desc)}" placeholder="Beschreibung" oninput="updatePosition(${pos.id},'desc',this.value)">
+      <input type="number" value="${pos.price}" min="0" step="0.01" oninput="updatePosition(${pos.id},'price',this.value)">
+      <input type="number" value="${pos.qty}" step="1" oninput="updatePosition(${pos.id},'qty',this.value)">
+      <button class="btn-remove" onclick="removePosition(${pos.id})">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+// ── META ROWS (dynamic, 0–5) ───────────────────────────────────
+let metaId = 0;
+function addMetaRow(label='', value='', labelPh='Titel', valuePh='Wert') {
+  if (metaRows.length >= 5) return;
+  metaRows.push({ id: metaId++, label, value, labelPh, valuePh });
+  renderMetaList();
+  render();
+}
+function removeMetaRow(id) {
+  metaRows.splice(metaRows.findIndex(r=>r.id===id), 1);
+  renderMetaList();
+  render();
+}
+function updateMetaRow(id, field, value) {
+  const r = metaRows.find(r=>r.id===id);
+  if (!r) return;
+  r[field] = value;
+  render();
+}
+function renderMetaList() {
+  const list = document.getElementById('meta-list');
+  list.innerHTML = '';
+  metaRows.forEach(row => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 24px;gap:4px;align-items:start;';
+    div.innerHTML = `
+      <input type="text" value="${esc(row.label)}" placeholder="${esc(row.labelPh)}"
+        oninput="updateMetaRow(${row.id},'label',this.value);render()">
+      <textarea rows="1" placeholder="${esc(row.valuePh)}"
+        oninput="updateMetaRow(${row.id},'value',this.value);render()"
+        style="min-height:34px;max-height:102px">${esc(row.value)}</textarea>
+      <button class="btn-remove" onclick="removeMetaRow(${row.id})">×</button>`;
+    list.appendChild(div);
+  });
+  // Show/hide add button based on limit
+  const btn = document.getElementById('btn-add-meta');
+  if (btn) btn.style.display = metaRows.length >= 5 ? 'none' : '';
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function rteInit() {
+  document.execCommand('defaultParagraphSeparator', false, 'p');
+  document.execCommand('styleWithCSS', false, false);
+}
+
+// ── INLINE (bold/italic/underline) ──────────────────────────
+// With selection: wraps/unwraps. Without: toggles typing mode.
+function rteInline(tag, editorId) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const editor = document.getElementById(editorId);
+  if (!editor || !editor.contains(range.commonAncestorContainer)) return;
+
+  if (sel.isCollapsed) {
+    // No selection — toggle typing mode via execCommand (b/i/u)
+    const cmdMap = { b:'bold', i:'italic', u:'underline' };
+    if (cmdMap[tag]) { document.execCommand('styleWithCSS',false,false); document.execCommand(cmdMap[tag],false,null); }
+    return;
+  }
+
+  // Check if already wrapped — toggle off
+  const existing = sel.anchorNode?.parentElement?.closest(tag);
+  if (existing) {
+    const frag = document.createDocumentFragment();
+    while (existing.firstChild) frag.appendChild(existing.firstChild);
+    existing.replaceWith(frag);
+  } else {
+    const wrap = document.createElement(tag);
+    try { range.surroundContents(wrap); }
+    catch { wrap.appendChild(range.extractContents()); range.insertNode(wrap); }
+    const r2 = document.createRange();
+    r2.selectNodeContents(wrap);
+    sel.removeAllRanges(); sel.addRange(r2);
+  }
+}
+
+// ── BLOCK (h1/h2/h3/p) ──────────────────────────────────────
+// Applies formatBlock to the current block — cursor stays in place.
+// On Enter inside a heading → handled by rteKeydown.
+function rteBlock(tag, editorId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  // If editor has no content yet, ensure there's a paragraph to format
+  if (!editor.innerText.trim()) {
+    editor.innerHTML = '<p><br></p>';
+    const r = document.createRange();
+    r.setStart(editor.firstChild, 0);
+    r.collapse(true);
+    const s = window.getSelection();
+    s.removeAllRanges(); s.addRange(r);
+  }
+  document.execCommand('styleWithCSS', false, false);
+  document.execCommand('formatBlock', false, tag);
+}
+
+// ── ENTER KEY in headings → drop to <p> ─────────────────────
+function rteKeydown(e, editorId) {
+  if (e.key !== 'Enter') return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const node = sel.getRangeAt(0).startContainer;
+  const el   = node.nodeType === 3 ? node.parentElement : node;
+  const heading = el.closest('h1,h2,h3,h4,h5,h6');
+  if (!heading) return;
+
+  e.preventDefault();
+  const p = document.createElement('p');
+  p.innerHTML = '<br>';
+  heading.after(p);
+  const r = document.createRange();
+  r.setStart(p, 0); r.collapse(true);
+  sel.removeAllRanges(); sel.addRange(r);
+  render();
+}
+
+// ── HR ───────────────────────────────────────────────────────
+function rteInsertHrInEditor(editorId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('insertHTML', false, '<hr><p><br></p>');
+}
+
+// ── SHORTHAND for toolbar buttons ───────────────────────────
+// Editor 1
+function rteCmd(cmd)       { rteInline(cmd==='bold'?'b':cmd==='italic'?'i':'u', 'f-textblock'); }
+function rteCmdRaw(cmd)    { document.execCommand('styleWithCSS',false,false); document.execCommand(cmd,false,null); }
+function rteBlockBtn(tag)  { rteBlock(tag, 'f-textblock'); }
+function rteInsertHr()     { rteInsertHrInEditor('f-textblock'); }
+
+// Editor 2
+function rteCmd2(cmd)      { rteInline(cmd==='bold'?'b':cmd==='italic'?'i':'u', 'f-textblock2'); }
+function rteCmd2Raw(cmd)   { document.execCommand('styleWithCSS',false,false); document.execCommand(cmd,false,null); }
+function rteBlock2(tag)    { rteBlock(tag, 'f-textblock2'); }
+function rteInsertHr2()    { rteInsertHrInEditor('f-textblock2'); }
+function val(id) { return document.getElementById(id)?.value || ''; }
+// Returns value if typed, else the placeholder (for preview display)
+function ph(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  return el.value || el.placeholder || '';
+}
+function chk(id) { return document.getElementById(id)?.checked || false; }
+function fmt(n) { return Number(n).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function render() {
+  const wrap = document.getElementById('preview-wrap');
+  const scrollTop = wrap.scrollTop;
+  wrap.innerHTML = '';
+  buildPages().forEach(html => {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    wrap.appendChild(d.firstElementChild);
+  });
+  wrap.scrollTop = scrollTop;
+}
+
+function buildHeader(isFirst) {
+  const sub = isFirst ? '' : ' page-header--sub';
+  const hide = !visibility.header ? ' style="visibility:hidden"' : '';
+  const company = val('f-company');
+  const email   = val('f-email');
+  const lines   = [company, email].filter(Boolean);
+  return `<div class="page-header${sub}"${hide}>
+    ${lines.length ? `<div class="company-name">${lines.map(esc).join('<br>')}</div>` : ''}
+  </div>`;
+}
+
+function buildFooter() {
+  const vis = visibility.bank ? '' : ' inv-hidden';
+  const bankName    = val('f-bank-name');
+  const bankAdresse = val('f-bank-adresse');
+  const bankStrasse = val('f-bank-strasse');
+  const iban        = val('f-iban');
+  const bankLines   = [bankName, bankAdresse, bankStrasse].filter(Boolean);
+  return `<div class="page-footer${vis}">
+    <hr class="footer-line">
+    <div class="footer-content">
+      <div class="footer-left">
+        ${bankLines.length ? `<span class="footer-bank-label">BANK</span><div>${bankLines.map(esc).join('<br>')}</div>` : ''}
+      </div>
+      ${iban ? `<div class="footer-iban">IBAN &nbsp; ${esc(iban)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function buildPages() {
+  const empName    = val('f-emp-name');
+  const empStrasse = val('f-emp-strasse');
+  const empOrt     = val('f-emp-ort');
+  const stName     = val('f-stell-name');
+  const stAdresse  = val('f-stell-adresse');
+  const stOrt      = val('f-stell-ort');
+  const titel      = val('f-titel');
+  const heading    = val('f-heading');
+  const currency   = val('f-currency')   || 'CHF';
+  const showQtyTot = chk('chk-qty-total');
+  const colPos     = val('f-col-pos')    || 'POSITION';
+  const colPreis   = val('f-col-preis')  || 'PREIS';
+  const colMenge   = val('f-col-menge')  || 'MENGE';
+  const colTotal   = val('f-col-total')  || 'TOTAL';
+  const textblockEl   = document.getElementById('f-textblock');
+  const textblockRaw  = textblockEl ? textblockEl.innerHTML : '';
+  const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
+  const useTextblock  = visibility.textblock && textblockText.length > 0;
+
+  const metaData = metaRows.map(r => ({
+    label: r.label.trim(), value: r.value.trim()
+  })).filter(r => r.label.length > 0);
+
+  const showTitel = visibility.titel && titel.trim().length > 0;
+  const total     = positions.reduce((s,p) => s + p.price * p.qty, 0);
+  const totalQty  = positions.reduce((s,p) => s + p.qty, 0);
+
+  const tableHead = `<thead><tr>
+    <th style="width:46%">${esc(colPos)}</th>
+    <th class="r" style="width:18%">${esc(colPreis)}</th>
+    <th class="r" style="width:14%">${esc(colMenge)}</th>
+    <th class="r" style="width:22%">${esc(colTotal)} ${esc(currency)}</th>
+  </tr></thead>`;
+
+  const tableFoot = (isLast) => isLast ? `<tfoot><tr>
+    <td colspan="2">Total</td>
+    <td class="r">${showQtyTot ? totalQty : ''}</td>
+    <td class="r">${esc(currency)} ${fmt(total)}</td>
+  </tr></tfoot>` : '';
+
+  const rowHTML = p => `<tr>
+    <td>${esc(p.desc)}</td>
+    <td class="r">${fmt(p.price)}</td>
+    <td class="r">${p.qty}</td>
+    <td class="r">${fmt(p.price * p.qty)}</td>
+  </tr>`;
+
+  const headingVisible = visibility.heading && heading.trim().length > 0;
+  const sepHide        = !visibility.heading ? ' style="visibility:hidden"' : '';
+  const headingHide    = !headingVisible ? ' style="visibility:hidden"' : '';
+  const headingText    = heading.trim() || '\u00A0';
+  const separatorHTML  = `<div class="separator-area"${sepHide}>
+    <div class="separator-left"><hr class="separator-line"></div>
+    <div class="separator-right"><span class="invoice-heading-text"${headingHide}>${esc(headingText)}</span></div>
+  </div>`;
+
+  const empLines  = [empName, empStrasse, empOrt].filter(Boolean);
+  const empBlock  = empLines.length && visibility.empfaenger
+    ? `<div class="emp-block">${empLines.map(esc).join('<br>')}</div>` : '';
+  const stLines   = [stName, stAdresse, stOrt].filter(Boolean);
+  const stellHTML = stLines.length && visibility.steller ? stLines.map(esc).join('<br>') : '';
+  const metaVisible = metaData.filter(r => r.label.length > 0);
+  const metaColHTML = (visibility.meta && metaVisible.length > 0)
+    ? `<div class="meta-col"><table class="meta-table">
+        ${metaVisible.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.value)}</td></tr>`).join('')}
+      </table></div>` : '';
+
+  const contentTopHTML = `${empBlock}<div class="steller-meta-row">
+    <div class="steller-col">${stellHTML}</div>${metaColHTML}
+  </div>`;
+  const titleHTML = showTitel ? `<div class="invoice-title">${esc(titel)}</div>` : '';
+
+  // ── MEASUREMENT-BASED PAGINATOR ─────────────────────────────
+  // Content width inside page-content = 794 - 2×56 = 682px
+  const mC = document.createElement('div');
+  mC.style.cssText = 'position:fixed;left:-9999px;top:0;width:682px;font-family:"Open Sans",sans-serif;font-size:12px;color:#2c2c2c;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(mC);
+  const mW = document.createElement('div');
+  mW.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;font-family:"Open Sans",sans-serif;font-size:12px;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(mW);
+
+  const mH  = html => { mC.innerHTML = html; return mC.scrollHeight; };
+  const mHW = html => { mW.innerHTML = html; return mW.scrollHeight; };
+
+  const PAGE_H  = 1123;
+  const PAD_BOT = 120; // page-content padding-bottom acts as footer buffer
+
+  const hH1     = mHW(buildHeader(true));
+  const hHN     = mHW(buildHeader(false));
+  const avail1  = PAGE_H - PAD_BOT - hH1;   // available content px on page 1
+  const availN  = PAGE_H - PAD_BOT - hHN;   // available content px on subsequent pages
+
+  // Fixed first-page content height (separator + addresses + title)
+  const hStatic1 = mH(separatorHTML + contentTopHTML + titleHTML);
+
+  // Textblock: parse innerHTML into top-level element strings for fitting
+  const tbParser = document.createElement('div');
+  tbParser.innerHTML = useTextblock ? textblockRaw : '';
+  const tbElements = (() => {
+    if (!useTextblock) return [];
+    const kids = Array.from(tbParser.childNodes);
+    const blocks = kids.map(n => {
+      if (n.nodeType === 3) return n.textContent.trim() ? `<p>${n.textContent}</p>` : null;
+      return n.outerHTML || null;
+    }).filter(Boolean);
+    return blocks.length ? blocks : (textblockRaw.trim() ? [textblockRaw] : []);
+  })();
+
+  function tbElH(els) {
+    if (!els.length) return 0;
+    return mH(`<div class="text-block">${els.join('')}</div>`);
+  }
+  function fitElements(els, maxH) {
+    if (!els.length || maxH <= 0) return { fit: [], rest: els };
+    if (tbElH(els) <= maxH)       return { fit: els, rest: [] };
+    let lo = 0, hi = els.length;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      if (tbElH(els.slice(0, mid)) <= maxH) lo = mid; else hi = mid - 1;
+    }
+    if (lo === 0) lo = 1;
+    return { fit: els.slice(0, lo), rest: els.slice(lo) };
+  }
+
+  // Table height helpers
+  function tableH(fromIdx, count, isLast) {
+    const slice = positions.slice(fromIdx, fromIdx + count);
+    return mH(`<table class="items-table">${tableHead}<tbody>${slice.map(rowHTML).join('')}</tbody>${tableFoot(isLast)}</table>`);
+  }
+
+  // Binary search: max rows from positions[fromIdx] that fit in maxH px
+  function fitRows(fromIdx, maxH) {
+    const rem = positions.length - fromIdx;
+    if (rem <= 0 || maxH <= 0) return { count: 0, nextIdx: fromIdx };
+    if (mH(`<table class="items-table">${tableHead}<tbody></tbody></table>`) > maxH) {
+      return { count: 0, nextIdx: fromIdx };
+    }
+    let lo = 0, hi = rem;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      const isLast = (fromIdx + mid >= positions.length);
+      if (tableH(fromIdx, mid, isLast) <= maxH) lo = mid; else hi = mid - 1;
+    }
+    if (lo === 0) lo = 1;
+    return { count: lo, nextIdx: fromIdx + lo };
+  }
+
+  // Textblock2 (after table)
+  const tb2El   = document.getElementById('f-textblock2');
+  const tb2Raw  = tb2El ? tb2El.innerHTML : '';
+  const tb2Text = tb2El ? tb2El.innerText.trim() : '';
+  const useTb2  = visibility.textblock2 && tb2Text.length > 0;
+  const tb2Parser = document.createElement('div');
+  tb2Parser.innerHTML = useTb2 ? tb2Raw : '';
+  const tb2Elements = (() => {
+    if (!useTb2) return [];
+    const kids = Array.from(tb2Parser.childNodes);
+    const blocks = kids.map(n => {
+      if (n.nodeType === 3) return n.textContent.trim() ? `<p>${n.textContent}</p>` : null;
+      return n.outerHTML || null;
+    }).filter(Boolean);
+    return blocks.length ? blocks : (tb2Raw.trim() ? [tb2Raw] : []);
+  })();
+
+  function tb2ElH(els) {
+    if (!els.length) return 0;
+    return mH(`<div class="text-block">${els.join('')}</div>`);
+  }
+  function fitElements2(els, maxH) {
+    if (!els.length || maxH <= 0) return { fit: [], rest: els };
+    if (tb2ElH(els) <= maxH)       return { fit: els, rest: [] };
+    let lo = 0, hi = els.length;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      if (tb2ElH(els.slice(0, mid)) <= maxH) lo = mid; else hi = mid - 1;
+    }
+    if (lo === 0) lo = 1;
+    return { fit: els.slice(0, lo), rest: els.slice(lo) };
+  }
+
+  // ── BUILD PAGES ─────────────────────────────────────────────
+  const pages = [];
+  let tbRest  = tbElements.slice();
+  let tb2Rest = tb2Elements.slice();
+  let posIdx  = 0;
+  let pageNum = 0;
+  const needTable = visibility.positionen;
+  const tableFinished = () => !needTable || posIdx >= positions.length;
+  const hasMoreContent = () =>
+    tbRest.length > 0 ||
+    (needTable && posIdx < positions.length) ||
+    tb2Rest.length > 0;
+
+  do {
+    const isFirst = pageNum === 0;
+    const avail   = isFirst ? avail1 : availN;
+    let remaining = avail - (isFirst ? hStatic1 : 0);
+    const parts   = isFirst ? [separatorHTML + contentTopHTML + titleHTML] : [];
+
+    // Fit textblock1 elements
+    if (tbRest.length > 0) {
+      const { fit, rest } = fitElements(tbRest, remaining);
+      if (fit.length > 0) {
+        parts.push(`<div class="text-block">${fit.join('')}</div>`);
+        remaining -= tbElH(fit);
+      }
+      tbRest = rest;
+    }
+
+    // Fit table rows
+    if (needTable) {
+      if (positions.length === 0) {
+        if (isFirst) {
+          parts.push(`<table class="items-table">${tableHead}<tbody></tbody>${tableFoot(true)}</table>`);
+          remaining = 0;
+        }
+      } else if (posIdx < positions.length) {
+        const { count, nextIdx } = fitRows(posIdx, remaining);
+        if (count > 0) {
+          const isLastSlice = nextIdx >= positions.length;
+          const slice = positions.slice(posIdx, nextIdx);
+          parts.push(`<table class="items-table">${tableHead}<tbody>${slice.map(rowHTML).join('')}</tbody>${tableFoot(isLastSlice)}</table>`);
+          remaining -= tableH(posIdx, count, isLastSlice);
+          posIdx = nextIdx;
+        }
+      }
+    }
+
+    // Fit textblock2 elements (only after table is fully rendered)
+    if (tableFinished() && tb2Rest.length > 0) {
+      const { fit, rest } = fitElements2(tb2Rest, remaining);
+      if (fit.length > 0) {
+        parts.push(`<div class="text-block">${fit.join('')}</div>`);
+        remaining -= tb2ElH(fit);
+      }
+      tb2Rest = rest;
+    }
+
+    pages.push(`<div class="a4-page">${buildHeader(isFirst)}<div class="page-content">${parts.join('')}</div>${buildFooter()}</div>`);
+    pageNum++;
+
+  } while (hasMoreContent());
+
+  // Cleanup measurers
+  document.body.removeChild(mC);
+  document.body.removeChild(mW);
+
+  if (pages.length === 0) {
+    pages.push(`<div class="a4-page">${buildHeader(true)}<div class="page-content">${separatorHTML}${contentTopHTML}${titleHTML}</div>${buildFooter()}</div>`);
+  }
+
+  return pages;
+}
+
+async function downloadPDF() {
+  const btn = document.getElementById('btn-download');
+  const loading = document.getElementById('loading');
+  btn.disabled = true; loading.classList.add('show');
+  try {
+    const { jsPDF } = window.jspdf;
+    const pages = document.querySelectorAll('#preview-wrap .a4-page');
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], { scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false, width:794, height:1123 });
+      if (i > 0) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+    }
+    pdf.save(`${(val('f-titel')||'Rechnung').replace(/\s+/g,'_')}.pdf`);
+  } catch(e) {
+    alert('Fehler: ' + e.message);
+  } finally {
+    btn.disabled = false; loading.classList.remove('show');
+  }
+}
+</script>
+</body>
+</html>
