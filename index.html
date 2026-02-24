@@ -66,11 +66,22 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .toggle-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
 .toggle-row label { font-size:11px; color:#aaa; text-transform:none; letter-spacing:0; cursor:pointer; margin:0; }
 
-#btn-download { width:100%; margin-top:16px; padding:12px; background:var(--blue); border:none; border-radius:6px; color:#fff; font-family:'Open Sans',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:background .15s,transform .1s; }
+/* Action buttons */
+#action-btns { display:flex; gap:8px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid #333; }
+#btn-download, #btn-print {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:7px;
+  padding:9px 12px; border-radius:5px; cursor:pointer;
+  font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:1.2px; text-transform:uppercase; transition:background .15s, opacity .15s;
+  border: none;
+}
+#btn-download svg, #btn-print svg { width:15px; height:15px; flex-shrink:0; }
+#btn-download { background:var(--blue); color:#fff; }
 #btn-download:hover { background:#3a7ef0; }
-#btn-download:active { transform:scale(.98); }
-#btn-print { width:100%; margin-top:8px; padding:12px; background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#ccc; font-family:'Open Sans',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:background .15s; }
-#btn-print:hover { background:#333; color:#fff; }
+#btn-download:active { opacity:.85; }
+#btn-download:disabled { background:#444; cursor:default; opacity:.6; }
+#btn-print { background:var(--blue); color:#fff; }
+#btn-print:hover { background:#3a7ef0; }
 
 .vis-toggle { display:inline-flex; align-items:center; gap:4px; margin-left:6px; font-size:9px; color:#555; cursor:pointer; background:#2a2a2a; border:1px solid #444; border-radius:3px; padding:2px 5px; text-transform:uppercase; letter-spacing:.5px; transition:background .15s; user-select:none; vertical-align:middle; }
 .vis-toggle:hover { background:#333; }
@@ -337,6 +348,16 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 <!-- ══ EDITOR ══ -->
 <div id="editor">
   <h1>Rechnungs-Editor</h1>
+  <div id="action-btns">
+    <button id="btn-download" onclick="downloadPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      PDF
+    </button>
+    <button id="btn-print" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Drucken
+    </button>
+  </div>
 
   <!-- HEADER -->
   <div class="section-block">
@@ -368,7 +389,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
   <!-- EMPFÄNGER -->
   <div class="section-block">
     <div class="section-header open" onclick="toggleSection(this)">
-      <div class="section-header-label">Rechnungsempfänger
+      <div class="section-header-label">Empfänger
         <span class="vis-toggle" id="vis-empfaenger" onclick="event.stopPropagation();toggleVis('empfaenger')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
@@ -380,23 +401,23 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         </select>
         <div class="picker-divider">oder manuell</div>
       </div>
-      <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Rechnungsempfänger" oninput="render()"></div>
-      <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Rechnungsempfänger" oninput="render()"></div>
-      <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Rechnungsempfänger" oninput="render()"></div>
+      <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Empfänger" oninput="render()"></div>
+      <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Empfänger" oninput="render()"></div>
+      <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Empfänger" oninput="render()"></div>
     </div>
   </div>
 
   <!-- RECHNUNGSTELLER -->
   <div class="section-block">
     <div class="section-header open" onclick="toggleSection(this)">
-      <div class="section-header-label">Rechnungsteller
+      <div class="section-header-label">Absender
         <span class="vis-toggle" id="vis-steller" onclick="event.stopPropagation();toggleVis('steller')">👁 sichtbar</span>
       </div><span class="toggle-icon">▲</span>
     </div>
     <div class="section-body open">
-      <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Rechnungsteller" oninput="render()"></div>
-      <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Rechnungsteller" oninput="render()"></div>
-      <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Rechnungsteller" oninput="render()"></div>
+      <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Absender" oninput="render()"></div>
+      <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Absender" oninput="render()"></div>
+      <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Absender" oninput="render()"></div>
     </div>
   </div>
 
@@ -564,9 +585,6 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <div><label>Bank PLZ / ORT</label><input type="text" id="f-bank-strasse" value="3132 Riggisberg" placeholder="PLZ / ORT Bank" oninput="render()"></div>
     </div>
   </div>
-
-  <button id="btn-download" onclick="downloadPDF()">⬇ PDF herunterladen</button>
-  <button id="btn-print" onclick="window.print()">🖨 Drucken</button>
 </div>
 
 <!-- ══ PREVIEW ══ -->
@@ -578,15 +596,39 @@ const metaRows  = [];
 const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true };
 
 // ── CONTACTS ─────────────────────────────────────────────────
+const DEFAULT_CONTACTS = [
+  {
+    strasse: "Gerbestrasse 22", ort: "3550 Langnau i. E.",
+    namen: ["Pneu Service Heinz Gerber","Herr Daniel Burkhalter","Herr Novotny Leos","Herr Krisztian Gombas"]
+  },
+  {
+    strasse: "Herrengässli 1", ort: "3532 Zäziwil",
+    namen: ["Frau Annemarie Kammermann","Laura und Andreas Mumenthaler","Herr Andreas Minder","Herr Markus Gehri"]
+  },
+  {
+    strasse: "Gotthelfstrasse 12", ort: "3432 Lützelflüh",
+    namen: ["Herr Patrick Neuhaus","Frau Selina Schär, Herr Tim Rothenbühler","Jakob GmbH"]
+  },
+  {
+    strasse: "Hausmattweg 3", ort: "3323 Bäriswil",
+    namen: ["Herr Filipe Machado","Nick und Georgia Neuhaus","Frau Narissara Chiankrathok","Frau Rachel Schumacher, Herr Philip Erard"]
+  }
+];
+
 let contacts = [];
 
 async function loadContacts() {
   try {
     const res = await fetch('contacts.json');
-    if (!res.ok) return;
-    contacts = await res.json();
-    buildContactPicker();
-  } catch (e) { /* file not present — silently skip */ }
+    if (res.ok) {
+      contacts = await res.json();
+    } else {
+      contacts = DEFAULT_CONTACTS;
+    }
+  } catch (e) {
+    contacts = DEFAULT_CONTACTS; // file:// or missing — use embedded data
+  }
+  buildContactPicker();
 }
 
 function buildContactPicker() {
