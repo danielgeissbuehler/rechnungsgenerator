@@ -15,7 +15,7 @@ body { font-family:'Open Sans',sans-serif; background:#1a1a1a; color:#eee; displ
 
 /* ══ EDITOR ══ */
 #editor { width:390px; min-width:350px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid #333; flex-shrink:0; }
-#editor h1 { font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#fff; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #333; }
+#editor h1 { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#555; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #333; }
 
 .section-block { margin-bottom:10px; border:1px solid #333; border-radius:6px; overflow:hidden; }
 .section-header { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#2a2a2a; cursor:pointer; user-select:none; font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#aaa; transition:background .15s; }
@@ -35,6 +35,18 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
 .field-row { display:flex; gap:8px; }
 .field-row > * { flex:1; }
+
+/* Contact picker */
+.contact-picker-wrap { display:flex; flex-direction:column; gap:6px; }
+.contact-picker-wrap select {
+  width:100%; background:var(--input-bg); border:1px solid #3a3a3a; border-radius:4px;
+  color:#eee; font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px;
+  outline:none; cursor:pointer; transition:border-color .15s;
+}
+.contact-picker-wrap select:focus { border-color:var(--blue); }
+.contact-picker-wrap select option { background:#2e2e2e; }
+.picker-divider { display:flex; align-items:center; gap:8px; color:#444; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
+.picker-divider::before, .picker-divider::after { content:''; flex:1; height:1px; background:#333; }
 
 .meta-row-editor { display:grid; grid-template-columns:1fr 1fr; gap:6px; border:1px solid #333; border-radius:4px; padding:8px; background:#222; }
 .meta-row-editor small { grid-column:1/-1; font-size:9px; color:#555; letter-spacing:.5px; text-transform:uppercase; }
@@ -187,16 +199,140 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 #loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#fff; font-size:13px; letter-spacing:1px; }
 #loading.show { display:flex; }
 .spinner { width:36px; height:36px; border:3px solid #333; border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; }
+/* Mobile: floating preview-toggle pill */
+#mobile-tabs { display: none; }
+#mob-preview-btn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  z-index: 999;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(79,142,247,.4);
+  display: none;
+  align-items: center;
+  gap: 7px;
+}
+#mob-preview-btn svg { width:16px; height:16px; flex-shrink:0; }
+@media (hover: none) and (pointer: coarse) {
+  #mob-preview-btn { display: block; }
+
+  body {
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  #mobile-tabs {
+    display: flex;
+    flex-shrink: 0;
+    background: var(--form-bg);
+    border-bottom: 1px solid #333;
+    z-index: 10;
+    padding: 0 12px;
+    gap: 4px;
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #555;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .mob-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .mob-tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  #mob-preview-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    bottom: 24px;
+    right: 16px;
+    padding: 11px 20px 11px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  #mob-preview-btn svg { width: 16px; height: 16px; }
+
+  #editor {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-right: none !important;
+    height: calc(100dvh - 48px);
+    flex-shrink: 0;
+  }
+  #editor.mob-hidden { display: none; }
+
+  #preview-wrap {
+    flex: 1;
+    height: calc(100dvh - 48px);
+    padding: 16px 8px;
+    overflow-y: auto;
+    align-items: center;
+  }
+  #preview-wrap.mob-hidden { display: none; }
+
+  .a4-page {
+    transform-origin: top center;
+    transform: scale(var(--preview-scale, 0.4));
+    margin-bottom: calc((var(--preview-scale, 0.4) - 1) * 1123px);
+  }
+
+  .pos-row { grid-template-columns: 1fr 55px 44px 24px; }
+}
+
 @media print {
-  #editor, #loading { display: none !important; }
+  #editor, #loading, #mobile-tabs { display: none !important; }
   body { display: block; background: #fff; }
   #preview-wrap { display: block; overflow: visible; padding: 0; background: #fff; }
-  .a4-page { box-shadow: none; page-break-after: always; }
+  .a4-page { box-shadow: none; page-break-after: always; transform: none !important; margin-bottom: 0 !important; }
 }
 </style>
 </head>
 <body>
 <div id="loading"><div class="spinner"></div><span>PDF wird erstellt…</span></div>
+
+<div id="mobile-tabs">
+  <button class="mob-tab active" onclick="showTab('editor')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Editor
+  </button>
+  <button class="mob-tab" onclick="showTab('preview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    Vorschau
+  </button>
+</div>
+<button id="mob-preview-btn" onclick="showTab('preview')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  Vorschau
+</button>
 
 <!-- ══ EDITOR ══ -->
 <div id="editor">
@@ -237,6 +373,13 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       </div><span class="toggle-icon">▲</span>
     </div>
     <div class="section-body open">
+      <div class="contact-picker-wrap" id="contact-picker-wrap" style="display:none">
+        <label>Kontakt wählen</label>
+        <select id="contact-select" onchange="applyContact()">
+          <option value="">— Kontakt wählen —</option>
+        </select>
+        <div class="picker-divider">oder manuell</div>
+      </div>
       <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Rechnungsempfänger" oninput="render()"></div>
       <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Rechnungsempfänger" oninput="render()"></div>
       <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Rechnungsempfänger" oninput="render()"></div>
@@ -434,6 +577,47 @@ const positions = [];
 const metaRows  = [];
 const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true };
 
+// ── CONTACTS ─────────────────────────────────────────────────
+let contacts = [];
+
+async function loadContacts() {
+  try {
+    const res = await fetch('contacts.json');
+    if (!res.ok) return;
+    contacts = await res.json();
+    buildContactPicker();
+  } catch (e) { /* file not present — silently skip */ }
+}
+
+function buildContactPicker() {
+  if (!contacts.length) return;
+  const wrap = document.getElementById('contact-picker-wrap');
+  const sel  = document.getElementById('contact-select');
+  wrap.style.display = 'flex';
+  contacts.forEach((loc, li) => {
+    const grp = document.createElement('optgroup');
+    grp.label = `${loc.strasse}, ${loc.ort}`;
+    loc.namen.forEach((name, ni) => {
+      const opt = document.createElement('option');
+      opt.value = `${li},${ni}`;
+      opt.textContent = name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+function applyContact() {
+  const sel = document.getElementById('contact-select');
+  if (!sel.value) return;
+  const [li, ni] = sel.value.split(',').map(Number);
+  const loc = contacts[li];
+  document.getElementById('f-emp-name').value    = loc.namen[ni];
+  document.getElementById('f-emp-strasse').value = loc.strasse;
+  document.getElementById('f-emp-ort').value     = loc.ort;
+  render();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   rteInit();
   // Re-apply settings whenever editor gains focus (browser may reset them)
@@ -450,6 +634,8 @@ window.addEventListener('DOMContentLoaded', () => {
   [['Strombezug', 0.28, 330], ['Abzug akonto', 800, -1]]
     .forEach(([d,p,q]) => addPosition(d,p,q));
   render();
+  updatePreviewScale();
+  loadContacts();
 });
 
 function toggleSection(h) {
@@ -646,6 +832,37 @@ function ph(id) {
 function chk(id) { return document.getElementById(id)?.checked || false; }
 function fmt(n) { return Number(n).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
+function showTab(tab) {
+  const editor = document.getElementById('editor');
+  const preview = document.getElementById('preview-wrap');
+  const tabs = document.querySelectorAll('.mob-tab');
+  if (tab === 'editor') {
+    editor.classList.remove('mob-hidden');
+    preview.classList.add('mob-hidden');
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+  } else {
+    editor.classList.add('mob-hidden');
+    preview.classList.remove('mob-hidden');
+    tabs[0].classList.remove('active');
+    tabs[1].classList.add('active');
+    updatePreviewScale();
+  }
+}
+
+function updatePreviewScale() {
+  const isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (!isMobile) {
+    document.documentElement.style.removeProperty('--preview-scale');
+    return;
+  }
+  const available = window.innerWidth - 16;
+  const scale = Math.min(available / 794, 1);
+  document.documentElement.style.setProperty('--preview-scale', scale);
+}
+
+window.addEventListener('resize', () => { updatePreviewScale(); });
+
 function render() {
   const wrap = document.getElementById('preview-wrap');
   const scrollTop = wrap.scrollTop;
@@ -656,6 +873,7 @@ function render() {
     wrap.appendChild(d.firstElementChild);
   });
   wrap.scrollTop = scrollTop;
+  updatePreviewScale();
 }
 
 function buildHeader(isFirst) {
