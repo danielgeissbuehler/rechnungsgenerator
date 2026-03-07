@@ -63,6 +63,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .pos-row { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; align-items:end; }
 .pos-row input { font-size:11.5px; }
 .pos-row input[type="number"] { text-align:right; }
+.pos-row textarea { font-size:11.5px; resize:vertical; min-height:34px; max-height:102px; font-family:'Open Sans',sans-serif; line-height:1.4; }
 
 .btn-remove { background:#fff0f0; border:1px solid #f5c0c0; border-radius:4px; color:#d04040; cursor:pointer; font-size:14px; line-height:1; padding:4px 5px; transition:background .15s; }
 .btn-remove:hover { background:#ffe0e0; }
@@ -137,7 +138,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .page-content { padding: 0 56px 120px; }
 
 /* FIX #2 & #3: separator = left 50% line + right 50% big heading */
-.separator-area { display:flex; align-items:center; margin:24px 0 28px; min-height:32px; }
+.separator-area { display:flex; align-items:center; margin:24px 0 68px; min-height:32px; }
 .separator-left { width:50%; flex-shrink:0; display:flex; align-items:center; }
 .separator-line { border:none; border-top:1px solid #aaa; width:100%; }
 .separator-right { flex:1; text-align:right; padding-left:12px; }
@@ -567,16 +568,56 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         <div></div>
       </div>
 
-      <!-- FIX #10: Spaltenüberschriften -->
+      <!-- Spaltenüberschriften mit Ein/Ausblenden -->
       <div>
-        <label style="margin-bottom:6px">Spaltenüberschriften</label>
+        <label style="margin-bottom:6px">Spalten</label>
         <div class="field-row">
-          <div><label style="font-size:9px">Spalte 1</label><input type="text" id="f-col-pos" value="POSITION" placeholder="POSITION" oninput="render()"></div>
-          <div><label style="font-size:9px">Spalte 2</label><input type="text" id="f-col-preis" value="PREIS" placeholder="PREIS" oninput="render()"></div>
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col1" checked onchange="toggleCol(1)">
+              <label for="chk-col1" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 1</label>
+            </div>
+            <input type="text" id="f-col-pos" value="POSITION" placeholder="POSITION" oninput="render()">
+          </div>
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col5" onchange="toggleCol(5)">
+              <label for="chk-col5" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 2</label>
+            </div>
+            <input type="text" id="f-col-extra5" value="" placeholder="z.B. Einheit" oninput="renderPositionsList();render()">
+          </div>
         </div>
         <div class="field-row" style="margin-top:4px">
-          <div><label style="font-size:9px">Spalte 3</label><input type="text" id="f-col-menge" value="MENGE" placeholder="MENGE" oninput="render()"></div>
-          <div><label style="font-size:9px">Spalte 4 (+ Währung)</label><input type="text" id="f-col-total" value="TOTAL" placeholder="TOTAL" oninput="render()"></div>
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col6" onchange="toggleCol(6)">
+              <label for="chk-col6" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 3</label>
+            </div>
+            <input type="text" id="f-col-extra6" value="" placeholder="z.B. Rabatt" oninput="renderPositionsList();render()">
+          </div>
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col2" checked onchange="toggleCol(2)">
+              <label for="chk-col2" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 4</label>
+            </div>
+            <input type="text" id="f-col-preis" value="PREIS" placeholder="PREIS" oninput="render()">
+          </div>
+        </div>
+        <div class="field-row" style="margin-top:4px">
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col3" checked onchange="toggleCol(3)">
+              <label for="chk-col3" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 5</label>
+            </div>
+            <input type="text" id="f-col-menge" value="MENGE" placeholder="MENGE" oninput="render()">
+          </div>
+          <div>
+            <div class="toggle-row" style="margin-bottom:3px">
+              <input type="checkbox" id="chk-col4" checked onchange="toggleCol(4)">
+              <label for="chk-col4" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 6 (+ Währung)</label>
+            </div>
+            <input type="text" id="f-col-total" value="TOTAL" placeholder="TOTAL" oninput="render()">
+          </div>
         </div>
       </div>
 
@@ -586,7 +627,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         <label for="chk-qty-total">Summe der Menge im Total anzeigen</label>
       </div>
 
-      <div class="pos-labels">
+      <div class="pos-labels" id="pos-labels">
         <span>Beschreibung</span><span>Preis</span><span>Menge</span><span></span>
       </div>
       <div id="positions-list"></div>
@@ -654,7 +695,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
 <script>
 const positions = [];
-const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true };
+const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true, col1:true, col2:true, col3:true, col4:true, col5:false, col6:false };
 
 // ── CONTACTS ─────────────────────────────────────────────────
 const DEFAULT_CONTACTS = [
@@ -823,9 +864,15 @@ function toggleVis(key) {
   render();
 }
 
+function toggleCol(n) {
+  visibility['col'+n] = document.getElementById('chk-col'+n).checked;
+  renderPositionsList();
+  render();
+}
+
 let posId = 0;
 function addPosition(desc='', price=0, qty=1) {
-  positions.push({ id:posId++, desc, price:+price||0, qty: qty === '' ? 1 : +qty });
+  positions.push({ id:posId++, desc, price:+price||0, qty: qty === '' ? 1 : +qty, col5:'', col6:'' });
   renderPositionsList();
   render();
 }
@@ -843,16 +890,81 @@ function updatePosition(id, field, value) {
   render();
 }
 function renderPositionsList() {
+  // Column order in editor: 1 → 5 → 6 → 2 → 3 → [remove]  (col4=total is calculated, no editor input)
+  const c1 = visibility.col1, c5 = visibility.col5, c6 = visibility.col6;
+  const c2 = visibility.col2, c3 = visibility.col3;
+
+  // Build grid columns: each visible input col + remove button
+  const inputCols = [
+    ...(c1 ? ['1fr'] : []),
+    ...(c5 ? ['68px'] : []),
+    ...(c6 ? ['68px'] : []),
+    ...(c2 ? ['88px'] : []),
+    ...(c3 ? ['68px'] : []),
+    '24px'
+  ];
+  const gridCols = inputCols.join(' ');
+
+  // Update labels
+  const labelsEl = document.getElementById('pos-labels');
+  if (labelsEl) {
+    labelsEl.style.gridTemplateColumns = gridCols;
+    while (labelsEl.firstChild) labelsEl.removeChild(labelsEl.firstChild);
+    const labelTexts = [
+      ...(c1 ? ['Beschreibung'] : []),
+      ...(c5 ? [document.getElementById('f-col-extra5')?.value || 'Spalte 5'] : []),
+      ...(c6 ? [document.getElementById('f-col-extra6')?.value || 'Spalte 6'] : []),
+      ...(c2 ? ['Preis'] : []),
+      ...(c3 ? ['Menge'] : []),
+      ''
+    ];
+    labelTexts.forEach(t => { const s = document.createElement('span'); s.textContent = t; labelsEl.appendChild(s); });
+  }
+
   const list = document.getElementById('positions-list');
-  list.innerHTML = '';
+  while (list.firstChild) list.removeChild(list.firstChild);
+
   positions.forEach(pos => {
     const row = document.createElement('div');
     row.className = 'pos-row';
-    row.innerHTML = `
-      <input type="text" value="${esc(pos.desc)}" placeholder="Beschreibung" oninput="updatePosition(${pos.id},'desc',this.value)">
-      <input type="number" value="${pos.price}" min="0" step="0.01" oninput="updatePosition(${pos.id},'price',this.value)">
-      <input type="number" value="${pos.qty}" step="1" oninput="updatePosition(${pos.id},'qty',this.value)">
-      <button class="btn-remove" onclick="removePosition(${pos.id})">×</button>`;
+    row.style.gridTemplateColumns = gridCols;
+
+    if (c1) {
+      const ta = document.createElement('textarea');
+      ta.placeholder = 'Beschreibung'; ta.value = pos.desc;
+      ta.addEventListener('input', function() { updatePosition(pos.id, 'desc', this.value); });
+      row.appendChild(ta);
+    }
+    if (c5) {
+      const i = document.createElement('input');
+      i.type = 'text'; i.value = pos.col5 || ''; i.placeholder = '–';
+      i.addEventListener('input', function() { updatePosition(pos.id, 'col5', this.value); });
+      row.appendChild(i);
+    }
+    if (c6) {
+      const i = document.createElement('input');
+      i.type = 'text'; i.value = pos.col6 || ''; i.placeholder = '–';
+      i.addEventListener('input', function() { updatePosition(pos.id, 'col6', this.value); });
+      row.appendChild(i);
+    }
+    if (c2) {
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.value = pos.price; inp.min = '0'; inp.step = '0.01';
+      inp.addEventListener('input', function() { updatePosition(pos.id, 'price', this.value); });
+      row.appendChild(inp);
+    }
+    if (c3) {
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.value = pos.qty; inp.step = '1';
+      inp.addEventListener('input', function() { updatePosition(pos.id, 'qty', this.value); });
+      row.appendChild(inp);
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-remove'; btn.textContent = '×';
+    btn.addEventListener('click', function() { removePosition(pos.id); });
+    row.appendChild(btn);
+
     list.appendChild(row);
   });
 }
@@ -1076,10 +1188,18 @@ function buildPages() {
   const heading    = val('f-heading');
   const currency   = val('f-currency')   || 'CHF';
   const showQtyTot = chk('chk-qty-total');
-  const colPos     = val('f-col-pos')    || 'POSITION';
-  const colPreis   = val('f-col-preis')  || 'PREIS';
-  const colMenge   = val('f-col-menge')  || 'MENGE';
-  const colTotal   = val('f-col-total')  || 'TOTAL';
+  const colPos     = val('f-col-pos')      || 'POSITION';
+  const colPreis   = val('f-col-preis')    || 'PREIS';
+  const colMenge   = val('f-col-menge')    || 'MENGE';
+  const colTotal   = val('f-col-total')    || 'TOTAL';
+  const colExtra5  = val('f-col-extra5')   || 'Spalte 5';
+  const colExtra6  = val('f-col-extra6')   || 'Spalte 6';
+  const useCol1    = visibility.col1;
+  const useCol2    = visibility.col2;
+  const useCol3    = visibility.col3;
+  const useCol4    = visibility.col4;
+  const useCol5    = visibility.col5;
+  const useCol6    = visibility.col6;
   const textblockEl   = document.getElementById('f-textblock');
   const textblockRaw  = textblockEl ? textblockEl.innerHTML : '';
   const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
@@ -1091,24 +1211,37 @@ function buildPages() {
   const total     = positions.reduce((s,p) => s + p.price * p.qty, 0);
   const totalQty  = positions.reduce((s,p) => s + p.qty, 0);
 
+  // Proportional base weights per column; distribute 100% among visible cols
+  const colDefs = [
+    { use: useCol1, label: colPos,    align: '',  baseW: 46 },
+    { use: useCol5, label: colExtra5, align: 'r', baseW: 14 },
+    { use: useCol6, label: colExtra6, align: 'r', baseW: 14 },
+    { use: useCol2, label: colPreis,  align: 'r', baseW: 18 },
+    { use: useCol3, label: colMenge,  align: 'r', baseW: 14 },
+    { use: useCol4, label: colTotal + ' ' + currency, align: 'r', baseW: 22 },
+  ];
+  const visCols = colDefs.filter(c => c.use);
+  const totalBaseW = visCols.reduce((s,c) => s + c.baseW, 0) || 1;
   const tableHead = `<thead><tr>
-    <th style="width:46%">${esc(colPos)}</th>
-    <th class="r" style="width:18%">${esc(colPreis)}</th>
-    <th class="r" style="width:14%">${esc(colMenge)}</th>
-    <th class="r" style="width:22%">${esc(colTotal)} ${esc(currency)}</th>
+    ${visCols.map(c => `<th${c.align ? ' class="r"' : ''} style="width:${Math.round(c.baseW/totalBaseW*100)}%">${esc(c.label)}</th>`).join('')}
   </tr></thead>`;
 
+  // Footer spans all cols before col3(Menge) and col4(Total)
+  const footColspan = [useCol1, useCol5, useCol6, useCol2].filter(Boolean).length || 1;
   const tableFoot = (isLast) => isLast ? `<tfoot><tr>
-    <td colspan="2">Total</td>
-    <td class="r">${showQtyTot ? totalQty : ''}</td>
-    <td class="r">${esc(currency)} ${fmt(total)}</td>
+    <td colspan="${footColspan}">Total</td>
+    ${useCol3 ? `<td class="r">${showQtyTot ? totalQty : ''}</td>` : ''}
+    ${useCol4 ? `<td class="r">${esc(currency)} ${fmt(total)}</td>` : ''}
   </tr></tfoot>` : '';
 
+  const nl2br = s => esc(s).replace(/\n/g, '<br>');
   const rowHTML = p => `<tr>
-    <td>${esc(p.desc)}</td>
-    <td class="r">${fmt(p.price)}</td>
-    <td class="r">${p.qty}</td>
-    <td class="r">${fmt(p.price * p.qty)}</td>
+    ${useCol1 ? `<td>${nl2br(p.desc)}</td>` : ''}
+    ${useCol5 ? `<td class="r">${esc(p.col5||'')}</td>` : ''}
+    ${useCol6 ? `<td class="r">${esc(p.col6||'')}</td>` : ''}
+    ${useCol2 ? `<td class="r">${fmt(p.price)}</td>` : ''}
+    ${useCol3 ? `<td class="r">${p.qty}</td>` : ''}
+    ${useCol4 ? `<td class="r">${fmt(p.price * p.qty)}</td>` : ''}
   </tr>`;
 
   const headingVisible = visibility.heading && heading.trim().length > 0;
