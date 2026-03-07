@@ -1,0 +1,150 @@
+{
+  "Leere Tabelle": {
+    "fields": {
+      "f-company": "G INVESTMENTS & REAL ESTATES AG",
+      "f-email": "ADMIN@G-INVESTMENTS-REALESTATES.CH",
+      "f-heading": "RECHNUNG",
+      "f-emp-name": "Name Empfänger",
+      "f-emp-strasse": "Strasse Empfänger",
+      "f-emp-ort": "PLZ / ORT Empfänger",
+      "f-stell-name": "G Investments & Real Estates AG",
+      "f-stell-adresse": "Stygweg 21",
+      "f-stell-ort": "3504 Oberhünigen",
+      "f-titel": "TITEL",
+      "f-currency": "CHF",
+      "f-col-pos": "POSITION",
+      "f-col-preis": "PREIS",
+      "f-col-menge": "MENGE",
+      "f-col-total": "TOTAL",
+      "f-col-extra5": "",
+      "f-col-extra6": "",
+      "f-bank-name": "Spar+Leihkasse Riggisberg AG",
+      "f-bank-adresse": "Grabenstrasse 7",
+      "f-iban": "CH93 0637 4730 0382 2750 4",
+      "f-bank-strasse": "3132 Riggisberg"
+    },
+    "meta": [
+      {
+        "show": true,
+        "label": "DATUM",
+        "value": "07.03.2026"
+      },
+      {
+        "show": false,
+        "label": "ZEITRAUM",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "ZAHLBAR BIS",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "REFERENZ",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "KUNDEN-NR.",
+        "value": ""
+      }
+    ],
+    "visibility": {
+      "header": true,
+      "heading": true,
+      "empfaenger": true,
+      "steller": true,
+      "meta": true,
+      "titel": true,
+      "textblock": false,
+      "positionen": true,
+      "textblock2": false,
+      "bank": true,
+      "col1": true,
+      "col2": true,
+      "col3": true,
+      "col4": true,
+      "col5": false,
+      "col6": false
+    },
+    "positions": [],
+    "textblock": "",
+    "textblock2": "",
+    "qtyTotal": false
+  },
+  "Leeres Dokument": {
+    "fields": {
+      "f-company": "G INVESTMENTS & REAL ESTATES AG",
+      "f-email": "ADMIN@G-INVESTMENTS-REALESTATES.CH",
+      "f-heading": "",
+      "f-emp-name": "Name Empfänger",
+      "f-emp-strasse": "Strasse Empfänger",
+      "f-emp-ort": "PLZ / ORT Empfänger",
+      "f-stell-name": "G Investments & Real Estates AG",
+      "f-stell-adresse": "Stygweg 21",
+      "f-stell-ort": "3504 Oberhünigen",
+      "f-titel": "TITEL",
+      "f-currency": "CHF",
+      "f-col-pos": "POSITION",
+      "f-col-preis": "PREIS",
+      "f-col-menge": "MENGE",
+      "f-col-total": "TOTAL",
+      "f-col-extra5": "",
+      "f-col-extra6": "",
+      "f-bank-name": "",
+      "f-bank-adresse": "",
+      "f-iban": "",
+      "f-bank-strasse": ""
+    },
+    "meta": [
+      {
+        "show": true,
+        "label": "DATUM",
+        "value": "07.03.2026"
+      },
+      {
+        "show": false,
+        "label": "ZEITRAUM",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "ZAHLBAR BIS",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "REFERENZ",
+        "value": ""
+      },
+      {
+        "show": false,
+        "label": "KUNDEN-NR.",
+        "value": ""
+      }
+    ],
+    "visibility": {
+      "header": true,
+      "heading": true,
+      "empfaenger": true,
+      "steller": true,
+      "meta": true,
+      "titel": true,
+      "textblock": true,
+      "positionen": false,
+      "textblock2": false,
+      "bank": true,
+      "col1": true,
+      "col2": true,
+      "col3": true,
+      "col4": true,
+      "col5": false,
+      "col6": false
+    },
+    "positions": [],
+    "textblock": "Sehr geehrte Damen und Herren<br><br>1.&nbsp;",
+    "textblock2": "",
+    "qtyTotal": false
+  }
+}

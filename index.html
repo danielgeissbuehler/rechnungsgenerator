@@ -217,6 +217,18 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 
 .inv-hidden { display:none !important; }
 
+/* ══ VORLAGEN ══ */
+.btn-tpl-save { background:#4caf86; border:1px solid #3a9870; border-radius:4px; color:#fff; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; padding:6px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; }
+.btn-tpl-save:hover { background:#3a9870; }
+.btn-tpl-load { background:var(--blue); border:1px solid #3a7ef0; border-radius:4px; color:#fff; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; padding:6px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; }
+.btn-tpl-load:hover { background:#3a7ef0; }
+.btn-tpl-del { background:#fff0f0; border:1px solid #f5c0c0; border-radius:4px; color:#d04040; cursor:pointer; font-size:14px; line-height:1; padding:5px 8px; transition:background .15s; }
+.btn-tpl-del:hover { background:#ffe0e0; }
+.btn-tpl-io { background:#edf0f5; border:1px solid var(--border); border-radius:4px; color:#5a6478; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:600; letter-spacing:.8px; padding:5px 10px; text-transform:uppercase; transition:background .15s; display:inline-block; text-align:center; }
+.btn-tpl-io:hover { background:#dde1e7; }
+#template-select { flex:1; background:var(--input-bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px; outline:none; cursor:pointer; transition:border-color .15s; }
+#template-select:focus { border-color:var(--blue); }
+
 /* Loading */
 #loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#fff; font-size:13px; letter-spacing:1px; }
 #loading.show { display:flex; }
@@ -368,6 +380,30 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Drucken
     </button>
+  </div>
+
+  <!-- VORLAGEN -->
+  <div class="section-block" style="margin-bottom:16px">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Vorlagen</div>
+      <span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open" style="gap:6px">
+      <div class="field-row" style="align-items:center">
+        <select id="template-select"><option value="">— Vorlage wählen —</option></select>
+        <button class="btn-tpl-load" onclick="loadTemplate()">Laden</button>
+        <button class="btn-tpl-del" onclick="deleteTemplate()" title="Vorlage löschen">×</button>
+      </div>
+      <div class="field-row" style="align-items:center">
+        <input type="text" id="template-name" placeholder="Vorlagenname…" style="flex:1" onkeydown="if(event.key==='Enter')saveTemplate()">
+        <button class="btn-tpl-save" onclick="saveTemplate()">Speichern</button>
+      </div>
+      <div class="field-row" style="gap:4px">
+        <button class="btn-tpl-io" style="flex:1" onclick="exportTemplates()">↓ Alle exportieren</button>
+        <label class="btn-tpl-io" style="flex:1">↑ Importieren<input type="file" accept=".json" style="display:none" onchange="importTemplates(this)"></label>
+      </div>
+      <button class="btn-tpl-io" style="width:100%;margin-top:2px" onclick="downloadCurrentAsJSON()">↓ Aktuell als JSON herunterladen</button>
+    </div>
   </div>
 
   <!-- HEADER -->
@@ -849,6 +885,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updatePreviewScale();
   loadContacts();
   loadCompanies();
+  loadVorlagen();
 });
 
 function toggleSection(h) {
@@ -912,8 +949,8 @@ function renderPositionsList() {
     while (labelsEl.firstChild) labelsEl.removeChild(labelsEl.firstChild);
     const labelTexts = [
       ...(c1 ? ['Beschreibung'] : []),
-      ...(c5 ? [document.getElementById('f-col-extra5')?.value || 'Spalte 5'] : []),
-      ...(c6 ? [document.getElementById('f-col-extra6')?.value || 'Spalte 6'] : []),
+      ...(c5 ? [document.getElementById('f-col-extra5')?.value || ''] : []),
+      ...(c6 ? [document.getElementById('f-col-extra6')?.value || ''] : []),
       ...(c2 ? ['Preis'] : []),
       ...(c3 ? ['Menge'] : []),
       ''
@@ -1192,8 +1229,8 @@ function buildPages() {
   const colPreis   = val('f-col-preis')    || 'PREIS';
   const colMenge   = val('f-col-menge')    || 'MENGE';
   const colTotal   = val('f-col-total')    || 'TOTAL';
-  const colExtra5  = val('f-col-extra5')   || 'Spalte 5';
-  const colExtra6  = val('f-col-extra6')   || 'Spalte 6';
+  const colExtra5  = val('f-col-extra5');
+  const colExtra6  = val('f-col-extra6');
   const useCol1    = visibility.col1;
   const useCol2    = visibility.col2;
   const useCol3    = visibility.col3;
@@ -1449,6 +1486,224 @@ function buildPages() {
   }
 
   return pages;
+}
+
+// ── VORLAGEN ────────────────────────────────────────────────────
+const TPLS_KEY = 'rechnungsgenerator_vorlagen';
+
+function loadTemplatesData() {
+  try { return JSON.parse(localStorage.getItem(TPLS_KEY) || '{}'); } catch { return {}; }
+}
+function saveTemplatesData(data) {
+  localStorage.setItem(TPLS_KEY, JSON.stringify(data));
+}
+
+let fixedVorlagen = {};
+
+async function loadVorlagen() {
+  try {
+    const res = await fetch('vorlagen.json');
+    if (res.ok) fixedVorlagen = await res.json();
+  } catch { /* no file or file:// – ignore */ }
+  buildTemplateList();
+}
+
+function buildTemplateList() {
+  const sel = document.getElementById('template-select');
+  const cur = sel.value;
+  sel.textContent = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = ''; placeholder.textContent = '— Vorlage wählen —';
+  sel.appendChild(placeholder);
+
+  const fixedKeys = Object.keys(fixedVorlagen).sort();
+  const localData = loadTemplatesData();
+  const localKeys = Object.keys(localData).sort();
+
+  if (fixedKeys.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Fixe Vorlagen';
+    fixedKeys.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = 'fixed:' + name; opt.textContent = name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+  if (localKeys.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Eigene Vorlagen';
+    localKeys.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = 'local:' + name; opt.textContent = name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  const hasCur = cur && (
+    (cur.startsWith('fixed:') && fixedVorlagen[cur.slice(6)]) ||
+    (cur.startsWith('local:') && localData[cur.slice(6)])
+  );
+  if (hasCur) sel.value = cur;
+}
+
+function collectState() {
+  const fieldIds = [
+    'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
+    'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
+    'f-col-pos','f-col-preis','f-col-menge','f-col-total','f-col-extra5','f-col-extra6',
+    'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse'
+  ];
+  const fields = {};
+  fieldIds.forEach(id => { fields[id] = val(id); });
+  const meta = [];
+  for (let i = 0; i < META_COUNT; i++) {
+    meta.push({
+      show:  document.getElementById(`mf-show-${i}`)?.checked || false,
+      label: val(`mf-label-${i}`),
+      value: val(`mf-value-${i}`)
+    });
+  }
+  const tb  = document.getElementById('f-textblock');
+  const tb2 = document.getElementById('f-textblock2');
+  return {
+    fields,
+    meta,
+    visibility: {...visibility},
+    positions:  positions.map(p => ({...p})),
+    textblock:  tb  ? tb.innerHTML  : '',
+    textblock2: tb2 ? tb2.innerHTML : '',
+    qtyTotal:   chk('chk-qty-total')
+  };
+}
+
+function syncVisBtn(key) {
+  const btn = document.getElementById('vis-' + key);
+  if (!btn) return;
+  const v = visibility[key];
+  const svgEye  = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const svgHide = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  btn.textContent = '';
+  btn.insertAdjacentHTML('beforeend', v ? svgEye + ' sichtbar' : svgHide + ' ausgeblendet');
+  btn.classList.toggle('hidden-state', !v);
+}
+
+function applyState(state) {
+  // Restore text fields
+  Object.entries(state.fields || {}).forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = v;
+  });
+  // Restore meta fields
+  (state.meta || []).forEach((m, i) => {
+    const showEl  = document.getElementById(`mf-show-${i}`);
+    const labelEl = document.getElementById(`mf-label-${i}`);
+    const valueEl = document.getElementById(`mf-value-${i}`);
+    if (showEl)  showEl.checked = m.show;
+    if (labelEl) labelEl.value  = m.label;
+    if (valueEl) valueEl.value  = m.value;
+    toggleMetaField(i);
+  });
+  // Restore visibility toggles
+  if (state.visibility) {
+    Object.assign(visibility, state.visibility);
+    ['header','heading','empfaenger','steller','meta','titel','textblock','positionen','textblock2','bank']
+      .forEach(syncVisBtn);
+    [1,2,3,4,5,6].forEach(n => {
+      const el = document.getElementById('chk-col' + n);
+      if (el) el.checked = !!visibility['col' + n];
+    });
+  }
+  // Restore table rows
+  positions.length = 0;
+  (state.positions || []).forEach(p => positions.push({...p}));
+  posId = positions.length ? Math.max(...positions.map(p => p.id)) + 1 : 0;
+  renderPositionsList();
+  // Restore RTE content via DOMParser (avoids innerHTML assignment)
+  const setRTE = (id, html) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const parsed = new DOMParser().parseFromString(html || '', 'text/html');
+    el.replaceChildren(...Array.from(parsed.body.childNodes));
+  };
+  setRTE('f-textblock',  state.textblock);
+  setRTE('f-textblock2', state.textblock2);
+  // Restore qty-total checkbox
+  const qtyEl = document.getElementById('chk-qty-total');
+  if (qtyEl) qtyEl.checked = !!state.qtyTotal;
+  render();
+}
+
+function saveTemplate() {
+  const nameEl = document.getElementById('template-name');
+  const name = nameEl.value.trim();
+  if (!name) { nameEl.focus(); return; }
+  const data = loadTemplatesData();
+  data[name] = collectState();
+  saveTemplatesData(data);
+  buildTemplateList();
+  document.getElementById('template-select').value = 'local:' + name;
+  nameEl.value = '';
+}
+
+function loadTemplate() {
+  const raw = document.getElementById('template-select').value;
+  if (!raw) return;
+  let state;
+  if (raw.startsWith('fixed:')) state = fixedVorlagen[raw.slice(6)];
+  else if (raw.startsWith('local:')) state = loadTemplatesData()[raw.slice(6)];
+  if (state) applyState(state);
+}
+
+function deleteTemplate() {
+  const raw = document.getElementById('template-select').value;
+  if (!raw) return;
+  if (raw.startsWith('fixed:')) { alert('Fixe Vorlagen können nicht gelöscht werden.'); return; }
+  const name = raw.slice(6);
+  if (!confirm(`Vorlage "${name}" löschen?`)) return;
+  const data = loadTemplatesData();
+  delete data[name];
+  saveTemplatesData(data);
+  buildTemplateList();
+}
+
+function downloadCurrentAsJSON() {
+  const nameEl = document.getElementById('template-name');
+  const name = nameEl.value.trim() || 'Vorlage';
+  const blob = new Blob([JSON.stringify({ [name]: collectState() }, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name.replace(/\s+/g, '_') + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportTemplates() {
+  const data = loadTemplatesData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vorlagen_export.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importTemplates(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      const existing = loadTemplatesData();
+      Object.assign(existing, imported);
+      saveTemplatesData(existing);
+      buildTemplateList();
+    } catch { alert('Ungültige JSON-Datei.'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 async function downloadPDF() {
