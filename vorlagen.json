@@ -162,9 +162,9 @@
       "f-company": "G INVESTMENTS & REAL ESTATES AG",
       "f-email": "ADMIN@G-INVESTMENTS-REALESTATES.CH",
       "f-heading": "RECHNUNG",
-      "f-emp-name": "Name Empfänger",
-      "f-emp-strasse": "Strasse Empfänger",
-      "f-emp-ort": "PLZ / ORT Empfänger",
+      "f-emp-name": "Herr Daniel Burkhalter",
+      "f-emp-strasse": "Gerbestrasse 22",
+      "f-emp-ort": "3550 Langnau i. E.",
       "f-stell-name": "G Investments & Real Estates AG",
       "f-stell-adresse": "Stygweg 21",
       "f-stell-ort": "3504 Oberhünigen",
@@ -228,7 +228,7 @@
       "col5": true,
       "col6": true,
       "col7": false,
-      "col8": false
+      "col8": true
     },
     "colAlign": {
       "1": "l",
@@ -249,7 +249,7 @@
         "col5": "0",
         "col6": "8713",
         "col7": "",
-        "col8": ""
+        "col8": "kWh"
       },
       {
         "id": 2,
@@ -259,7 +259,7 @@
         "col5": "",
         "col6": "",
         "col7": "",
-        "col8": ""
+        "col8": "Mte"
       },
       {
         "id": 1,

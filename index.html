@@ -1463,7 +1463,7 @@ function buildPages() {
   const metaData = getMetaData();
 
   const showTitel = visibility.titel && titel.trim().length > 0;
-  const total     = positions.reduce((s,p) => s + p.price * p.qty, 0);
+  const total = Math.round(positions.reduce((s, p) => s + p.price * p.qty, 0) * 20) / 20;
   const totalQty  = positions.reduce((s,p) => s + p.qty, 0);
 
   // Proportional base weights per column; distribute 100% among visible cols
@@ -1494,7 +1494,14 @@ function buildPages() {
   </tr></tfoot>` : '';
 
   const nl2br = s => esc(s).replace(/\n/g, '<br>');
-  const rowHTML = p => `<tr>
+  const rowHTML = p => {
+  // 1. Berechnung des Zeilentotals
+  const rowTotal = p.price * p.qty;
+  
+  // 2. Rundung auf 5 Rappen (CHF)
+  const roundedTotal = Math.round(rowTotal * 20) / 20;
+
+  return `<tr>
     ${useCol1 ? `<td${aC(1)}>${nl2br(p.desc)}</td>` : ''}
     ${useCol5 ? `<td${aC(5)}>${esc(p.col5||'')}</td>` : ''}
     ${useCol6 ? `<td${aC(6)}>${esc(p.col6||'')}</td>` : ''}
@@ -1502,8 +1509,9 @@ function buildPages() {
     ${useCol7 ? `<td${aC(7)}>${esc(p.col7||'')}</td>` : ''}
     ${useCol3 ? `<td${aC(3)}>${p.qty}</td>` : ''}
     ${useCol8 ? `<td${aC(8)}>${esc(p.col8||'')}</td>` : ''}
-    ${useCol4 ? `<td${aC(4)}>${fmt(p.price * p.qty)}</td>` : ''}
+    ${useCol4 ? `<td${aC(4)}>${fmt(roundedTotal)}</td>` : ''}
   </tr>`;
+};
 
   const headingVisible = visibility.heading && heading.trim().length > 0;
   const sepHide        = !visibility.heading ? ' style="visibility:hidden"' : '';
