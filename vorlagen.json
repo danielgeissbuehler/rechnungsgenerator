@@ -157,14 +157,14 @@
     "textblock2": "",
     "qtyTotal": false
   },
-  "Stromrechnung": {
+  "Stromrechnung 2025": {
     "fields": {
       "f-company": "G INVESTMENTS & REAL ESTATES AG",
       "f-email": "ADMIN@G-INVESTMENTS-REALESTATES.CH",
       "f-heading": "RECHNUNG",
-      "f-emp-name": "Herr Daniel Burkhalter",
-      "f-emp-strasse": "Gerbestrasse 22",
-      "f-emp-ort": "3550 Langnau i. E.",
+      "f-emp-name": "Name Empfänger",
+      "f-emp-strasse": "Strasse Empfänger",
+      "f-emp-ort": "PLZ Ort Empfänger",
       "f-stell-name": "G Investments & Real Estates AG",
       "f-stell-adresse": "Stygweg 21",
       "f-stell-ort": "3504 Oberhünigen",
