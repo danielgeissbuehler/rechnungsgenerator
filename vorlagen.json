@@ -18,6 +18,8 @@
       "f-col-total": "TOTAL",
       "f-col-extra5": "",
       "f-col-extra6": "",
+      "f-col-extra7": "",
+      "f-col-extra8": "",
       "f-bank-name": "Spar+Leihkasse Riggisberg AG",
       "f-bank-adresse": "Grabenstrasse 7",
       "f-iban": "CH93 0637 4730 0382 2750 4",
@@ -66,8 +68,11 @@
       "col3": true,
       "col4": true,
       "col5": false,
-      "col6": false
+      "col6": false,
+      "col7": false,
+      "col8": false
     },
+    "colAlign": { "1":"l", "2":"r", "3":"r", "4":"r", "5":"l", "6":"l", "7":"l", "8":"l" },
     "positions": [],
     "textblock": "",
     "textblock2": "",
@@ -92,6 +97,8 @@
       "f-col-total": "TOTAL",
       "f-col-extra5": "",
       "f-col-extra6": "",
+      "f-col-extra7": "",
+      "f-col-extra8": "",
       "f-bank-name": "",
       "f-bank-adresse": "",
       "f-iban": "",
@@ -140,8 +147,11 @@
       "col3": true,
       "col4": true,
       "col5": false,
-      "col6": false
+      "col6": false,
+      "col7": false,
+      "col8": false
     },
+    "colAlign": { "1":"l", "2":"r", "3":"r", "4":"r", "5":"l", "6":"l", "7":"l", "8":"l" },
     "positions": [],
     "textblock": "Sehr geehrte Damen und Herren<br><br>1.&nbsp;",
     "textblock2": "",

@@ -59,11 +59,21 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .meta-field-inputs { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
 .meta-field-row.mf-hidden .meta-field-inputs { opacity:.4; }
 
-#positions-list { display:flex; flex-direction:column; gap:6px; }
-.pos-row { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; align-items:end; }
-.pos-row input { font-size:11.5px; }
-.pos-row input[type="number"] { text-align:right; }
-.pos-row textarea { font-size:11.5px; resize:vertical; min-height:34px; max-height:102px; font-family:'Open Sans',sans-serif; line-height:1.4; }
+#positions-list { display:flex; flex-direction:column; gap:4px; }
+
+/* Expandable position rows */
+.pos-item { border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+.pos-summary { display:flex; align-items:center; gap:6px; padding:5px 8px; cursor:pointer; background:var(--input-bg); user-select:none; transition:background .1s; }
+.pos-summary:hover { background:#edf0f5; }
+.pos-summary.open { background:#e4eaf5; border-bottom:1px solid var(--border); }
+.pos-summary-desc { flex:1; font-size:11.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.pos-summary-desc.empty { color:#bbb; font-style:italic; }
+.pos-summary-num { font-size:10px; color:#888; white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
+.pos-chevron { font-size:8px; color:#aab0be; flex-shrink:0; line-height:1; }
+.pos-detail { padding:8px; background:var(--form-bg); display:flex; flex-direction:column; gap:6px; }
+.pos-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.pos-detail > div > label, .pos-detail-grid > div > label { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:var(--label); margin-bottom:2px; display:block; }
+.pos-total-readonly { background:#edf0f5 !important; color:#888 !important; cursor:default; }
 
 .btn-remove { background:#fff0f0; border:1px solid #f5c0c0; border-radius:4px; color:#d04040; cursor:pointer; font-size:14px; line-height:1; padding:4px 5px; transition:background .15s; }
 .btn-remove:hover { background:#ffe0e0; }
@@ -71,6 +81,24 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .btn-add:hover { background:#dceeff; }
 .pos-labels { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; }
 .pos-labels span { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#aab0be; }
+
+/* Column configuration list */
+.col-cfg-list { display:flex; flex-direction:column; gap:3px; }
+.col-cfg-row { display:grid; grid-template-columns:16px 72px 1fr auto; gap:6px; align-items:center; }
+.col-cfg-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
+.col-cfg-row .col-cfg-label { font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--label); cursor:pointer; margin:0; white-space:nowrap; }
+.col-align-btns { display:flex; }
+.col-align-btn { background:var(--input-bg); border:1px solid var(--border); color:var(--label); cursor:pointer; font-size:9px; font-weight:600; font-family:'Open Sans',sans-serif; padding:3px 6px; line-height:1; transition:background .1s; }
+.col-align-btn:not(:first-child) { border-left:none; }
+.col-align-btn:first-child { border-radius:3px 0 0 3px; }
+.col-align-btn:last-child { border-radius:0 3px 3px 0; }
+.col-align-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+.col-align-btn.active + .col-align-btn { border-left:none; }
+
+/* Table center alignment */
+.items-table thead th.c { text-align:center; }
+.items-table tbody td.c { text-align:center; }
+.items-table tfoot td.c { text-align:center; }
 
 .toggle-row { display:flex; align-items:center; gap:8px; }
 .toggle-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
@@ -98,6 +126,32 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .vis-toggle:hover { background:#dde1e7; }
 .vis-toggle.hidden-state { color:#d04040; border-color:#f5c0c0; background:#fff5f5; }
 .section-header-label { display:flex; align-items:center; }
+
+/* ══ TABLE SUB-SECTIONS ══ */
+.sub-block { border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:6px; }
+.sub-block-header { display:flex; align-items:center; justify-content:space-between; padding:5px 10px; background:#e2e6ee; cursor:pointer; user-select:none; font-size:9px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:#5a6580; transition:background .15s; }
+.sub-block-header:hover { background:#d6dbe6; }
+.sub-block-toggle { font-size:8px; color:#8a96aa; transition:transform .2s; }
+.sub-block-header.open .sub-block-toggle { transform:rotate(180deg); }
+.sub-block-body { padding:10px; flex-direction:column; gap:8px; background:#f0f2f8; display:none; }
+.sub-block-body.open { display:flex; }
+
+.zeilen-header { display:flex; align-items:center; justify-content:space-between; padding:4px 2px; margin-bottom:4px; border-bottom:2px solid #c8d0e0; }
+.zeilen-header-label { font-size:9px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:#5a6580; }
+.zeilen-count { font-size:9px; color:#aab0be; font-variant-numeric:tabular-nums; }
+
+/* Position drag & move */
+.pos-grip { cursor:grab; color:#bbc4d4; font-size:13px; line-height:1; padding:0 3px; flex-shrink:0; user-select:none; }
+.pos-grip:active { cursor:grabbing; }
+.pos-move-btn { background:none; border:1px solid var(--border); border-radius:3px; color:#8a96aa; cursor:pointer; font-size:9px; line-height:1; padding:2px 4px; flex-shrink:0; transition:background .1s, color .1s; }
+.pos-move-btn:hover:not(:disabled) { background:#dde3ec; color:var(--text); }
+.pos-move-btn:disabled { opacity:.3; cursor:default; }
+.pos-item.dragging { opacity:.4; }
+.pos-item.drag-over { outline:2px solid var(--blue); outline-offset:-1px; }
+
+/* ══ RESIZE HANDLE ══ */
+#resize-handle { width:5px; background:var(--border); cursor:col-resize; flex-shrink:0; transition:background .15s; }
+#resize-handle:hover, #resize-handle.dragging { background:var(--blue); }
 
 /* ══ PREVIEW ══ */
 #preview-wrap { flex:1; overflow-y:auto; background:#111; display:flex; flex-direction:column; align-items:center; padding:30px 20px; gap:24px; }
@@ -598,76 +652,37 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
     <div class="section-body open">
 
-      <!-- FIX #8: Währung -->
-      <div class="field-row">
-        <div><label>Währung</label><input type="text" id="f-currency" value="CHF" placeholder="CHF" oninput="render()"></div>
-        <div></div>
+      <!-- SUB: SPALTEN-KONFIGURATION (default collapsed) -->
+      <div class="sub-block">
+        <div class="sub-block-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+          <span>Spalten-Konfiguration</span>
+          <span class="sub-block-toggle">▲</span>
+        </div>
+        <div class="sub-block-body">
+          <div class="field-row">
+            <div><label>Währung</label><input type="text" id="f-currency" value="CHF" placeholder="CHF" oninput="render()"></div>
+            <div></div>
+          </div>
+          <div>
+            <label style="margin-bottom:6px">Spalten</label>
+            <div class="col-cfg-list" id="col-cfg-list"></div>
+          </div>
+          <div class="toggle-row">
+            <input type="checkbox" id="chk-qty-total" onchange="render()">
+            <label for="chk-qty-total">Summe der Menge im Total anzeigen</label>
+          </div>
+        </div>
       </div>
 
-      <!-- Spaltenüberschriften mit Ein/Ausblenden -->
+      <!-- SUB: ZEILEN -->
       <div>
-        <label style="margin-bottom:6px">Spalten</label>
-        <div class="field-row">
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col1" checked onchange="toggleCol(1)">
-              <label for="chk-col1" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 1</label>
-            </div>
-            <input type="text" id="f-col-pos" value="POSITION" placeholder="POSITION" oninput="render()">
-          </div>
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col5" onchange="toggleCol(5)">
-              <label for="chk-col5" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 2</label>
-            </div>
-            <input type="text" id="f-col-extra5" value="" placeholder="z.B. Einheit" oninput="renderPositionsList();render()">
-          </div>
+        <div class="zeilen-header">
+          <span class="zeilen-header-label">Zeilen</span>
+          <span class="zeilen-count" id="zeilen-count"></span>
         </div>
-        <div class="field-row" style="margin-top:4px">
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col6" onchange="toggleCol(6)">
-              <label for="chk-col6" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 3</label>
-            </div>
-            <input type="text" id="f-col-extra6" value="" placeholder="z.B. Rabatt" oninput="renderPositionsList();render()">
-          </div>
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col2" checked onchange="toggleCol(2)">
-              <label for="chk-col2" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 4</label>
-            </div>
-            <input type="text" id="f-col-preis" value="PREIS" placeholder="PREIS" oninput="render()">
-          </div>
-        </div>
-        <div class="field-row" style="margin-top:4px">
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col3" checked onchange="toggleCol(3)">
-              <label for="chk-col3" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 5</label>
-            </div>
-            <input type="text" id="f-col-menge" value="MENGE" placeholder="MENGE" oninput="render()">
-          </div>
-          <div>
-            <div class="toggle-row" style="margin-bottom:3px">
-              <input type="checkbox" id="chk-col4" checked onchange="toggleCol(4)">
-              <label for="chk-col4" style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;cursor:pointer">Spalte 6 (+ Währung)</label>
-            </div>
-            <input type="text" id="f-col-total" value="TOTAL" placeholder="TOTAL" oninput="render()">
-          </div>
-        </div>
+        <div id="positions-list"></div>
+        <button class="btn-add" onclick="addPosition()">+ Position hinzufügen</button>
       </div>
-
-      <!-- FIX #7: Menge-Total -->
-      <div class="toggle-row">
-        <input type="checkbox" id="chk-qty-total" onchange="render()">
-        <label for="chk-qty-total">Summe der Menge im Total anzeigen</label>
-      </div>
-
-      <div class="pos-labels" id="pos-labels">
-        <span>Beschreibung</span><span>Preis</span><span>Menge</span><span></span>
-      </div>
-      <div id="positions-list"></div>
-      <button class="btn-add" onclick="addPosition()">+ Position hinzufügen</button>
     </div>
   </div>
 
@@ -726,12 +741,78 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
   </div>
 </div>
 
+<!-- ══ RESIZE HANDLE ══ -->
+<div id="resize-handle"></div>
+
 <!-- ══ PREVIEW ══ -->
 <div id="preview-wrap"></div>
 
 <script>
 const positions = [];
-const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true, col1:true, col2:true, col3:true, col4:true, col5:false, col6:false };
+const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true, col1:true, col2:true, col3:true, col4:true, col5:false, col6:false, col7:false, col8:false };
+
+// Per-column alignment: 'l' = left, 'c' = center, 'r' = right
+const colAlign = { 1:'l', 2:'r', 3:'r', 4:'r', 5:'l', 6:'l', 7:'l', 8:'l' };
+
+// Column definitions (display order in editor and table)
+const COL_DEFS = [
+  { n:1, label:'Spalte 1',      inputId:'f-col-pos',    ph:'POSITION',     extra:false },
+  { n:5, label:'Spalte 2 opt.', inputId:'f-col-extra5', ph:'z.B. Einheit', extra:true  },
+  { n:6, label:'Spalte 3 opt.', inputId:'f-col-extra6', ph:'z.B. Rabatt',  extra:true  },
+  { n:2, label:'Spalte 4',      inputId:'f-col-preis',  ph:'PREIS',        extra:false },
+  { n:7, label:'Spalte 5 opt.', inputId:'f-col-extra7', ph:'z.B. Stunden', extra:true  },
+  { n:3, label:'Spalte 6',      inputId:'f-col-menge',  ph:'MENGE',        extra:false },
+  { n:8, label:'Spalte 7 opt.', inputId:'f-col-extra8', ph:'z.B. MwSt.',   extra:true  },
+  { n:4, label:'Spalte 8 (CHF)',inputId:'f-col-total',  ph:'TOTAL',        extra:false },
+];
+const COL_DEFAULTS = { 'f-col-pos':'POSITION','f-col-preis':'PREIS','f-col-menge':'MENGE','f-col-total':'TOTAL','f-col-extra5':'','f-col-extra6':'','f-col-extra7':'','f-col-extra8':'' };
+
+function renderColConfig() {
+  const container = document.getElementById('col-cfg-list');
+  if (!container) return;
+  // Snapshot current input values before clearing
+  const snap = {};
+  COL_DEFS.forEach(({ inputId }) => { const el = document.getElementById(inputId); if (el) snap[inputId] = el.value; });
+  while (container.firstChild) container.removeChild(container.firstChild);
+  COL_DEFS.forEach(({ n, label, inputId, ph, extra }) => {
+    const row = document.createElement('div');
+    row.className = 'col-cfg-row';
+    // Checkbox
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.id = 'chk-col' + n;
+    chk.checked = !!visibility['col' + n];
+    chk.addEventListener('change', () => toggleCol(n));
+    // Label
+    const lbl = document.createElement('label');
+    lbl.className = 'col-cfg-label'; lbl.htmlFor = 'chk-col' + n;
+    lbl.textContent = label;
+    // Header text input
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.id = inputId; inp.placeholder = ph;
+    inp.value = snap[inputId] !== undefined ? snap[inputId] : (COL_DEFAULTS[inputId] || '');
+    inp.addEventListener('input', () => { if (extra) renderPositionsList(); render(); });
+    // Alignment buttons
+    const alignWrap = document.createElement('div');
+    alignWrap.className = 'col-align-btns';
+    [['l','L'],['c','C'],['r','R']].forEach(([a, txt]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'col-align-btn' + (colAlign[n] === a ? ' active' : '');
+      btn.textContent = txt;
+      btn.title = a === 'l' ? 'Links' : a === 'c' ? 'Mitte' : 'Rechts';
+      btn.addEventListener('click', () => setColAlign(n, a));
+      alignWrap.appendChild(btn);
+    });
+    row.appendChild(chk); row.appendChild(lbl); row.appendChild(inp); row.appendChild(alignWrap);
+    container.appendChild(row);
+  });
+}
+
+function setColAlign(n, align) {
+  colAlign[n] = align;
+  renderColConfig();
+  render();
+}
 
 // ── CONTACTS ─────────────────────────────────────────────────
 const DEFAULT_CONTACTS = [
@@ -877,6 +958,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const datumEl = document.getElementById('mf-value-0');
   if (datumEl) datumEl.value = todayStr;
 
+  renderColConfig();
   // Apply initial hidden state for unchecked fields
   for (let i = 0; i < 5; i++) toggleMetaField(i);
   [['Strombezug', 0.28, 330], ['Abzug akonto', 800, -1]]
@@ -908,13 +990,18 @@ function toggleCol(n) {
 }
 
 let posId = 0;
+const expandedPositions = new Set();
+
 function addPosition(desc='', price=0, qty=1) {
-  positions.push({ id:posId++, desc, price:+price||0, qty: qty === '' ? 1 : +qty, col5:'', col6:'' });
+  const id = posId++;
+  positions.push({ id, desc, price:+price||0, qty: qty === '' ? 1 : +qty, col5:'', col6:'', col7:'', col8:'' });
+  expandedPositions.add(id); // auto-expand new rows
   renderPositionsList();
   render();
 }
 function removePosition(id) {
   positions.splice(positions.findIndex(p=>p.id===id),1);
+  expandedPositions.delete(id);
   renderPositionsList();
   render();
 }
@@ -927,83 +1014,210 @@ function updatePosition(id, field, value) {
   render();
 }
 function renderPositionsList() {
-  // Column order in editor: 1 → 5 → 6 → 2 → 3 → [remove]  (col4=total is calculated, no editor input)
   const c1 = visibility.col1, c5 = visibility.col5, c6 = visibility.col6;
-  const c2 = visibility.col2, c3 = visibility.col3;
-
-  // Build grid columns: each visible input col + remove button
-  const inputCols = [
-    ...(c1 ? ['1fr'] : []),
-    ...(c5 ? ['68px'] : []),
-    ...(c6 ? ['68px'] : []),
-    ...(c2 ? ['88px'] : []),
-    ...(c3 ? ['68px'] : []),
-    '24px'
-  ];
-  const gridCols = inputCols.join(' ');
-
-  // Update labels
-  const labelsEl = document.getElementById('pos-labels');
-  if (labelsEl) {
-    labelsEl.style.gridTemplateColumns = gridCols;
-    while (labelsEl.firstChild) labelsEl.removeChild(labelsEl.firstChild);
-    const labelTexts = [
-      ...(c1 ? ['Beschreibung'] : []),
-      ...(c5 ? [document.getElementById('f-col-extra5')?.value || ''] : []),
-      ...(c6 ? [document.getElementById('f-col-extra6')?.value || ''] : []),
-      ...(c2 ? ['Preis'] : []),
-      ...(c3 ? ['Menge'] : []),
-      ''
-    ];
-    labelTexts.forEach(t => { const s = document.createElement('span'); s.textContent = t; labelsEl.appendChild(s); });
-  }
+  const c2 = visibility.col2, c7 = visibility.col7, c3 = visibility.col3, c8 = visibility.col8, c4 = visibility.col4;
+  const currency = val('f-currency') || 'CHF';
 
   const list = document.getElementById('positions-list');
   while (list.firstChild) list.removeChild(list.firstChild);
 
-  positions.forEach(pos => {
-    const row = document.createElement('div');
-    row.className = 'pos-row';
-    row.style.gridTemplateColumns = gridCols;
+  const zeilenCount = document.getElementById('zeilen-count');
+  if (zeilenCount) zeilenCount.textContent = positions.length ? positions.length + ' Zeile' + (positions.length !== 1 ? 'n' : '') : '';
 
-    if (c1) {
-      const ta = document.createElement('textarea');
-      ta.placeholder = 'Beschreibung'; ta.value = pos.desc;
-      ta.addEventListener('input', function() { updatePosition(pos.id, 'desc', this.value); });
-      row.appendChild(ta);
-    }
-    if (c5) {
-      const i = document.createElement('input');
-      i.type = 'text'; i.value = pos.col5 || ''; i.placeholder = '–';
-      i.addEventListener('input', function() { updatePosition(pos.id, 'col5', this.value); });
-      row.appendChild(i);
-    }
-    if (c6) {
-      const i = document.createElement('input');
-      i.type = 'text'; i.value = pos.col6 || ''; i.placeholder = '–';
-      i.addEventListener('input', function() { updatePosition(pos.id, 'col6', this.value); });
-      row.appendChild(i);
-    }
-    if (c2) {
-      const inp = document.createElement('input');
-      inp.type = 'number'; inp.value = pos.price; inp.min = '0'; inp.step = '0.01';
-      inp.addEventListener('input', function() { updatePosition(pos.id, 'price', this.value); });
-      row.appendChild(inp);
-    }
-    if (c3) {
-      const inp = document.createElement('input');
-      inp.type = 'number'; inp.value = pos.qty; inp.step = '1';
-      inp.addEventListener('input', function() { updatePosition(pos.id, 'qty', this.value); });
-      row.appendChild(inp);
+  let dragFromGrip = false;
+
+  positions.forEach((pos, idx) => {
+    const isOpen = expandedPositions.has(pos.id);
+
+    // ── ITEM WRAPPER ────────────────────────────────────────────
+    const item = document.createElement('div');
+    item.className = 'pos-item';
+    item.draggable = true;
+
+    // ── DRAG & DROP ─────────────────────────────────────────────
+    item.addEventListener('dragstart', e => {
+      if (!dragFromGrip) { e.preventDefault(); return; }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(pos.id));
+      setTimeout(() => item.classList.add('dragging'), 0);
+    });
+    item.addEventListener('dragend', () => { item.classList.remove('dragging'); dragFromGrip = false; });
+    item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const fromId = parseInt(e.dataTransfer.getData('text/plain'));
+      if (fromId === pos.id) return;
+      const fromIdx = positions.findIndex(p => p.id === fromId);
+      const toIdx = idx;
+      const [moved] = positions.splice(fromIdx, 1);
+      positions.splice(toIdx, 0, moved);
+      renderPositionsList();
+      render();
+    });
+
+    // ── SUMMARY BAR ─────────────────────────────────────────────
+    const summary = document.createElement('div');
+    summary.className = 'pos-summary' + (isOpen ? ' open' : '');
+
+    // Grip handle
+    const grip = document.createElement('span');
+    grip.className = 'pos-grip';
+    grip.textContent = '⠿';
+    grip.title = 'Ziehen zum Verschieben';
+    grip.addEventListener('mousedown', () => { dragFromGrip = true; });
+
+    const chevron = document.createElement('span');
+    chevron.className = 'pos-chevron';
+    chevron.textContent = isOpen ? '▲' : '▼';
+
+    const descSpan = document.createElement('span');
+    descSpan.className = 'pos-summary-desc' + (pos.desc ? '' : ' empty');
+    descSpan.textContent = pos.desc || 'Neue Position';
+
+    const numSpan = document.createElement('span');
+    numSpan.className = 'pos-summary-num';
+    const numParts = [];
+    if (c2) numParts.push(fmt(pos.price));
+    if (c3) numParts.push('×' + pos.qty);
+    if (c4 && (c2 || c3)) numParts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
+    numSpan.textContent = numParts.join(' ');
+
+    // Up / Down buttons
+    const upBtn = document.createElement('button');
+    upBtn.className = 'pos-move-btn'; upBtn.textContent = '↑'; upBtn.title = 'Nach oben';
+    upBtn.disabled = idx === 0;
+    upBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      [positions[idx - 1], positions[idx]] = [positions[idx], positions[idx - 1]];
+      renderPositionsList(); render();
+    });
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'pos-move-btn'; downBtn.textContent = '↓'; downBtn.title = 'Nach unten';
+    downBtn.disabled = idx === positions.length - 1;
+    downBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      [positions[idx + 1], positions[idx]] = [positions[idx], positions[idx + 1]];
+      renderPositionsList(); render();
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-remove'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', e => { e.stopPropagation(); removePosition(pos.id); });
+
+    summary.appendChild(grip);
+    summary.appendChild(chevron);
+    summary.appendChild(descSpan);
+    if (numParts.length) summary.appendChild(numSpan);
+    summary.appendChild(upBtn);
+    summary.appendChild(downBtn);
+    summary.appendChild(removeBtn);
+
+    summary.addEventListener('click', () => {
+      if (expandedPositions.has(pos.id)) expandedPositions.delete(pos.id);
+      else expandedPositions.add(pos.id);
+      renderPositionsList();
+    });
+
+    item.appendChild(summary);
+
+    // ── DETAIL FORM (when expanded) ──────────────────────────────
+    if (isOpen) {
+      const detail = document.createElement('div');
+      detail.className = 'pos-detail';
+
+      const mkLabel = (text) => {
+        const l = document.createElement('label');
+        l.textContent = text; return l;
+      };
+      const mkWrap = () => document.createElement('div');
+
+      // Col 1: description – full width textarea
+      if (c1) {
+        const w = mkWrap();
+        w.appendChild(mkLabel(val('f-col-pos') || 'Position'));
+        const ta = document.createElement('textarea');
+        ta.rows = 2; ta.value = pos.desc; ta.placeholder = 'Beschreibung';
+        ta.style.cssText = 'width:100%;font-size:11.5px;resize:vertical;min-height:34px;max-height:120px;font-family:inherit;line-height:1.4;';
+        ta.addEventListener('input', function() {
+          updatePosition(pos.id, 'desc', this.value);
+          descSpan.textContent = this.value || 'Neue Position';
+          descSpan.className = 'pos-summary-desc' + (this.value ? '' : ' empty');
+        });
+        w.appendChild(ta);
+        detail.appendChild(w);
+      }
+
+      // Remaining columns in a 2-col grid
+      const grid = document.createElement('div');
+      grid.className = 'pos-detail-grid';
+
+      const addGridField = (labelText, inputEl) => {
+        const w = mkWrap();
+        w.appendChild(mkLabel(labelText));
+        w.appendChild(inputEl);
+        grid.appendChild(w);
+      };
+
+      if (c5) {
+        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col5 || ''; i.placeholder = '–';
+        i.addEventListener('input', function() { updatePosition(pos.id, 'col5', this.value); });
+        addGridField(val('f-col-extra5') || 'Spalte 2', i);
+      }
+      if (c6) {
+        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col6 || ''; i.placeholder = '–';
+        i.addEventListener('input', function() { updatePosition(pos.id, 'col6', this.value); });
+        addGridField(val('f-col-extra6') || 'Spalte 3', i);
+      }
+      if (c2) {
+        const i = document.createElement('input'); i.type = 'number'; i.value = pos.price; i.min = '0'; i.step = '0.01';
+        i.addEventListener('input', function() {
+          updatePosition(pos.id, 'price', this.value);
+          numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
+        });
+        addGridField(val('f-col-preis') || 'Preis', i);
+      }
+      if (c7) {
+        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col7 || ''; i.placeholder = '–';
+        i.addEventListener('input', function() { updatePosition(pos.id, 'col7', this.value); });
+        addGridField(val('f-col-extra7') || 'Spalte 5', i);
+      }
+      if (c3) {
+        const i = document.createElement('input'); i.type = 'number'; i.value = pos.qty; i.step = '1';
+        i.addEventListener('input', function() {
+          updatePosition(pos.id, 'qty', this.value);
+          numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
+        });
+        addGridField(val('f-col-menge') || 'Menge', i);
+      }
+      if (c8) {
+        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col8 || ''; i.placeholder = '–';
+        i.addEventListener('input', function() { updatePosition(pos.id, 'col8', this.value); });
+        addGridField(val('f-col-extra8') || 'Spalte 7', i);
+      }
+      if (c4) {
+        const i = document.createElement('input'); i.type = 'text'; i.readOnly = true;
+        i.value = currency + ' ' + fmt(pos.price * pos.qty);
+        i.className = 'pos-total-readonly';
+        addGridField((val('f-col-total') || 'Total') + ' (' + currency + ')', i);
+      }
+
+      if (grid.children.length) detail.appendChild(grid);
+      item.appendChild(detail);
     }
 
-    const btn = document.createElement('button');
-    btn.className = 'btn-remove'; btn.textContent = '×';
-    btn.addEventListener('click', function() { removePosition(pos.id); });
-    row.appendChild(btn);
-
-    list.appendChild(row);
+    list.appendChild(item);
   });
+}
+
+function buildNumText(pos, c2, c3, c4, currency) {
+  const parts = [];
+  if (c2) parts.push(fmt(pos.price));
+  if (c3) parts.push('×' + pos.qty);
+  if (c4 && (c2 || c3)) parts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
+  return parts.join(' ');
 }
 
 // ── META ROWS (dynamic, 0–5) ───────────────────────────────────
@@ -1231,12 +1445,16 @@ function buildPages() {
   const colTotal   = val('f-col-total')    || 'TOTAL';
   const colExtra5  = val('f-col-extra5');
   const colExtra6  = val('f-col-extra6');
+  const colExtra7  = val('f-col-extra7');
+  const colExtra8  = val('f-col-extra8');
   const useCol1    = visibility.col1;
   const useCol2    = visibility.col2;
   const useCol3    = visibility.col3;
   const useCol4    = visibility.col4;
   const useCol5    = visibility.col5;
   const useCol6    = visibility.col6;
+  const useCol7    = visibility.col7;
+  const useCol8    = visibility.col8;
   const textblockEl   = document.getElementById('f-textblock');
   const textblockRaw  = textblockEl ? textblockEl.innerHTML : '';
   const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
@@ -1249,36 +1467,42 @@ function buildPages() {
   const totalQty  = positions.reduce((s,p) => s + p.qty, 0);
 
   // Proportional base weights per column; distribute 100% among visible cols
+  const aC = n => colAlign[n] === 'r' ? ' class="r"' : colAlign[n] === 'c' ? ' class="c"' : '';
   const colDefs = [
-    { use: useCol1, label: colPos,    align: '',  baseW: 46 },
-    { use: useCol5, label: colExtra5, align: 'r', baseW: 14 },
-    { use: useCol6, label: colExtra6, align: 'r', baseW: 14 },
-    { use: useCol2, label: colPreis,  align: 'r', baseW: 18 },
-    { use: useCol3, label: colMenge,  align: 'r', baseW: 14 },
-    { use: useCol4, label: colTotal + ' ' + currency, align: 'r', baseW: 22 },
+    { use: useCol1, label: colPos,    n:1, baseW: 46 },
+    { use: useCol5, label: colExtra5, n:5, baseW: 12 },
+    { use: useCol6, label: colExtra6, n:6, baseW: 12 },
+    { use: useCol2, label: colPreis,  n:2, baseW: 16 },
+    { use: useCol7, label: colExtra7, n:7, baseW: 12 },
+    { use: useCol3, label: colMenge,  n:3, baseW: 12 },
+    { use: useCol8, label: colExtra8, n:8, baseW: 12 },
+    { use: useCol4, label: colTotal + ' ' + currency, n:4, baseW: 20 },
   ];
   const visCols = colDefs.filter(c => c.use);
   const totalBaseW = visCols.reduce((s,c) => s + c.baseW, 0) || 1;
   const tableHead = `<thead><tr>
-    ${visCols.map(c => `<th${c.align ? ' class="r"' : ''} style="width:${Math.round(c.baseW/totalBaseW*100)}%">${esc(c.label)}</th>`).join('')}
+    ${visCols.map(c => `<th${aC(c.n)} style="width:${Math.round(c.baseW/totalBaseW*100)}%">${esc(c.label)}</th>`).join('')}
   </tr></thead>`;
 
-  // Footer spans all cols before col3(Menge) and col4(Total)
-  const footColspan = [useCol1, useCol5, useCol6, useCol2].filter(Boolean).length || 1;
+  // Footer spans all cols before col3(Menge), then col3, col8 (empty), col4(Total)
+  const footColspan = [useCol1, useCol5, useCol6, useCol2, useCol7].filter(Boolean).length || 1;
   const tableFoot = (isLast) => isLast ? `<tfoot><tr>
     <td colspan="${footColspan}">Total</td>
-    ${useCol3 ? `<td class="r">${showQtyTot ? totalQty : ''}</td>` : ''}
-    ${useCol4 ? `<td class="r">${esc(currency)} ${fmt(total)}</td>` : ''}
+    ${useCol3 ? `<td${aC(3)}>${showQtyTot ? totalQty : ''}</td>` : ''}
+    ${useCol8 ? `<td></td>` : ''}
+    ${useCol4 ? `<td${aC(4)}>${esc(currency)} ${fmt(total)}</td>` : ''}
   </tr></tfoot>` : '';
 
   const nl2br = s => esc(s).replace(/\n/g, '<br>');
   const rowHTML = p => `<tr>
-    ${useCol1 ? `<td>${nl2br(p.desc)}</td>` : ''}
-    ${useCol5 ? `<td class="r">${esc(p.col5||'')}</td>` : ''}
-    ${useCol6 ? `<td class="r">${esc(p.col6||'')}</td>` : ''}
-    ${useCol2 ? `<td class="r">${fmt(p.price)}</td>` : ''}
-    ${useCol3 ? `<td class="r">${p.qty}</td>` : ''}
-    ${useCol4 ? `<td class="r">${fmt(p.price * p.qty)}</td>` : ''}
+    ${useCol1 ? `<td${aC(1)}>${nl2br(p.desc)}</td>` : ''}
+    ${useCol5 ? `<td${aC(5)}>${esc(p.col5||'')}</td>` : ''}
+    ${useCol6 ? `<td${aC(6)}>${esc(p.col6||'')}</td>` : ''}
+    ${useCol2 ? `<td${aC(2)}>${fmt(p.price)}</td>` : ''}
+    ${useCol7 ? `<td${aC(7)}>${esc(p.col7||'')}</td>` : ''}
+    ${useCol3 ? `<td${aC(3)}>${p.qty}</td>` : ''}
+    ${useCol8 ? `<td${aC(8)}>${esc(p.col8||'')}</td>` : ''}
+    ${useCol4 ? `<td${aC(4)}>${fmt(p.price * p.qty)}</td>` : ''}
   </tr>`;
 
   const headingVisible = visibility.heading && heading.trim().length > 0;
@@ -1552,7 +1776,7 @@ function collectState() {
   const fieldIds = [
     'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
     'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
-    'f-col-pos','f-col-preis','f-col-menge','f-col-total','f-col-extra5','f-col-extra6',
+    'f-col-pos','f-col-preis','f-col-menge','f-col-total','f-col-extra5','f-col-extra6','f-col-extra7','f-col-extra8',
     'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse'
   ];
   const fields = {};
@@ -1571,6 +1795,7 @@ function collectState() {
     fields,
     meta,
     visibility: {...visibility},
+    colAlign:   {...colAlign},
     positions:  positions.map(p => ({...p})),
     textblock:  tb  ? tb.innerHTML  : '',
     textblock2: tb2 ? tb2.innerHTML : '',
@@ -1610,13 +1835,14 @@ function applyState(state) {
     Object.assign(visibility, state.visibility);
     ['header','heading','empfaenger','steller','meta','titel','textblock','positionen','textblock2','bank']
       .forEach(syncVisBtn);
-    [1,2,3,4,5,6].forEach(n => {
-      const el = document.getElementById('chk-col' + n);
-      if (el) el.checked = !!visibility['col' + n];
-    });
   }
+  // Restore column alignment
+  if (state.colAlign) Object.assign(colAlign, state.colAlign);
+  // Re-render column config (updates checkboxes + alignment buttons)
+  renderColConfig();
   // Restore table rows
   positions.length = 0;
+  expandedPositions.clear();
   (state.positions || []).forEach(p => positions.push({...p}));
   posId = positions.length ? Math.max(...positions.map(p => p.id)) + 1 : 0;
   renderPositionsList();
@@ -1726,6 +1952,33 @@ async function downloadPDF() {
     btn.disabled = false; loading.classList.remove('show');
   }
 }
+
+// ══ EDITOR RESIZE ══
+(function() {
+  const handle = document.getElementById('resize-handle');
+  const editor = document.getElementById('editor');
+  let startX, startW;
+  handle.addEventListener('mousedown', e => {
+    startX = e.clientX;
+    startW = editor.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    const onMove = ev => {
+      const w = Math.max(280, Math.min(800, startW + ev.clientX - startX));
+      editor.style.width = w + 'px';
+    };
+    const onUp = () => {
+      handle.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+})();
 </script>
 </body>
 </html>
