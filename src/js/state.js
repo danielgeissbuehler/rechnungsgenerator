@@ -3,6 +3,8 @@ export const state = {
   posId: 0,
   expandedPositions: new Set(),
   isReadonly: false,
+  currentDraftId: null,
+  currentRechnungId: null,
   visibility: {
     header: true, heading: true, empfaenger: true, steller: true, meta: true,
     titel: true, textblock: false, positionen: true, textblock2: false, bank: true,

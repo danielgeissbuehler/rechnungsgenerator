@@ -34,6 +34,178 @@
 <!-- ══ LOADING OVERLAY ══ -->
 <div id="loading"><div class="spinner"></div><span>PDF wird erstellt…</span></div>
 
+<!-- ══ DASHBOARD VIEW ══ -->
+<div id="view-dashboard" class="db-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">R</div>
+      <div>
+        <div class="brand-name">Rechnungen</div>
+        <div class="brand-sub">G Investments &amp; Real Estates AG</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Übersicht</div>
+      <div class="nav-item active" onclick="showDashboard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showDashboard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Rechnungen
+        <span class="nav-badge" id="nav-badge-offen" style="display:none">0</span>
+      </div>
+
+      <div class="nav-section-label">Stammdaten</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+        Absender
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Empfänger
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Vorlagen
+      </div>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="db-avatar" id="sidebar-avatar">?</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-name" id="sidebar-user-name">—</div>
+        <div class="user-email" id="sidebar-user-email">—</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="db-main">
+    <header class="db-topbar">
+      <span class="topbar-title">Rechnungen</span>
+      <div class="topbar-spacer"></div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" id="dash-search" placeholder="Suchen…" oninput="dashFilterChanged()">
+      </div>
+      <button class="btn btn-primary" onclick="handleNeueRechnung()">
+        + Neue Rechnung
+      </button>
+    </header>
+
+    <div class="db-content">
+      <!-- Stats -->
+      <div class="stats-row" id="dash-stats-row">
+        <div class="stat-card"><div class="stat-label">Rechnungen</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub" id="stat-total-sub"></div></div>
+        <div class="stat-card"><div class="stat-label">Offen</div><div class="stat-value" id="stat-offen" style="color:var(--amber)">—</div><div class="stat-sub" id="stat-offen-sub"></div></div>
+        <div class="stat-card"><div class="stat-label">Bezahlt (Jahr)</div><div class="stat-value" id="stat-bezahlt" style="color:var(--green)">—</div><div class="stat-sub" id="stat-bezahlt-sub"></div></div>
+        <div class="stat-card"><div class="stat-label">Ausstehend</div><div class="stat-value" id="stat-ausstehend">—</div><div class="stat-sub" id="stat-ausstehend-sub" style="font-family:var(--mono);font-size:11px">CHF</div></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar" id="dash-filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Absender</label>
+          <select id="filter-absender" onchange="dashFilterChanged()"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Empfänger</label>
+          <select id="filter-empfaenger" onchange="dashFilterChanged()"><option value="">Alle</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Betrag von</label>
+          <input type="number" id="filter-betrag-von" placeholder="0.00" oninput="dashFilterChanged()">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">bis</label>
+          <input type="number" id="filter-betrag-bis" placeholder="∞" oninput="dashFilterChanged()">
+        </div>
+      </div>
+
+      <!-- Table card -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <span class="table-title" id="dash-table-title">Rechnungen</span>
+          <div class="filter-tabs" id="dash-status-tabs">
+            <div class="ftab active" data-status="alle" onclick="dashSetStatusTab(this)">Alle</div>
+            <div class="ftab" data-status="entwurf" onclick="dashSetStatusTab(this)">Entwurf</div>
+            <div class="ftab" data-status="offen" onclick="dashSetStatusTab(this)">Offen</div>
+            <div class="ftab" data-status="versendet" onclick="dashSetStatusTab(this)">Versendet</div>
+            <div class="ftab" data-status="bezahlt" onclick="dashSetStatusTab(this)">Bezahlt</div>
+            <div class="ftab" data-status="storniert" onclick="dashSetStatusTab(this)">Storniert</div>
+          </div>
+          <div class="toolbar-spacer"></div>
+        </div>
+        <div id="dash-table-container">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL (hidden by default) -->
+  <div class="panel-backdrop" id="detail-panel-backdrop" style="display:none">
+    <div class="detail-panel" id="detail-panel">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- NEW INVOICE MODAL (hidden by default) -->
+  <div class="overlay-backdrop" id="new-invoice-overlay" style="display:none">
+    <div class="new-invoice-modal">
+      <div class="nim-header">
+        <div>
+          <div class="nim-title">Neue Rechnung</div>
+          <div class="nim-sub">Wie möchten Sie starten?</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeNeueRechnungModal()" style="padding:6px 12px;font-size:12px">✕</button>
+      </div>
+      <div class="nim-body" style="padding:24px 26px;display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+          <input type="radio" name="neue-rechnung-typ" value="leer" checked style="accent-color:var(--accent)">
+          <div><div style="font-weight:600;font-size:14px">Leere Rechnung</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Neues Formular, alle Felder leer</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+          <input type="radio" name="neue-rechnung-typ" value="vorlage" style="accent-color:var(--accent)">
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px">Aus Vorlage</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Vorlage als Startpunkt wählen</div>
+            <select id="modal-vorlage-select" style="margin-top:8px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit" onclick="document.querySelector('[name=neue-rechnung-typ][value=vorlage]').checked=true"><option value="">— Vorlage wählen —</option></select>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+          <input type="radio" name="neue-rechnung-typ" value="kopie" style="accent-color:var(--accent)">
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px">Kopie von bestehender Rechnung</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Alle Felder einer Rechnung übernehmen</div>
+            <select id="modal-kopie-select" style="margin-top:8px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit" onclick="document.querySelector('[name=neue-rechnung-typ][value=kopie]').checked=true"><option value="">— Rechnung wählen —</option></select>
+          </div>
+        </label>
+      </div>
+      <div class="nim-footer">
+        <button class="btn btn-ghost" onclick="closeNeueRechnungModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="confirmNeueRechnung()">Weiter →</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /view-dashboard -->
+
+<!-- ══ EDITOR VIEW ══ -->
+<div id="view-editor">
+  <div id="editor-topbar" class="editor-topbar">
+    <button class="btn btn-ghost" onclick="showDashboard()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Übersicht
+    </button>
+    <span style="font-size:13px;color:var(--label,#7a8499)" id="editor-topbar-title">Neue Rechnung</span>
+  </div>
+  <div class="editor-inner">
+
 <!-- ══ MOBILE TABS ══ -->
 <div id="mobile-tabs">
   <button class="mob-tab active" onclick="showTab('editor')">
@@ -446,6 +618,9 @@
 
 <!-- ══ PREVIEW PANEL ══ -->
 <div id="preview-wrap"></div>
+
+  </div><!-- /editor-inner -->
+</div><!-- /view-editor -->
 
 </body>
 </html>

@@ -155,9 +155,21 @@ export async function getNextInvoiceNumber(absenderName) {
 export async function saveRechnung(record) {
   const client = getClient();
   if (!client) return null;
+  // If converting a draft (record.id provided), update the existing row
+  if (record.id) {
+    const { id, ...fields } = record;
+    const { data, error } = await client
+      .from('rechnungen')
+      .update({ ...fields, status: 'offen' })
+      .eq('id', id)
+      .select('id')
+      .single();
+    if (error) { console.error('saveRechnung (update):', error.message); return null; }
+    return data.id;
+  }
   const { data, error } = await client
     .from('rechnungen')
-    .insert(record)
+    .insert({ ...record, status: 'offen' })
     .select('id')
     .single();
   if (error) { console.error('saveRechnung:', error.message); return null; }
@@ -169,7 +181,7 @@ export async function fetchRechnungen() {
   if (!client) return [];
   const { data, error } = await client
     .from('rechnungen')
-    .select('id, nummer, absender_name, empfaenger_name, betrag, waehrung, created_at')
+    .select('id, nummer, absender_name, empfaenger_name, betrag, waehrung, status, created_at')
     .order('created_at', { ascending: false });
   if (error) { console.error('fetchRechnungen:', error.message); return []; }
   return data;
@@ -193,4 +205,70 @@ export async function deleteRechnung(id) {
   const { error } = await client.from('rechnungen').delete().eq('id', id);
   if (error) { console.error('deleteRechnung:', error.message); return false; }
   return true;
+}
+
+// ── Entwürfe & Status ─────────────────────────────────────────────────────────
+
+/**
+ * Saves or updates a draft invoice.
+ * Record shape: { id?, absender_name, empfaenger_name, betrag, waehrung, daten }
+ * Always sets status = 'entwurf' and nummer = null.
+ * Returns the UUID of the saved draft, or null on error.
+ */
+export async function saveEntwurf(record) {
+  const client = getClient();
+  if (!client) return null;
+  try {
+    const user_id = (await client.auth.getUser()).data.user?.id;
+    const payload = {
+      ...record,
+      user_id,
+      status: 'entwurf',
+      nummer: null,
+    };
+    if (record.id) {
+      // Update existing draft
+      const { id, ...fields } = payload;
+      const { data, error } = await client
+        .from('rechnungen')
+        .update(fields)
+        .eq('id', record.id)
+        .select('id')
+        .single();
+      if (error) { console.error('saveEntwurf (update):', error.message); return null; }
+      return data.id;
+    }
+    // Insert new draft
+    const { data, error } = await client
+      .from('rechnungen')
+      .insert(payload)
+      .select('id')
+      .single();
+    if (error) { console.error('saveEntwurf (insert):', error.message); return null; }
+    return data.id;
+  } catch (err) {
+    console.error('saveEntwurf:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Updates only the status column for a given invoice UUID.
+ * Valid values: 'entwurf' | 'offen' | 'versendet' | 'bezahlt' | 'storniert'
+ * Returns true on success, false on error.
+ */
+export async function updateRechnungStatus(id, status) {
+  const client = getClient();
+  if (!client) return false;
+  try {
+    const { error } = await client
+      .from('rechnungen')
+      .update({ status })
+      .eq('id', id);
+    if (error) { console.error('updateRechnungStatus:', error.message); return false; }
+    return true;
+  } catch (err) {
+    console.error('updateRechnungStatus:', err.message);
+    return false;
+  }
 }

@@ -18,7 +18,7 @@ export function saveTemplatesData(data) {
 }
 
 // ── Cloud status indicator ─────────────────────────────────────────────────
-function setCloudStatus(msg, type) {
+export function setCloudStatus(msg, type) {
   const el = document.getElementById('cloud-status');
   if (!el) return;
   el.textContent = msg;

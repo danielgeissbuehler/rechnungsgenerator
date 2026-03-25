@@ -1,9 +1,10 @@
 import { state } from './state.js';
-import { collectState, applyState } from './templates.js';
+import { collectState, applyState, setCloudStatus } from './templates.js';
 import {
   isConfigured,
   getNextInvoiceNumber,
   saveRechnung,
+  saveEntwurf,
   fetchRechnungen,
   fetchRechnungById,
   deleteRechnung,
@@ -88,15 +89,25 @@ export async function bucheRechnung() {
     daten:           snapshot,
   };
 
+  // If this was a draft, update the existing row instead of inserting a new one
+  if (state.currentDraftId) {
+    record.id = state.currentDraftId;
+  }
+
   const id = await saveRechnung(record);
   if (!id) {
     alert('Fehler beim Speichern der Rechnung.');
     return;
   }
 
+  state.currentDraftId = null;
+  state.currentRechnungId = id;
+
   setReadonly(true);
   await renderArchivListe();
+  window.loadRechnungen?.();
   alert(`Rechnung Nr. ${nummer} wurde gebucht.`);
+  setTimeout(() => window.showDashboard?.(), 300);
 }
 
 // ── Archiv laden ──────────────────────────────────────────────────────────────
@@ -106,6 +117,8 @@ export async function ladeAusArchiv(id) {
 
   applyState(rechnung.daten);
   setReadonly(true);
+  state.currentRechnungId = id;
+  state.currentDraftId = null;
 }
 
 export async function loescheAusArchiv(id) {
@@ -118,7 +131,62 @@ export async function loescheAusArchiv(id) {
 export async function neueRechnung() {
   if (state.isReadonly && !confirm('Aktuelle gebuchte Rechnung verlassen? Änderungen sind nicht möglich.')) return;
   setReadonly(false);
+  state.currentDraftId = null;
+  state.currentRechnungId = null;
   // Clear key fields for a new invoice
+  const titelEl = document.getElementById('f-titel');
+  if (titelEl) titelEl.value = '';
+}
+
+// ── Entwurf speichern ─────────────────────────────────────────────────────────
+export async function speichereEntwurf() {
+  if (!isConfigured()) {
+    alert('Supabase nicht konfiguriert. Speichern nicht möglich.');
+    return;
+  }
+
+  const snapshot = collectState();
+
+  const absenderName = document.getElementById('f-stell-name')?.value?.trim() || '';
+  const empfaengerName = document.getElementById('f-emp-name')?.value?.trim() || '';
+
+  const betrag = state.positions.reduce((sum, p) => {
+    return sum + (parseFloat(p.qty || 0) * parseFloat(p.price || 0));
+  }, 0);
+
+  const waehrung = document.getElementById('f-currency')?.value || 'CHF';
+
+  const record = {
+    absender_name:   absenderName,
+    empfaenger_name: empfaengerName,
+    betrag:          Math.round(betrag * 20) / 20,
+    waehrung,
+    daten:           snapshot,
+  };
+
+  if (state.currentDraftId) {
+    record.id = state.currentDraftId;
+  }
+
+  const id = await saveEntwurf(record);
+  if (id) {
+    state.currentDraftId = id;
+    setCloudStatus('Entwurf gespeichert', 'ok');
+    window.loadRechnungen?.();
+  }
+}
+
+// ── Kopie einer Rechnung erstellen ────────────────────────────────────────────
+export async function kopieRechnung(id) {
+  const rechnung = await fetchRechnungById(id);
+  if (!rechnung) return;
+
+  applyState(rechnung.daten);
+  setReadonly(false);
+  state.currentDraftId = null;
+  state.currentRechnungId = null;
+
+  // Clear the title field so it doesn't carry over the original invoice number
   const titelEl = document.getElementById('f-titel');
   if (titelEl) titelEl.value = '';
 }
