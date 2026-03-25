@@ -1,0 +1,18 @@
+{
+  "name": "rechnungsgenerator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "swissqrbill": "^4.2.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2",
+    "vite": "^6.2.4"
+  }
+}

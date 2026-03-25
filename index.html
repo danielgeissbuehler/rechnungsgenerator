@@ -1,412 +1,40 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rechnungs-Editor – G Investments & Real Estates AG</title>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --form-bg:#f4f5f7; --input-bg:#ffffff; --blue:#4f8ef7; --border:#dde1e7; --text:#1a1a2e; --label:#7a8499; --section-header:#eaecf0; }
-
-body { font-family:'Open Sans',sans-serif; background:#1a1a1a; color:#eee; display:flex; height:100vh; overflow:hidden; }
-
-/* ══ EDITOR ══ */
-#editor { width:460px; min-width:420px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid var(--border); flex-shrink:0; color:var(--text); }
-#editor h1 { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#b0b8c8; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-
-.section-block { margin-bottom:8px; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
-.section-header { display:flex; align-items:center; justify-content:space-between; padding:6px 12px; background:var(--section-header); cursor:pointer; user-select:none; font-size:10px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#5a6478; transition:background .15s; }
-.section-header:hover { background:#e0e4eb; }
-.toggle-icon { font-size:10px; transition:transform .2s; color:#aab0be; }
-.section-header.open .toggle-icon { transform:rotate(180deg); }
-.section-body { padding:14px 12px; display:none; flex-direction:column; gap:8px; background:var(--form-bg); }
-.section-body.open { display:flex; }
-
-label { font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--label); margin-bottom:2px; display:block; }
-input[type="text"], input[type="number"], textarea {
-  width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:4px;
-  color:var(--text); font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px; outline:none; transition:border-color .15s;
-}
-input:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 2px rgba(79,142,247,.12); }
-textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; overflow-y:auto; }
-
-.field-row { display:flex; gap:8px; }
-.field-row > * { flex:1; }
-
-/* Contact picker */
-.contact-picker-wrap { display:flex; flex-direction:column; gap:6px; }
-.contact-picker-wrap select {
-  width:100%; background:var(--input-bg); border:1px solid var(--border); border-radius:4px;
-  color:var(--text); font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px;
-  outline:none; cursor:pointer; transition:border-color .15s;
-}
-.contact-picker-wrap select:focus { border-color:var(--blue); }
-.contact-picker-wrap select option { background:#fff; }
-.picker-divider { display:flex; align-items:center; gap:8px; color:#c0c8d8; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
-.picker-divider::before, .picker-divider::after { content:''; flex:1; height:1px; background:var(--border); }
-
-.meta-row-editor { display:grid; grid-template-columns:1fr 1fr; gap:6px; border:1px solid var(--border); border-radius:4px; padding:8px; background:#edf0f5; }
-.meta-row-editor small { grid-column:1/-1; font-size:9px; color:#aab0be; letter-spacing:.5px; text-transform:uppercase; }
-
-/* Fixed meta fields */
-.meta-field-row { display:flex; flex-direction:column; gap:4px; border:1px solid var(--border); border-radius:4px; padding:7px 8px; background:#edf0f5; }
-.meta-field-toggle { display:flex; align-items:center; gap:6px; }
-.meta-field-toggle input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
-.meta-field-toggle label { font-size:9px; color:var(--label); text-transform:uppercase; letter-spacing:.8px; cursor:pointer; margin:0; }
-.meta-field-inputs { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
-.meta-field-row.mf-hidden .meta-field-inputs { opacity:.4; }
-
-#positions-list { display:flex; flex-direction:column; gap:4px; }
-
-/* Expandable position rows */
-.pos-item { border:1px solid var(--border); border-radius:4px; overflow:hidden; }
-.pos-summary { display:flex; align-items:center; gap:6px; padding:5px 8px; cursor:pointer; background:var(--input-bg); user-select:none; transition:background .1s; }
-.pos-summary:hover { background:#edf0f5; }
-.pos-summary.open { background:#e4eaf5; border-bottom:1px solid var(--border); }
-.pos-summary-desc { flex:1; font-size:11.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
-.pos-summary-desc.empty { color:#bbb; font-style:italic; }
-.pos-summary-num { font-size:10px; color:#888; white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
-.pos-chevron { font-size:8px; color:#aab0be; flex-shrink:0; line-height:1; }
-.pos-detail { padding:8px; background:var(--form-bg); display:flex; flex-direction:column; gap:6px; }
-.pos-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.pos-detail > div > label, .pos-detail-grid > div > label { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:var(--label); margin-bottom:2px; display:block; }
-.pos-total-readonly { background:#edf0f5 !important; color:#888 !important; cursor:default; }
-
-.btn-remove { background:#fff0f0; border:1px solid #f5c0c0; border-radius:4px; color:#d04040; cursor:pointer; font-size:14px; line-height:1; padding:4px 5px; transition:background .15s; }
-.btn-remove:hover { background:#ffe0e0; }
-.btn-add { background:#edf5ff; border:1px solid #c0d8f8; border-radius:4px; color:var(--blue); cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.8px; padding:7px 10px; text-transform:uppercase; width:100%; transition:background .15s; }
-.btn-add:hover { background:#dceeff; }
-.pos-labels { display:grid; grid-template-columns:1fr 92px 72px 24px; gap:4px; }
-.pos-labels span { font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#aab0be; }
-
-/* Column configuration list */
-.col-cfg-list { display:flex; flex-direction:column; gap:3px; }
-.col-cfg-row { display:grid; grid-template-columns:16px 72px 1fr auto; gap:6px; align-items:center; }
-.col-cfg-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
-.col-cfg-row .col-cfg-label { font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--label); cursor:pointer; margin:0; white-space:nowrap; }
-.col-align-btns { display:flex; }
-.col-align-btn { background:var(--input-bg); border:1px solid var(--border); color:var(--label); cursor:pointer; font-size:9px; font-weight:600; font-family:'Open Sans',sans-serif; padding:3px 6px; line-height:1; transition:background .1s; }
-.col-align-btn:not(:first-child) { border-left:none; }
-.col-align-btn:first-child { border-radius:3px 0 0 3px; }
-.col-align-btn:last-child { border-radius:0 3px 3px 0; }
-.col-align-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
-.col-align-btn.active + .col-align-btn { border-left:none; }
-
-/* Table center alignment */
-.items-table thead th.c { text-align:center; }
-.items-table tbody td.c { text-align:center; }
-.items-table tfoot td.c { text-align:center; }
-
-.toggle-row { display:flex; align-items:center; gap:8px; }
-.toggle-row input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
-.toggle-row label { font-size:11px; color:#5a6478; text-transform:none; letter-spacing:0; cursor:pointer; margin:0; }
-
-/* Action buttons */
-#action-btns { display:flex; gap:8px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
-#btn-download, #btn-print {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:7px;
-  padding:9px 12px; border-radius:5px; cursor:pointer;
-  font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700;
-  letter-spacing:1.2px; text-transform:uppercase; transition:background .15s, opacity .15s;
-  border: none;
-}
-#btn-download svg, #btn-print svg { width:15px; height:15px; flex-shrink:0; }
-#btn-download { background:var(--blue); color:#fff; }
-#btn-download:hover { background:#3a7ef0; }
-#btn-download:active { opacity:.85; }
-#btn-download:disabled { background:#aac4f0; cursor:default; opacity:.6; }
-#btn-print { background:var(--blue); color:#fff; }
-#btn-print:hover { background:#3a7ef0; }
-
-.vis-toggle { display:inline-flex; align-items:center; gap:4px; margin-left:6px; font-size:9px; color:#9aa0b0; cursor:pointer; background:#eaecf0; border:1px solid var(--border); border-radius:3px; padding:2px 5px; text-transform:uppercase; letter-spacing:.5px; transition:background .15s; user-select:none; vertical-align:middle; }
-.vis-toggle svg { flex-shrink:0; }
-.vis-toggle:hover { background:#dde1e7; }
-.vis-toggle.hidden-state { color:#d04040; border-color:#f5c0c0; background:#fff5f5; }
-.section-header-label { display:flex; align-items:center; }
-
-/* ══ TABLE SUB-SECTIONS ══ */
-.sub-block { border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:6px; }
-.sub-block-header { display:flex; align-items:center; justify-content:space-between; padding:5px 10px; background:#e2e6ee; cursor:pointer; user-select:none; font-size:9px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:#5a6580; transition:background .15s; }
-.sub-block-header:hover { background:#d6dbe6; }
-.sub-block-toggle { font-size:8px; color:#8a96aa; transition:transform .2s; }
-.sub-block-header.open .sub-block-toggle { transform:rotate(180deg); }
-.sub-block-body { padding:10px; flex-direction:column; gap:8px; background:#f0f2f8; display:none; }
-.sub-block-body.open { display:flex; }
-
-.zeilen-header { display:flex; align-items:center; justify-content:space-between; padding:4px 2px; margin-bottom:4px; border-bottom:2px solid #c8d0e0; }
-.zeilen-header-label { font-size:9px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase; color:#5a6580; }
-.zeilen-count { font-size:9px; color:#aab0be; font-variant-numeric:tabular-nums; }
-
-/* Position drag & move */
-.pos-grip { cursor:grab; color:#bbc4d4; font-size:13px; line-height:1; padding:0 3px; flex-shrink:0; user-select:none; }
-.pos-grip:active { cursor:grabbing; }
-.pos-move-btn { background:none; border:1px solid var(--border); border-radius:3px; color:#8a96aa; cursor:pointer; font-size:9px; line-height:1; padding:2px 4px; flex-shrink:0; transition:background .1s, color .1s; }
-.pos-move-btn:hover:not(:disabled) { background:#dde3ec; color:var(--text); }
-.pos-move-btn:disabled { opacity:.3; cursor:default; }
-.pos-item.dragging { opacity:.4; }
-.pos-item.drag-over { outline:2px solid var(--blue); outline-offset:-1px; }
-
-/* ══ RESIZE HANDLE ══ */
-#resize-handle { width:5px; background:var(--border); cursor:col-resize; flex-shrink:0; transition:background .15s; }
-#resize-handle:hover, #resize-handle.dragging { background:var(--blue); }
-
-/* ══ PREVIEW ══ */
-#preview-wrap { flex:1; overflow-y:auto; background:#111; display:flex; flex-direction:column; align-items:center; padding:30px 20px; gap:24px; }
-
-/* A4 */
-.a4-page {
-  width: 794px;
-  height: 1123px;        /* exact — never grows */
-  background: #fff;
-  color: #2c2c2c;
-  font-family: 'Open Sans', sans-serif;
-  font-size: 12px;
-  box-shadow: 0 4px 32px rgba(0,0,0,.5);
-  position: relative;
-  overflow: hidden;      /* content can never push past the page edge */
-  flex-shrink: 0;
-}
-
-/* Header */
-.page-header { padding: 40px 56px 0; text-align: right; }
-.page-header--sub { padding-bottom: 28px; }
-.page-header .company-name { font-size: 11.5px; font-weight: 400; letter-spacing: .5px; color: #2c2c2c; line-height: 1.7; }
-
-/* Footer — always pinned to bottom, white bg covers any overflow */
-.page-footer {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 0 56px 28px;
-  background: #fff;
-}
-.footer-line { border: none; border-top: 1px solid #aaa; margin-bottom: 10px; }
-.footer-content { display: flex; justify-content: space-between; font-size: 10px; color: #555; line-height: 1.7; }
-.footer-bank-label { font-size: 10px; font-weight: 600; letter-spacing: .8px; color: #555; }
-.footer-iban { font-size: 10px; font-weight: 600; letter-spacing: .8px; color: #555; }
-.footer-left { display: flex; gap: 10px; }
-
-/* Content — bottom padding = footer height (~82px) + 1.5 line buffer (~29px) */
-.page-content { padding: 0 56px 120px; }
-
-/* FIX #2 & #3: separator = left 50% line + right 50% big heading */
-.separator-area { display:flex; align-items:center; margin:24px 0 68px; min-height:32px; }
-.separator-left { width:50%; flex-shrink:0; display:flex; align-items:center; }
-.separator-line { border:none; border-top:1px solid #aaa; width:100%; }
-.separator-right { flex:1; text-align:right; padding-left:12px; }
-.invoice-heading-text { font-size:38px; font-weight:300; letter-spacing:0; text-transform:uppercase; color:#2c2c2c; line-height:1.1; font-family:'Open Sans',sans-serif; }
-
-/* Layout: empfaenger full-width, then steller+meta side-by-side so meta aligns perfectly with steller */
-.emp-block { margin-bottom:63px; font-size:11.5px; line-height:1.7; color:#2c2c2c; }
-.steller-meta-row { display:flex; }
-.steller-col { flex:1; font-size:11.5px; line-height:1.7; color:#2c2c2c; margin-bottom:63px; }
-.meta-col { width:230px; flex-shrink:0; }
-
-.addresses-row { margin-bottom:24px; font-size:11.5px; line-height:1.7; color:#2c2c2c; }
-
-/* FIX #4 #5: meta table free text, wraps nicely */
-.meta-table { font-size:11px; line-height:1.6; width:100%; }
-.meta-table td { vertical-align:top; padding-bottom:2px; }
-.meta-table td:first-child { letter-spacing:.8px; text-transform:uppercase; font-size:10px; color:#555; padding-right:14px; font-weight:400; white-space:nowrap; }
-.meta-table td:last-child { text-align:right; white-space:pre-wrap; word-break:break-word; }
-
-.invoice-title { font-size:38px; font-weight:300; color:#2c2c2c; margin-bottom:28px; line-height:1.1; white-space:pre-wrap; }
-
-/* Optional text block above table */
-.text-block { font-size:11.5px; line-height:1.8; color:#2c2c2c; width:100%; margin-bottom:28px; word-break:break-word; }
-.text-block h1 { font-size:22px; font-weight:600; margin:0 0 8px; }
-.text-block h2 { font-size:17px; font-weight:600; margin:0 0 6px; }
-.text-block h3 { font-size:14px; font-weight:600; margin:0 0 4px; }
-.text-block p  { margin:0 0 6px; }
-.text-block ul, .text-block ol { margin:0 0 6px; padding-left:20px; }
-.text-block hr { border:none; border-top:1px solid #aaa; margin:10px 0; }
-
-/* Rich text editor */
-.rte-toolbar {
-  display:flex; flex-wrap:wrap; gap:2px; padding:5px 6px;
-  background:#eaecf0; border:1px solid var(--border); border-bottom:none;
-  border-radius:4px 4px 0 0;
-}
-.rte-toolbar button {
-  background:#fff; border:1px solid var(--border); border-radius:3px;
-  color:#5a6478; cursor:pointer; font-family:'Open Sans',sans-serif;
-  font-size:11px; padding:3px 7px; line-height:1.4; transition:background .1s;
-  white-space:nowrap;
-}
-.rte-toolbar button:hover { background:#dde1e7; color:var(--text); }
-.rte-toolbar button:active { background:var(--blue); color:#fff; border-color:var(--blue); }
-.rte-sep { width:1px; background:var(--border); margin:2px 2px; align-self:stretch; }
-
-.rte-body {
-  width:100%; min-height:120px; max-height:320px; overflow-y:auto;
-  background:var(--input-bg); border:1px solid var(--border);
-  border-radius:0 0 4px 4px; color:var(--text);
-  font-family:'Open Sans',sans-serif; font-size:12px;
-  padding:8px 10px; outline:none; line-height:1.6;
-  word-break:break-word;
-}
-.rte-body:focus { border-color:var(--blue); box-shadow:0 0 0 2px rgba(79,142,247,.12); }
-.rte-body:empty::before {
-  content: attr(placeholder);
-  color: #c0c8d8; pointer-events:none;
-}
-.rte-body h1 { font-size:18px; font-weight:700; margin:4px 0; }
-.rte-body h2 { font-size:14px; font-weight:700; margin:3px 0; }
-.rte-body h3 { font-size:12px; font-weight:700; margin:2px 0; }
-.rte-body ul, .rte-body ol { padding-left:18px; margin:2px 0; }
-.rte-body hr { border:none; border-top:1px solid var(--border); margin:6px 0; }
-
-/* Items table */
-.items-table { width:100%; border-collapse:collapse; font-size:11.5px; }
-.items-table thead tr { border-top:1px solid #aaa; border-bottom:1px solid #aaa; }
-.items-table thead th { font-weight:700; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#2c2c2c; padding:8px 6px; text-align:left; }
-.items-table thead th.r { text-align:right; }
-.items-table tbody td { padding:8px 6px; color:#444; vertical-align:top; }
-.items-table tbody td.r { text-align:right; }
-.items-table tfoot tr { border-top:1px solid #aaa; }
-.items-table tfoot td { padding:10px 6px 0; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
-.items-table tfoot td.r { text-align:right; }
-
-.inv-hidden { display:none !important; }
-
-/* ══ VORLAGEN ══ */
-.btn-tpl-save { background:#4caf86; border:1px solid #3a9870; border-radius:4px; color:#fff; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; padding:6px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; }
-.btn-tpl-save:hover { background:#3a9870; }
-.btn-tpl-load { background:var(--blue); border:1px solid #3a7ef0; border-radius:4px; color:#fff; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; padding:6px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; }
-.btn-tpl-load:hover { background:#3a7ef0; }
-.btn-tpl-del { background:#fff0f0; border:1px solid #f5c0c0; border-radius:4px; color:#d04040; cursor:pointer; font-size:14px; line-height:1; padding:5px 8px; transition:background .15s; }
-.btn-tpl-del:hover { background:#ffe0e0; }
-.btn-tpl-io { background:#edf0f5; border:1px solid var(--border); border-radius:4px; color:#5a6478; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:600; letter-spacing:.8px; padding:5px 10px; text-transform:uppercase; transition:background .15s; display:inline-block; text-align:center; }
-.btn-tpl-io:hover { background:#dde1e7; }
-#template-select { flex:1; background:var(--input-bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:'Open Sans',sans-serif; font-size:12px; padding:6px 8px; outline:none; cursor:pointer; transition:border-color .15s; }
-#template-select:focus { border-color:var(--blue); }
-
-/* Loading */
-#loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#fff; font-size:13px; letter-spacing:1px; }
-#loading.show { display:flex; }
-.spinner { width:36px; height:36px; border:3px solid #333; border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; }
-/* Mobile: floating preview-toggle pill */
-#mobile-tabs { display: none; }
-#mob-preview-btn {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 16px;
-  z-index: 999;
-  background: var(--blue);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-family: 'Open Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(79,142,247,.4);
-  display: none;
-  align-items: center;
-  gap: 7px;
-}
-#mob-preview-btn svg { width:16px; height:16px; flex-shrink:0; }
-@media (hover: none) and (pointer: coarse) {
-  #mob-preview-btn { display: block; }
-
-  body {
-    flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
-  }
-
-  #mobile-tabs {
-    display: flex;
-    flex-shrink: 0;
-    background: var(--form-bg);
-    border-bottom: 1px solid var(--border);
-    z-index: 10;
-    padding: 0 12px;
-    gap: 4px;
-  }
-  .mob-tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 10px 8px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: #aab0be;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: color .15s, border-color .15s;
-  }
-  .mob-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .mob-tab.active {
-    color: var(--blue);
-    border-bottom-color: var(--blue);
-  }
-  #mob-preview-btn {
-    display: flex !important;
-    align-items: center;
-    gap: 8px;
-    bottom: 24px;
-    right: 16px;
-    padding: 11px 20px 11px 16px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-  }
-  #mob-preview-btn svg { width: 16px; height: 16px; }
-
-  #editor {
-    width: 100% !important;
-    min-width: 0 !important;
-    border-right: none !important;
-    height: calc(100dvh - 48px);
-    flex-shrink: 0;
-  }
-  #editor.mob-hidden { display: none; }
-
-  #preview-wrap {
-    flex: 1;
-    height: calc(100dvh - 48px);
-    padding: 16px 8px;
-    overflow-y: auto;
-    align-items: center;
-  }
-  #preview-wrap.mob-hidden { display: none; }
-
-  .a4-page {
-    transform-origin: top center;
-    transform: scale(var(--preview-scale, 0.4));
-    margin-bottom: calc((var(--preview-scale, 0.4) - 1) * 1123px);
-  }
-
-  .pos-row { grid-template-columns: 1fr 82px 66px 24px; }
-}
-
-@media print {
-  #editor, #loading, #mobile-tabs { display: none !important; }
-  body { display: block; background: #fff; }
-  #preview-wrap { display: block; overflow: visible; padding: 0; background: #fff; }
-  .a4-page { box-shadow: none; page-break-after: always; transform: none !important; margin-bottom: 0 !important; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rechnungs-Editor – G Investments & Real Estates AG</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="src/js/main.js"></script>
 </head>
 <body>
+
+<!-- Login Modal -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:2rem;width:min(400px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2);">
+    <h2 style="margin:0 0 1.5rem;font-size:1.25rem;font-weight:600;">Anmelden</h2>
+    <div style="display:flex;flex-direction:column;gap:.75rem;">
+      <input id="login-email" type="email" placeholder="E-Mail" autocomplete="email"
+        style="padding:.6rem .75rem;border:1px solid #d1d5db;border-radius:6px;font-size:.95rem;">
+      <input id="login-password" type="password" placeholder="Passwort" autocomplete="current-password"
+        style="padding:.6rem .75rem;border:1px solid #d1d5db;border-radius:6px;font-size:.95rem;"
+        onkeydown="if(event.key==='Enter')handleLogin()">
+      <p id="login-error" style="margin:0;color:#dc2626;font-size:.875rem;min-height:1.2em;"></p>
+      <button id="login-btn" onclick="handleLogin()"
+        style="padding:.6rem 1rem;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:.95rem;font-weight:500;cursor:pointer;">
+        Anmelden
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOADING OVERLAY ══ -->
 <div id="loading"><div class="spinner"></div><span>PDF wird erstellt…</span></div>
 
+<!-- ══ MOBILE TABS ══ -->
 <div id="mobile-tabs">
   <button class="mob-tab active" onclick="showTab('editor')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -422,9 +50,28 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
   Vorschau
 </button>
 
-<!-- ══ EDITOR ══ -->
+<!-- ══ EDITOR PANEL ══ -->
 <div id="editor">
-  <h1>Rechnungs-Editor</h1>
+
+  <!-- ── ARCHIV (visually separate, dark panel at top) ── -->
+  <div class="section-block open" id="archiv-section">
+    <div class="section-header open" onclick="toggleSection(this)">
+      <div class="section-header-label">Archiv</div>
+      <span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body open">
+      <div id="archiv-liste"></div>
+    </div>
+  </div>
+
+  <div id="readonly-banner">
+    Diese Rechnung wurde gebucht und ist schreibgeschützt.
+    <button onclick="neueRechnung()" class="btn-secondary" style="margin-left:1rem;">Neue Rechnung</button>
+  </div>
+
+  <h1>Rechnungs-Editor<button id="logout-btn" onclick="handleLogout()" title="Abmelden" class="btn-secondary">Abmelden</button></h1>
+
+  <!-- Action buttons -->
   <div id="action-btns">
     <button id="btn-download" onclick="downloadPDF()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -434,9 +81,12 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Drucken
     </button>
+    <button id="buch-rechnung-btn" class="buch-btn" onclick="bucheRechnung()">
+      Rechnung buchen
+    </button>
   </div>
 
-  <!-- VORLAGEN -->
+  <!-- ── VORLAGEN ── -->
   <div class="section-block" style="margin-bottom:16px">
     <div class="section-header open" onclick="toggleSection(this)">
       <div class="section-header-label">Vorlagen</div>
@@ -452,6 +102,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         <input type="text" id="template-name" placeholder="Vorlagenname…" style="flex:1" onkeydown="if(event.key==='Enter')saveTemplate()">
         <button class="btn-tpl-save" onclick="saveTemplate()">Speichern</button>
       </div>
+      <div id="cloud-status"></div>
       <div class="field-row" style="gap:4px">
         <button class="btn-tpl-io" style="flex:1" onclick="exportTemplates()">↓ Alle exportieren</button>
         <label class="btn-tpl-io" style="flex:1">↑ Importieren<input type="file" accept=".json" style="display:none" onchange="importTemplates(this)"></label>
@@ -460,12 +111,15 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- HEADER -->
+  <!-- ── ABSENDER / HEADER ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Absender / Header
-        <span class="vis-toggle" id="vis-header" onclick="event.stopPropagation();toggleVis('header')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-header" onclick="event.stopPropagation();toggleVis('header')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div><label>Firmenname</label><input type="text" id="f-company" value="G INVESTMENTS &amp; REAL ESTATES AG" placeholder="G INVESTMENTS &amp; REAL ESTATES AG" oninput="render()"></div>
@@ -473,12 +127,15 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- TRENNLINIE HEADING — FIX #3 -->
+  <!-- ── TITELTEXT UND TRENNLINIE ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Titeltext und Trennlinie
-        <span class="vis-toggle" id="vis-heading" onclick="event.stopPropagation();toggleVis('heading')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-heading" onclick="event.stopPropagation();toggleVis('heading')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div><label>Grosser Text (rechts neben der Linie, Caps)</label>
@@ -487,12 +144,15 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- EMPFÄNGER -->
+  <!-- ── EMPFÄNGER ── -->
   <div class="section-block">
     <div class="section-header open" onclick="toggleSection(this)">
       <div class="section-header-label">Empfänger
-        <span class="vis-toggle" id="vis-empfaenger" onclick="event.stopPropagation();toggleVis('empfaenger')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-empfaenger" onclick="event.stopPropagation();toggleVis('empfaenger')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body open">
       <div class="contact-picker-wrap" id="contact-picker-wrap" style="display:none">
@@ -505,15 +165,19 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Empfänger" oninput="render()"></div>
       <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Empfänger" oninput="render()"></div>
       <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Empfänger" oninput="render()"></div>
+      <button type="button" onclick="saveCurrentEmpfaenger()" class="btn-save">Empfänger speichern</button>
     </div>
   </div>
 
-  <!-- RECHNUNGSTELLER -->
+  <!-- ── ABSENDER (RECHNUNGSTELLER) ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Absender
-        <span class="vis-toggle" id="vis-steller" onclick="event.stopPropagation();toggleVis('steller')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-steller" onclick="event.stopPropagation();toggleVis('steller')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div class="contact-picker-wrap" id="company-picker-wrap" style="display:none">
@@ -526,15 +190,20 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Absender" oninput="render()"></div>
       <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Absender" oninput="render()"></div>
       <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Absender" oninput="render()"></div>
+      <div><label>Start-Rechnungsnummer</label><input type="number" id="f-stell-start-nr" placeholder="z.B. 100" min="1" value="1"></div>
+      <button type="button" onclick="saveCurrentAbsender()" class="btn-save">Absender speichern</button>
     </div>
   </div>
 
-  <!-- META — fixed fields with show/hide -->
+  <!-- ── DATUM & ZEITRAUM ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Datum &amp; Zeitraum
-        <span class="vis-toggle" id="vis-meta" onclick="event.stopPropagation();toggleVis('meta')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-meta" onclick="event.stopPropagation();toggleVis('meta')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div class="meta-field-row" id="mfr-0">
@@ -554,7 +223,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         </div>
         <div class="meta-field-inputs">
           <input type="text" id="mf-label-1" value="ZEITRAUM" oninput="render()">
-          <input type="text" id="mf-value-1" value="" placeholder="TT.MM.JJJJ – TT.MM.JJJJ" oninput="render()">
+          <input type="text" id="mf-value-1" placeholder="TT.MM.JJJJ – TT.MM.JJJJ" oninput="render()">
         </div>
       </div>
       <div class="meta-field-row" id="mfr-2">
@@ -590,12 +259,15 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- TITEL -->
+  <!-- ── TITEL ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Titel
-        <span class="vis-toggle" id="vis-titel" onclick="event.stopPropagation();toggleVis('titel')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-titel" onclick="event.stopPropagation();toggleVis('titel')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div><label>Titel (Freitext, mehrzeilig möglich)</label>
@@ -604,55 +276,59 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- TEXTBLOCK -->
+  <!-- ── TEXTBLOCK VOR TABELLE ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Textblock (vor Tabelle)
-        <span class="vis-toggle hidden-state" id="vis-textblock" onclick="event.stopPropagation();toggleVis('textblock')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet</span>
-      </div><span class="toggle-icon">▼</span>
+        <span class="vis-toggle hidden-state" id="vis-textblock" onclick="event.stopPropagation();toggleVis('textblock')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet
+        </span>
+      </div>
+      <span class="toggle-icon">▼</span>
     </div>
     <div class="section-body">
-      <div class="rte-toolbar" id="rte-toolbar">
-        <button title="Fett" onmousedown="event.preventDefault();rteCmd('bold');render()"><b>B</b></button>
-        <button title="Kursiv" onmousedown="event.preventDefault();rteCmd('italic');render()"><i>I</i></button>
+      <div class="rte-toolbar">
+        <button title="Fett"        onmousedown="event.preventDefault();rteCmd('bold');render()"><b>B</b></button>
+        <button title="Kursiv"      onmousedown="event.preventDefault();rteCmd('italic');render()"><i>I</i></button>
         <button title="Unterstrichen" onmousedown="event.preventDefault();rteCmd('underline');render()"><u>U</u></button>
         <span class="rte-sep"></span>
         <button title="Überschrift 1" onmousedown="event.preventDefault();rteBlockBtn('h1');render()">H1</button>
         <button title="Überschrift 2" onmousedown="event.preventDefault();rteBlockBtn('h2');render()">H2</button>
         <button title="Überschrift 3" onmousedown="event.preventDefault();rteBlockBtn('h3');render()">H3</button>
-        <button title="Normal" onmousedown="event.preventDefault();rteBlockBtn('p');render()">¶</button>
+        <button title="Normal"      onmousedown="event.preventDefault();rteBlockBtn('p');render()">¶</button>
         <span class="rte-sep"></span>
-        <button title="Aufzählung" onmousedown="event.preventDefault();rteCmdRaw('insertUnorderedList');render()">• Liste</button>
-        <button title="Nummeriert" onmousedown="event.preventDefault();rteCmdRaw('insertOrderedList');render()">1. Liste</button>
+        <button title="Aufzählung"  onmousedown="event.preventDefault();rteCmdRaw('insertUnorderedList');render()">• Liste</button>
+        <button title="Nummeriert"  onmousedown="event.preventDefault();rteCmdRaw('insertOrderedList');render()">1. Liste</button>
         <span class="rte-sep"></span>
         <button title="Linksbündig" onmousedown="event.preventDefault();rteCmdRaw('justifyLeft');render()">⬤≡</button>
-        <button title="Zentriert" onmousedown="event.preventDefault();rteCmdRaw('justifyCenter');render()">≡≡≡</button>
+        <button title="Zentriert"   onmousedown="event.preventDefault();rteCmdRaw('justifyCenter');render()">≡≡≡</button>
         <button title="Rechtsbündig" onmousedown="event.preventDefault();rteCmdRaw('justifyRight');render()">≡⬤</button>
         <span class="rte-sep"></span>
-        <button title="Einzug mehr" onmousedown="event.preventDefault();rteCmdRaw('indent');render()">→|</button>
+        <button title="Einzug mehr"  onmousedown="event.preventDefault();rteCmdRaw('indent');render()">→|</button>
         <button title="Einzug weniger" onmousedown="event.preventDefault();rteCmdRaw('outdent');render()">|←</button>
         <span class="rte-sep"></span>
         <button title="Linie einfügen" onmousedown="event.preventDefault();rteInsertHr();render()">──</button>
       </div>
-      <div id="f-textblock"
-        contenteditable="true"
-        class="rte-body"
+      <div id="f-textblock" contenteditable="true" class="rte-body"
         placeholder="Sehr geehrte Damen und Herren…"
         onkeydown="rteKeydown(event,'f-textblock')"
         oninput="render()"></div>
     </div>
   </div>
 
-  <!-- TABELLE -->
+  <!-- ── TABELLE ── -->
   <div class="section-block">
     <div class="section-header open" onclick="toggleSection(this)">
       <div class="section-header-label">Tabelle
-        <span class="vis-toggle" id="vis-positionen" onclick="event.stopPropagation();toggleVis('positionen')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-positionen" onclick="event.stopPropagation();toggleVis('positionen')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body open">
 
-      <!-- SUB: SPALTEN-KONFIGURATION (default collapsed) -->
+      <!-- Spalten-Konfiguration (collapsed by default) -->
       <div class="sub-block">
         <div class="sub-block-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
           <span>Spalten-Konfiguration</span>
@@ -674,7 +350,7 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
         </div>
       </div>
 
-      <!-- SUB: ZEILEN -->
+      <!-- Zeilen -->
       <div>
         <div class="zeilen-header">
           <span class="zeilen-header-label">Zeilen</span>
@@ -686,51 +362,55 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
     </div>
   </div>
 
-  <!-- TEXTBLOCK NACH TABELLE -->
+  <!-- ── TEXTBLOCK NACH TABELLE ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Textblock (nach Tabelle)
-        <span class="vis-toggle hidden-state" id="vis-textblock2" onclick="event.stopPropagation();toggleVis('textblock2')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet</span>
-      </div><span class="toggle-icon">▼</span>
+        <span class="vis-toggle hidden-state" id="vis-textblock2" onclick="event.stopPropagation();toggleVis('textblock2')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet
+        </span>
+      </div>
+      <span class="toggle-icon">▼</span>
     </div>
     <div class="section-body">
       <div class="rte-toolbar">
-        <button title="Fett" onmousedown="event.preventDefault();rteCmd2('bold');render()"><b>B</b></button>
-        <button title="Kursiv" onmousedown="event.preventDefault();rteCmd2('italic');render()"><i>I</i></button>
+        <button title="Fett"        onmousedown="event.preventDefault();rteCmd2('bold');render()"><b>B</b></button>
+        <button title="Kursiv"      onmousedown="event.preventDefault();rteCmd2('italic');render()"><i>I</i></button>
         <button title="Unterstrichen" onmousedown="event.preventDefault();rteCmd2('underline');render()"><u>U</u></button>
         <span class="rte-sep"></span>
         <button title="Überschrift 1" onmousedown="event.preventDefault();rteBlock2('h1');render()">H1</button>
         <button title="Überschrift 2" onmousedown="event.preventDefault();rteBlock2('h2');render()">H2</button>
         <button title="Überschrift 3" onmousedown="event.preventDefault();rteBlock2('h3');render()">H3</button>
-        <button title="Normal" onmousedown="event.preventDefault();rteBlock2('p');render()">¶</button>
+        <button title="Normal"      onmousedown="event.preventDefault();rteBlock2('p');render()">¶</button>
         <span class="rte-sep"></span>
-        <button title="Aufzählung" onmousedown="event.preventDefault();rteCmd2Raw('insertUnorderedList');render()">• Liste</button>
-        <button title="Nummeriert" onmousedown="event.preventDefault();rteCmd2Raw('insertOrderedList');render()">1. Liste</button>
+        <button title="Aufzählung"  onmousedown="event.preventDefault();rteCmd2Raw('insertUnorderedList');render()">• Liste</button>
+        <button title="Nummeriert"  onmousedown="event.preventDefault();rteCmd2Raw('insertOrderedList');render()">1. Liste</button>
         <span class="rte-sep"></span>
         <button title="Linksbündig" onmousedown="event.preventDefault();rteCmd2Raw('justifyLeft');render()">⬤≡</button>
-        <button title="Zentriert" onmousedown="event.preventDefault();rteCmd2Raw('justifyCenter');render()">≡≡≡</button>
+        <button title="Zentriert"   onmousedown="event.preventDefault();rteCmd2Raw('justifyCenter');render()">≡≡≡</button>
         <button title="Rechtsbündig" onmousedown="event.preventDefault();rteCmd2Raw('justifyRight');render()">≡⬤</button>
         <span class="rte-sep"></span>
-        <button title="Einzug mehr" onmousedown="event.preventDefault();rteCmd2Raw('indent');render()">→|</button>
+        <button title="Einzug mehr"  onmousedown="event.preventDefault();rteCmd2Raw('indent');render()">→|</button>
         <button title="Einzug weniger" onmousedown="event.preventDefault();rteCmd2Raw('outdent');render()">|←</button>
         <span class="rte-sep"></span>
         <button title="Linie einfügen" onmousedown="event.preventDefault();rteInsertHr2();render()">──</button>
       </div>
-      <div id="f-textblock2"
-        contenteditable="true"
-        class="rte-body"
+      <div id="f-textblock2" contenteditable="true" class="rte-body"
         placeholder="Zusätzlicher Text nach der Tabelle…"
         onkeydown="rteKeydown(event,'f-textblock2')"
         oninput="render()"></div>
     </div>
   </div>
 
-  <!-- BANK / FOOTER -->
+  <!-- ── BANK / FOOTER ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
       <div class="section-header-label">Bank / Footer
-        <span class="vis-toggle" id="vis-bank" onclick="event.stopPropagation();toggleVis('bank')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar</span>
-      </div><span class="toggle-icon">▲</span>
+        <span class="vis-toggle" id="vis-bank" onclick="event.stopPropagation();toggleVis('bank')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
     </div>
     <div class="section-body">
       <div><label>Bank Name</label><input type="text" id="f-bank-name" value="Spar+Leihkasse Riggisberg AG" placeholder="Name Bank" oninput="render()"></div>
@@ -739,1254 +419,33 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
       <div><label>Bank PLZ / ORT</label><input type="text" id="f-bank-strasse" value="3132 Riggisberg" placeholder="PLZ / ORT Bank" oninput="render()"></div>
     </div>
   </div>
-</div>
+
+  <!-- ── QR-RECHNUNG ── -->
+  <div class="section-block">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-header-label">QR-Einzahlungsschein
+        <span class="vis-toggle hidden-state" id="vis-qrBill" onclick="event.stopPropagation();toggleVis('qrBill')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet
+        </span>
+      </div>
+      <span class="toggle-icon">▲</span>
+    </div>
+    <div class="section-body">
+      <p class="section-hint">
+        Fügt einen Swiss QR-Einzahlungsschein als letzte Seite an.<br>
+        Das Rechnungstotal und die IBAN werden automatisch übernommen.
+      </p>
+    </div>
+  </div>
+
+
+</div><!-- /editor -->
 
 <!-- ══ RESIZE HANDLE ══ -->
 <div id="resize-handle"></div>
 
-<!-- ══ PREVIEW ══ -->
+<!-- ══ PREVIEW PANEL ══ -->
 <div id="preview-wrap"></div>
 
-<script>
-const positions = [];
-const visibility = { header:true, heading:true, empfaenger:true, steller:true, meta:true, titel:true, textblock:false, positionen:true, textblock2:false, bank:true, col1:true, col2:true, col3:true, col4:true, col5:false, col6:false, col7:false, col8:false };
-
-// Per-column alignment: 'l' = left, 'c' = center, 'r' = right
-const colAlign = { 1:'l', 2:'r', 3:'r', 4:'r', 5:'l', 6:'l', 7:'l', 8:'l' };
-
-// Column definitions (display order in editor and table)
-const COL_DEFS = [
-  { n:1, label:'Spalte 1',      inputId:'f-col-pos',    ph:'POSITION',     extra:false },
-  { n:5, label:'Spalte 2 opt.', inputId:'f-col-extra5', ph:'z.B. Einheit', extra:true  },
-  { n:6, label:'Spalte 3 opt.', inputId:'f-col-extra6', ph:'z.B. Rabatt',  extra:true  },
-  { n:2, label:'Spalte 4',      inputId:'f-col-preis',  ph:'PREIS',        extra:false },
-  { n:7, label:'Spalte 5 opt.', inputId:'f-col-extra7', ph:'z.B. Stunden', extra:true  },
-  { n:3, label:'Spalte 6',      inputId:'f-col-menge',  ph:'MENGE',        extra:false },
-  { n:8, label:'Spalte 7 opt.', inputId:'f-col-extra8', ph:'z.B. MwSt.',   extra:true  },
-  { n:4, label:'Spalte 8 (CHF)',inputId:'f-col-total',  ph:'TOTAL',        extra:false },
-];
-const COL_DEFAULTS = { 'f-col-pos':'POSITION','f-col-preis':'PREIS','f-col-menge':'MENGE','f-col-total':'TOTAL','f-col-extra5':'','f-col-extra6':'','f-col-extra7':'','f-col-extra8':'' };
-
-function renderColConfig() {
-  const container = document.getElementById('col-cfg-list');
-  if (!container) return;
-  // Snapshot current input values before clearing
-  const snap = {};
-  COL_DEFS.forEach(({ inputId }) => { const el = document.getElementById(inputId); if (el) snap[inputId] = el.value; });
-  while (container.firstChild) container.removeChild(container.firstChild);
-  COL_DEFS.forEach(({ n, label, inputId, ph, extra }) => {
-    const row = document.createElement('div');
-    row.className = 'col-cfg-row';
-    // Checkbox
-    const chk = document.createElement('input');
-    chk.type = 'checkbox'; chk.id = 'chk-col' + n;
-    chk.checked = !!visibility['col' + n];
-    chk.addEventListener('change', () => toggleCol(n));
-    // Label
-    const lbl = document.createElement('label');
-    lbl.className = 'col-cfg-label'; lbl.htmlFor = 'chk-col' + n;
-    lbl.textContent = label;
-    // Header text input
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.id = inputId; inp.placeholder = ph;
-    inp.value = snap[inputId] !== undefined ? snap[inputId] : (COL_DEFAULTS[inputId] || '');
-    inp.addEventListener('input', () => { if (extra) renderPositionsList(); render(); });
-    // Alignment buttons
-    const alignWrap = document.createElement('div');
-    alignWrap.className = 'col-align-btns';
-    [['l','L'],['c','C'],['r','R']].forEach(([a, txt]) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'col-align-btn' + (colAlign[n] === a ? ' active' : '');
-      btn.textContent = txt;
-      btn.title = a === 'l' ? 'Links' : a === 'c' ? 'Mitte' : 'Rechts';
-      btn.addEventListener('click', () => setColAlign(n, a));
-      alignWrap.appendChild(btn);
-    });
-    row.appendChild(chk); row.appendChild(lbl); row.appendChild(inp); row.appendChild(alignWrap);
-    container.appendChild(row);
-  });
-}
-
-function setColAlign(n, align) {
-  colAlign[n] = align;
-  renderColConfig();
-  render();
-}
-
-// ── CONTACTS ─────────────────────────────────────────────────
-const DEFAULT_CONTACTS = [
-  {
-    strasse: "Gerbestrasse 22", ort: "3550 Langnau i. E.",
-    namen: ["Pneu Service Heinz Gerber","Herr Daniel Burkhalter","Herr Novotny Leos","Herr Krisztian Gombas"]
-  },
-  {
-    strasse: "Herrengässli 1", ort: "3532 Zäziwil",
-    namen: ["Frau Annemarie Kammermann","Laura und Andreas Mumenthaler","Herr Andreas Minder","Herr Markus Gehri"]
-  },
-  {
-    strasse: "Gotthelfstrasse 12", ort: "3432 Lützelflüh",
-    namen: ["Herr Patrick Neuhaus","Frau Selina Schär, Herr Tim Rothenbühler","Jakob GmbH"]
-  },
-  {
-    strasse: "Hausmattweg 3", ort: "3323 Bäriswil",
-    namen: ["Herr Filipe Machado","Nick und Georgia Neuhaus","Frau Narissara Chiankrathok","Frau Rachel Schumacher, Herr Philip Erard"]
-  }
-];
-
-let contacts = [];
-
-async function loadContacts() {
-  try {
-    const res = await fetch('contacts.json');
-    if (res.ok) {
-      contacts = await res.json();
-    } else {
-      contacts = DEFAULT_CONTACTS;
-    }
-  } catch (e) {
-    contacts = DEFAULT_CONTACTS; // file:// or missing — use embedded data
-  }
-  buildContactPicker();
-}
-
-function buildContactPicker() {
-  if (!contacts.length) return;
-  const wrap = document.getElementById('contact-picker-wrap');
-  const sel  = document.getElementById('contact-select');
-  wrap.style.display = 'flex';
-  contacts.forEach((loc, li) => {
-    const grp = document.createElement('optgroup');
-    grp.label = `${loc.strasse}, ${loc.ort}`;
-    loc.namen.forEach((name, ni) => {
-      const opt = document.createElement('option');
-      opt.value = `${li},${ni}`;
-      opt.textContent = name;
-      grp.appendChild(opt);
-    });
-    sel.appendChild(grp);
-  });
-}
-
-function applyContact() {
-  const sel = document.getElementById('contact-select');
-  if (!sel.value) return;
-  const [li, ni] = sel.value.split(',').map(Number);
-  const loc = contacts[li];
-  document.getElementById('f-emp-name').value    = loc.namen[ni];
-  document.getElementById('f-emp-strasse').value = loc.strasse;
-  document.getElementById('f-emp-ort').value     = loc.ort;
-  render();
-}
-
-// ── COMPANIES ─────────────────────────────────────────────────
-const DEFAULT_COMPANIES = [
-  {
-    name: "G Investments & Real Estates AG",
-    header_name: "G INVESTMENTS & REAL ESTATES AG",
-    header_email: "ADMIN@G-INVESTMENTS-REALESTATES.CH",
-    absender_name: "G Investments & Real Estates AG",
-    absender_strasse: "Stygweg 21",
-    absender_ort: "3504 Oberhünigen",
-    bank_name: "Spar+Leihkasse Riggisberg AG",
-    bank_strasse: "Grabenstrasse 7",
-    bank_ort: "3132 Riggisberg",
-    iban: "CH93 0637 4730 0382 2750 4"
-  }
-];
-
-let companies = [];
-
-async function loadCompanies() {
-  try {
-    const res = await fetch('company.json');
-    companies = res.ok ? await res.json() : DEFAULT_COMPANIES;
-  } catch (e) {
-    companies = DEFAULT_COMPANIES;
-  }
-  buildCompanyPicker();
-}
-
-function buildCompanyPicker() {
-  if (!companies.length) return;
-  const wrap = document.getElementById('company-picker-wrap');
-  const sel  = document.getElementById('company-select');
-  wrap.style.display = 'flex';
-  companies.forEach((c, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = c.name;
-    sel.appendChild(opt);
-  });
-  // Auto-apply first company on load
-  sel.value = '0';
-  applyCompany();
-}
-
-function applyCompany() {
-  const sel = document.getElementById('company-select');
-  if (sel.value === '') return;
-  const c = companies[Number(sel.value)];
-  document.getElementById('f-company').value      = c.header_name;
-  document.getElementById('f-email').value        = c.header_email;
-  document.getElementById('f-stell-name').value   = c.absender_name;
-  document.getElementById('f-stell-adresse').value= c.absender_strasse;
-  document.getElementById('f-stell-ort').value    = c.absender_ort;
-  document.getElementById('f-bank-name').value    = c.bank_name;
-  document.getElementById('f-bank-adresse').value = c.bank_strasse;
-  document.getElementById('f-bank-strasse').value = c.bank_ort;
-  document.getElementById('f-iban').value         = c.iban;
-  render();
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  rteInit();
-  // Re-apply settings whenever editor gains focus (browser may reset them)
-  const rteEl = document.getElementById('f-textblock');
-  if (rteEl) {
-    rteEl.addEventListener('focus', () => {
-      document.execCommand('defaultParagraphSeparator', false, 'p');
-      document.execCommand('styleWithCSS', false, false);
-    });
-  }
-  // Set today's date in Datum field
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2,'0');
-  const mm = String(today.getMonth()+1).padStart(2,'0');
-  const yyyy = today.getFullYear();
-  const todayStr = `${dd}.${mm}.${yyyy}`;
-  const datumEl = document.getElementById('mf-value-0');
-  if (datumEl) datumEl.value = todayStr;
-
-  renderColConfig();
-  // Apply initial hidden state for unchecked fields
-  for (let i = 0; i < 5; i++) toggleMetaField(i);
-  [['Strombezug', 0.28, 330], ['Abzug akonto', 800, -1]]
-    .forEach(([d,p,q]) => addPosition(d,p,q));
-  render();
-  updatePreviewScale();
-  loadContacts();
-  loadCompanies();
-  loadVorlagen();
-});
-
-function toggleSection(h) {
-  h.classList.toggle('open');
-  h.nextElementSibling.classList.toggle('open');
-}
-
-function toggleVis(key) {
-  visibility[key] = !visibility[key];
-  const btn = document.getElementById('vis-'+key);
-  btn.innerHTML = visibility[key] ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> sichtbar' : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> ausgeblendet';
-  btn.classList.toggle('hidden-state', !visibility[key]);
-  render();
-}
-
-function toggleCol(n) {
-  visibility['col'+n] = document.getElementById('chk-col'+n).checked;
-  renderPositionsList();
-  render();
-}
-
-let posId = 0;
-const expandedPositions = new Set();
-
-function addPosition(desc='', price=0, qty=1) {
-  const id = posId++;
-  positions.push({ id, desc, price:+price||0, qty: qty === '' ? 1 : +qty, col5:'', col6:'', col7:'', col8:'' });
-  expandedPositions.add(id); // auto-expand new rows
-  renderPositionsList();
-  render();
-}
-function removePosition(id) {
-  positions.splice(positions.findIndex(p=>p.id===id),1);
-  expandedPositions.delete(id);
-  renderPositionsList();
-  render();
-}
-function updatePosition(id, field, value) {
-  const p = positions.find(p=>p.id===id);
-  if (!p) return;
-  if (field === 'price') p[field] = +value || 0;
-  else if (field === 'qty') p[field] = value === '' ? 0 : +value;
-  else p[field] = value;
-  render();
-}
-function renderPositionsList() {
-  const c1 = visibility.col1, c5 = visibility.col5, c6 = visibility.col6;
-  const c2 = visibility.col2, c7 = visibility.col7, c3 = visibility.col3, c8 = visibility.col8, c4 = visibility.col4;
-  const currency = val('f-currency') || 'CHF';
-
-  const list = document.getElementById('positions-list');
-  while (list.firstChild) list.removeChild(list.firstChild);
-
-  const zeilenCount = document.getElementById('zeilen-count');
-  if (zeilenCount) zeilenCount.textContent = positions.length ? positions.length + ' Zeile' + (positions.length !== 1 ? 'n' : '') : '';
-
-  let dragFromGrip = false;
-
-  positions.forEach((pos, idx) => {
-    const isOpen = expandedPositions.has(pos.id);
-
-    // ── ITEM WRAPPER ────────────────────────────────────────────
-    const item = document.createElement('div');
-    item.className = 'pos-item';
-    item.draggable = true;
-
-    // ── DRAG & DROP ─────────────────────────────────────────────
-    item.addEventListener('dragstart', e => {
-      if (!dragFromGrip) { e.preventDefault(); return; }
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', String(pos.id));
-      setTimeout(() => item.classList.add('dragging'), 0);
-    });
-    item.addEventListener('dragend', () => { item.classList.remove('dragging'); dragFromGrip = false; });
-    item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
-    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
-    item.addEventListener('drop', e => {
-      e.preventDefault();
-      item.classList.remove('drag-over');
-      const fromId = parseInt(e.dataTransfer.getData('text/plain'));
-      if (fromId === pos.id) return;
-      const fromIdx = positions.findIndex(p => p.id === fromId);
-      const toIdx = idx;
-      const [moved] = positions.splice(fromIdx, 1);
-      positions.splice(toIdx, 0, moved);
-      renderPositionsList();
-      render();
-    });
-
-    // ── SUMMARY BAR ─────────────────────────────────────────────
-    const summary = document.createElement('div');
-    summary.className = 'pos-summary' + (isOpen ? ' open' : '');
-
-    // Grip handle
-    const grip = document.createElement('span');
-    grip.className = 'pos-grip';
-    grip.textContent = '⠿';
-    grip.title = 'Ziehen zum Verschieben';
-    grip.addEventListener('mousedown', () => { dragFromGrip = true; });
-
-    const chevron = document.createElement('span');
-    chevron.className = 'pos-chevron';
-    chevron.textContent = isOpen ? '▲' : '▼';
-
-    const descSpan = document.createElement('span');
-    descSpan.className = 'pos-summary-desc' + (pos.desc ? '' : ' empty');
-    descSpan.textContent = pos.desc || 'Neue Position';
-
-    const numSpan = document.createElement('span');
-    numSpan.className = 'pos-summary-num';
-    const numParts = [];
-    if (c2) numParts.push(fmt(pos.price));
-    if (c3) numParts.push('×' + pos.qty);
-    if (c4 && (c2 || c3)) numParts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
-    numSpan.textContent = numParts.join(' ');
-
-    // Up / Down buttons
-    const upBtn = document.createElement('button');
-    upBtn.className = 'pos-move-btn'; upBtn.textContent = '↑'; upBtn.title = 'Nach oben';
-    upBtn.disabled = idx === 0;
-    upBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      [positions[idx - 1], positions[idx]] = [positions[idx], positions[idx - 1]];
-      renderPositionsList(); render();
-    });
-
-    const downBtn = document.createElement('button');
-    downBtn.className = 'pos-move-btn'; downBtn.textContent = '↓'; downBtn.title = 'Nach unten';
-    downBtn.disabled = idx === positions.length - 1;
-    downBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      [positions[idx + 1], positions[idx]] = [positions[idx], positions[idx + 1]];
-      renderPositionsList(); render();
-    });
-
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'btn-remove'; removeBtn.textContent = '×';
-    removeBtn.addEventListener('click', e => { e.stopPropagation(); removePosition(pos.id); });
-
-    summary.appendChild(grip);
-    summary.appendChild(chevron);
-    summary.appendChild(descSpan);
-    if (numParts.length) summary.appendChild(numSpan);
-    summary.appendChild(upBtn);
-    summary.appendChild(downBtn);
-    summary.appendChild(removeBtn);
-
-    summary.addEventListener('click', () => {
-      if (expandedPositions.has(pos.id)) expandedPositions.delete(pos.id);
-      else expandedPositions.add(pos.id);
-      renderPositionsList();
-    });
-
-    item.appendChild(summary);
-
-    // ── DETAIL FORM (when expanded) ──────────────────────────────
-    if (isOpen) {
-      const detail = document.createElement('div');
-      detail.className = 'pos-detail';
-
-      const mkLabel = (text) => {
-        const l = document.createElement('label');
-        l.textContent = text; return l;
-      };
-      const mkWrap = () => document.createElement('div');
-
-      // Col 1: description – full width textarea
-      if (c1) {
-        const w = mkWrap();
-        w.appendChild(mkLabel(val('f-col-pos') || 'Position'));
-        const ta = document.createElement('textarea');
-        ta.rows = 2; ta.value = pos.desc; ta.placeholder = 'Beschreibung';
-        ta.style.cssText = 'width:100%;font-size:11.5px;resize:vertical;min-height:34px;max-height:120px;font-family:inherit;line-height:1.4;';
-        ta.addEventListener('input', function() {
-          updatePosition(pos.id, 'desc', this.value);
-          descSpan.textContent = this.value || 'Neue Position';
-          descSpan.className = 'pos-summary-desc' + (this.value ? '' : ' empty');
-        });
-        w.appendChild(ta);
-        detail.appendChild(w);
-      }
-
-      // Remaining columns in a 2-col grid
-      const grid = document.createElement('div');
-      grid.className = 'pos-detail-grid';
-
-      const addGridField = (labelText, inputEl) => {
-        const w = mkWrap();
-        w.appendChild(mkLabel(labelText));
-        w.appendChild(inputEl);
-        grid.appendChild(w);
-      };
-
-      if (c5) {
-        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col5 || ''; i.placeholder = '–';
-        i.addEventListener('input', function() { updatePosition(pos.id, 'col5', this.value); });
-        addGridField(val('f-col-extra5') || 'Spalte 2', i);
-      }
-      if (c6) {
-        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col6 || ''; i.placeholder = '–';
-        i.addEventListener('input', function() { updatePosition(pos.id, 'col6', this.value); });
-        addGridField(val('f-col-extra6') || 'Spalte 3', i);
-      }
-      if (c2) {
-        const i = document.createElement('input'); i.type = 'number'; i.value = pos.price; i.min = '0'; i.step = '0.01';
-        i.addEventListener('input', function() {
-          updatePosition(pos.id, 'price', this.value);
-          numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
-        });
-        addGridField(val('f-col-preis') || 'Preis', i);
-      }
-      if (c7) {
-        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col7 || ''; i.placeholder = '–';
-        i.addEventListener('input', function() { updatePosition(pos.id, 'col7', this.value); });
-        addGridField(val('f-col-extra7') || 'Spalte 5', i);
-      }
-      if (c3) {
-        const i = document.createElement('input'); i.type = 'number'; i.value = pos.qty; i.step = '1';
-        i.addEventListener('input', function() {
-          updatePosition(pos.id, 'qty', this.value);
-          numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
-        });
-        addGridField(val('f-col-menge') || 'Menge', i);
-      }
-      if (c8) {
-        const i = document.createElement('input'); i.type = 'text'; i.value = pos.col8 || ''; i.placeholder = '–';
-        i.addEventListener('input', function() { updatePosition(pos.id, 'col8', this.value); });
-        addGridField(val('f-col-extra8') || 'Spalte 7', i);
-      }
-      if (c4) {
-        const i = document.createElement('input'); i.type = 'text'; i.readOnly = true;
-        i.value = currency + ' ' + fmt(pos.price * pos.qty);
-        i.className = 'pos-total-readonly';
-        addGridField((val('f-col-total') || 'Total') + ' (' + currency + ')', i);
-      }
-
-      if (grid.children.length) detail.appendChild(grid);
-      item.appendChild(detail);
-    }
-
-    list.appendChild(item);
-  });
-}
-
-function buildNumText(pos, c2, c3, c4, currency) {
-  const parts = [];
-  if (c2) parts.push(fmt(pos.price));
-  if (c3) parts.push('×' + pos.qty);
-  if (c4 && (c2 || c3)) parts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
-  return parts.join(' ');
-}
-
-// ── META ROWS (dynamic, 0–5) ───────────────────────────────────
-// ── META FIELDS (fixed, toggle show/hide) ──────────────────
-const META_COUNT = 5;
-
-function toggleMetaField(i) {
-  const row = document.getElementById(`mfr-${i}`);
-  const chk = document.getElementById(`mf-show-${i}`);
-  if (chk.checked) row.classList.remove('mf-hidden');
-  else row.classList.add('mf-hidden');
-}
-
-function getMetaData() {
-  const rows = [];
-  for (let i = 0; i < META_COUNT; i++) {
-    const chk   = document.getElementById(`mf-show-${i}`);
-    const label = document.getElementById(`mf-label-${i}`)?.value.trim() || '';
-    const value = document.getElementById(`mf-value-${i}`)?.value.trim() || '';
-    if (chk?.checked && label) rows.push({ label, value });
-  }
-  return rows;
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function rteInit() {
-  document.execCommand('defaultParagraphSeparator', false, 'p');
-  document.execCommand('styleWithCSS', false, false);
-}
-
-// ── INLINE (bold/italic/underline) ──────────────────────────
-// With selection: wraps/unwraps. Without: toggles typing mode.
-function rteInline(tag, editorId) {
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount) return;
-  const range = sel.getRangeAt(0);
-  const editor = document.getElementById(editorId);
-  if (!editor || !editor.contains(range.commonAncestorContainer)) return;
-
-  if (sel.isCollapsed) {
-    // No selection — toggle typing mode via execCommand (b/i/u)
-    const cmdMap = { b:'bold', i:'italic', u:'underline' };
-    if (cmdMap[tag]) { document.execCommand('styleWithCSS',false,false); document.execCommand(cmdMap[tag],false,null); }
-    return;
-  }
-
-  // Check if already wrapped — toggle off
-  const existing = sel.anchorNode?.parentElement?.closest(tag);
-  if (existing) {
-    const frag = document.createDocumentFragment();
-    while (existing.firstChild) frag.appendChild(existing.firstChild);
-    existing.replaceWith(frag);
-  } else {
-    const wrap = document.createElement(tag);
-    try { range.surroundContents(wrap); }
-    catch { wrap.appendChild(range.extractContents()); range.insertNode(wrap); }
-    const r2 = document.createRange();
-    r2.selectNodeContents(wrap);
-    sel.removeAllRanges(); sel.addRange(r2);
-  }
-}
-
-// ── BLOCK (h1/h2/h3/p) ──────────────────────────────────────
-// Applies formatBlock to the current block — cursor stays in place.
-// On Enter inside a heading → handled by rteKeydown.
-function rteBlock(tag, editorId) {
-  const editor = document.getElementById(editorId);
-  if (!editor) return;
-  // If editor has no content yet, ensure there's a paragraph to format
-  if (!editor.innerText.trim()) {
-    editor.innerHTML = '<p><br></p>';
-    const r = document.createRange();
-    r.setStart(editor.firstChild, 0);
-    r.collapse(true);
-    const s = window.getSelection();
-    s.removeAllRanges(); s.addRange(r);
-  }
-  document.execCommand('styleWithCSS', false, false);
-  document.execCommand('formatBlock', false, tag);
-}
-
-// ── ENTER KEY in headings → drop to <p> ─────────────────────
-function rteKeydown(e, editorId) {
-  if (e.key !== 'Enter') return;
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount) return;
-  const node = sel.getRangeAt(0).startContainer;
-  const el   = node.nodeType === 3 ? node.parentElement : node;
-  const heading = el.closest('h1,h2,h3,h4,h5,h6');
-  if (!heading) return;
-
-  e.preventDefault();
-  const p = document.createElement('p');
-  p.innerHTML = '<br>';
-  heading.after(p);
-  const r = document.createRange();
-  r.setStart(p, 0); r.collapse(true);
-  sel.removeAllRanges(); sel.addRange(r);
-  render();
-}
-
-// ── HR ───────────────────────────────────────────────────────
-function rteInsertHrInEditor(editorId) {
-  const editor = document.getElementById(editorId);
-  if (!editor) return;
-  editor.focus();
-  document.execCommand('insertHTML', false, '<hr><p><br></p>');
-}
-
-// ── SHORTHAND for toolbar buttons ───────────────────────────
-// Editor 1
-function rteCmd(cmd)       { rteInline(cmd==='bold'?'b':cmd==='italic'?'i':'u', 'f-textblock'); }
-function rteCmdRaw(cmd)    { document.execCommand('styleWithCSS',false,false); document.execCommand(cmd,false,null); }
-function rteBlockBtn(tag)  { rteBlock(tag, 'f-textblock'); }
-function rteInsertHr()     { rteInsertHrInEditor('f-textblock'); }
-
-// Editor 2
-function rteCmd2(cmd)      { rteInline(cmd==='bold'?'b':cmd==='italic'?'i':'u', 'f-textblock2'); }
-function rteCmd2Raw(cmd)   { document.execCommand('styleWithCSS',false,false); document.execCommand(cmd,false,null); }
-function rteBlock2(tag)    { rteBlock(tag, 'f-textblock2'); }
-function rteInsertHr2()    { rteInsertHrInEditor('f-textblock2'); }
-function val(id) { return document.getElementById(id)?.value || ''; }
-// Returns value if typed, else the placeholder (for preview display)
-function ph(id) {
-  const el = document.getElementById(id);
-  if (!el) return '';
-  return el.value || el.placeholder || '';
-}
-function chk(id) { return document.getElementById(id)?.checked || false; }
-function fmt(n) { return Number(n).toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-function showTab(tab) {
-  const editor = document.getElementById('editor');
-  const preview = document.getElementById('preview-wrap');
-  const tabs = document.querySelectorAll('.mob-tab');
-  const fab = document.getElementById('mob-preview-btn');
-  if (tab === 'editor') {
-    editor.classList.remove('mob-hidden');
-    preview.classList.add('mob-hidden');
-    tabs[0].classList.add('active');
-    tabs[1].classList.remove('active');
-    fab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Vorschau`;
-    fab.onclick = () => showTab('preview');
-  } else {
-    editor.classList.add('mob-hidden');
-    preview.classList.remove('mob-hidden');
-    tabs[0].classList.remove('active');
-    tabs[1].classList.add('active');
-    fab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editor`;
-    fab.onclick = () => showTab('editor');
-    updatePreviewScale();
-  }
-}
-
-function updatePreviewScale() {
-  const isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-  if (!isMobile) {
-    document.documentElement.style.removeProperty('--preview-scale');
-    return;
-  }
-  const available = window.innerWidth - 16;
-  const scale = Math.min(available / 794, 1);
-  document.documentElement.style.setProperty('--preview-scale', scale);
-}
-
-window.addEventListener('resize', () => { updatePreviewScale(); });
-
-function render() {
-  const wrap = document.getElementById('preview-wrap');
-  const scrollTop = wrap.scrollTop;
-  wrap.innerHTML = '';
-  buildPages().forEach(html => {
-    const d = document.createElement('div');
-    d.innerHTML = html;
-    wrap.appendChild(d.firstElementChild);
-  });
-  wrap.scrollTop = scrollTop;
-  updatePreviewScale();
-}
-
-function buildHeader(isFirst) {
-  const sub = isFirst ? '' : ' page-header--sub';
-  const hide = !visibility.header ? ' style="visibility:hidden"' : '';
-  const company = val('f-company');
-  const email   = val('f-email');
-  const lines   = [company, email].filter(Boolean);
-  return `<div class="page-header${sub}"${hide}>
-    ${lines.length ? `<div class="company-name">${lines.map(esc).join('<br>')}</div>` : ''}
-  </div>`;
-}
-
-function buildFooter() {
-  const vis = visibility.bank ? '' : ' inv-hidden';
-  const bankName    = val('f-bank-name');
-  const bankAdresse = val('f-bank-adresse');
-  const bankStrasse = val('f-bank-strasse');
-  const iban        = val('f-iban');
-  const bankLines   = [bankName, bankAdresse, bankStrasse].filter(Boolean);
-  return `<div class="page-footer${vis}">
-    <hr class="footer-line">
-    <div class="footer-content">
-      <div class="footer-left">
-        ${bankLines.length ? `<span class="footer-bank-label">BANK</span><div>${bankLines.map(esc).join('<br>')}</div>` : ''}
-      </div>
-      ${iban ? `<div class="footer-iban">IBAN &nbsp; ${esc(iban)}</div>` : ''}
-    </div>
-  </div>`;
-}
-
-function buildPages() {
-  const empName    = val('f-emp-name');
-  const empStrasse = val('f-emp-strasse');
-  const empOrt     = val('f-emp-ort');
-  const stName     = val('f-stell-name');
-  const stAdresse  = val('f-stell-adresse');
-  const stOrt      = val('f-stell-ort');
-  const titel      = val('f-titel');
-  const heading    = val('f-heading');
-  const currency   = val('f-currency')   || 'CHF';
-  const showQtyTot = chk('chk-qty-total');
-  const colPos     = val('f-col-pos')      || 'POSITION';
-  const colPreis   = val('f-col-preis')    || 'PREIS';
-  const colMenge   = val('f-col-menge')    || 'MENGE';
-  const colTotal   = val('f-col-total')    || 'TOTAL';
-  const colExtra5  = val('f-col-extra5');
-  const colExtra6  = val('f-col-extra6');
-  const colExtra7  = val('f-col-extra7');
-  const colExtra8  = val('f-col-extra8');
-  const useCol1    = visibility.col1;
-  const useCol2    = visibility.col2;
-  const useCol3    = visibility.col3;
-  const useCol4    = visibility.col4;
-  const useCol5    = visibility.col5;
-  const useCol6    = visibility.col6;
-  const useCol7    = visibility.col7;
-  const useCol8    = visibility.col8;
-  const textblockEl   = document.getElementById('f-textblock');
-  const textblockRaw  = textblockEl ? textblockEl.innerHTML : '';
-  const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
-  const useTextblock  = visibility.textblock && textblockText.length > 0;
-
-  const metaData = getMetaData();
-
-  const showTitel = visibility.titel && titel.trim().length > 0;
-  const total = Math.round(positions.reduce((s, p) => s + p.price * p.qty, 0) * 20) / 20;
-  const totalQty  = positions.reduce((s,p) => s + p.qty, 0);
-
-  // Proportional base weights per column; distribute 100% among visible cols
-  const aC = n => colAlign[n] === 'r' ? ' class="r"' : colAlign[n] === 'c' ? ' class="c"' : '';
-  const colDefs = [
-    { use: useCol1, label: colPos,    n:1, baseW: 46 },
-    { use: useCol5, label: colExtra5, n:5, baseW: 12 },
-    { use: useCol6, label: colExtra6, n:6, baseW: 12 },
-    { use: useCol2, label: colPreis,  n:2, baseW: 16 },
-    { use: useCol7, label: colExtra7, n:7, baseW: 12 },
-    { use: useCol3, label: colMenge,  n:3, baseW: 12 },
-    { use: useCol8, label: colExtra8, n:8, baseW: 12 },
-    { use: useCol4, label: colTotal + ' ' + currency, n:4, baseW: 20 },
-  ];
-  const visCols = colDefs.filter(c => c.use);
-  const totalBaseW = visCols.reduce((s,c) => s + c.baseW, 0) || 1;
-  const tableHead = `<thead><tr>
-    ${visCols.map(c => `<th${aC(c.n)} style="width:${Math.round(c.baseW/totalBaseW*100)}%">${esc(c.label)}</th>`).join('')}
-  </tr></thead>`;
-
-  // Footer spans all cols before col3(Menge), then col3, col8 (empty), col4(Total)
-  const footColspan = [useCol1, useCol5, useCol6, useCol2, useCol7].filter(Boolean).length || 1;
-  const tableFoot = (isLast) => isLast ? `<tfoot><tr>
-    <td colspan="${footColspan}">Total</td>
-    ${useCol3 ? `<td${aC(3)}>${showQtyTot ? totalQty : ''}</td>` : ''}
-    ${useCol8 ? `<td></td>` : ''}
-    ${useCol4 ? `<td${aC(4)}>${esc(currency)} ${fmt(total)}</td>` : ''}
-  </tr></tfoot>` : '';
-
-  const nl2br = s => esc(s).replace(/\n/g, '<br>');
-  const rowHTML = p => {
-  // 1. Berechnung des Zeilentotals
-  const rowTotal = p.price * p.qty;
-  
-  // 2. Rundung auf 5 Rappen (CHF)
-  const roundedTotal = Math.round(rowTotal * 20) / 20;
-
-  return `<tr>
-    ${useCol1 ? `<td${aC(1)}>${nl2br(p.desc)}</td>` : ''}
-    ${useCol5 ? `<td${aC(5)}>${esc(p.col5||'')}</td>` : ''}
-    ${useCol6 ? `<td${aC(6)}>${esc(p.col6||'')}</td>` : ''}
-    ${useCol2 ? `<td${aC(2)}>${fmt(p.price)}</td>` : ''}
-    ${useCol7 ? `<td${aC(7)}>${esc(p.col7||'')}</td>` : ''}
-    ${useCol3 ? `<td${aC(3)}>${p.qty}</td>` : ''}
-    ${useCol8 ? `<td${aC(8)}>${esc(p.col8||'')}</td>` : ''}
-    ${useCol4 ? `<td${aC(4)}>${fmt(roundedTotal)}</td>` : ''}
-  </tr>`;
-};
-
-  const headingVisible = visibility.heading && heading.trim().length > 0;
-  const sepHide        = !visibility.heading ? ' style="visibility:hidden"' : '';
-  const headingHide    = !headingVisible ? ' style="visibility:hidden"' : '';
-  const headingText    = heading.trim() || '\u00A0';
-  const separatorHTML  = `<div class="separator-area"${sepHide}>
-    <div class="separator-left"><hr class="separator-line"></div>
-    <div class="separator-right"><span class="invoice-heading-text"${headingHide}>${esc(headingText)}</span></div>
-  </div>`;
-
-  const empLines  = [empName, empStrasse, empOrt].filter(Boolean);
-  const empBlock  = empLines.length && visibility.empfaenger
-    ? `<div class="emp-block">${empLines.map(esc).join('<br>')}</div>` : '';
-  const stLines   = [stName, stAdresse, stOrt].filter(Boolean);
-  const stellHTML = stLines.length && visibility.steller ? stLines.map(esc).join('<br>') : '';
-  const metaVisible = metaData;
-  const metaColHTML = (visibility.meta && metaVisible.length > 0)
-    ? `<div class="meta-col"><table class="meta-table">
-        ${metaVisible.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.value)}</td></tr>`).join('')}
-      </table></div>` : '';
-
-  const contentTopHTML = `${empBlock}<div class="steller-meta-row">
-    <div class="steller-col">${stellHTML}</div>${metaColHTML}
-  </div>`;
-  const titleHTML = showTitel ? `<div class="invoice-title">${esc(titel)}</div>` : '';
-
-  // ── MEASUREMENT-BASED PAGINATOR ─────────────────────────────
-  // Content width inside page-content = 794 - 2×56 = 682px
-  const mC = document.createElement('div');
-  mC.style.cssText = 'position:fixed;left:-9999px;top:0;width:682px;font-family:"Open Sans",sans-serif;font-size:12px;color:#2c2c2c;visibility:hidden;pointer-events:none;';
-  document.body.appendChild(mC);
-  const mW = document.createElement('div');
-  mW.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;font-family:"Open Sans",sans-serif;font-size:12px;visibility:hidden;pointer-events:none;';
-  document.body.appendChild(mW);
-
-  const mH  = html => { mC.innerHTML = html; return mC.scrollHeight; };
-  const mHW = html => { mW.innerHTML = html; return mW.scrollHeight; };
-
-  const PAGE_H  = 1123;
-  const PAD_BOT = 120; // page-content padding-bottom acts as footer buffer
-
-  const hH1     = mHW(buildHeader(true));
-  const hHN     = mHW(buildHeader(false));
-  const avail1  = PAGE_H - PAD_BOT - hH1;   // available content px on page 1
-  const availN  = PAGE_H - PAD_BOT - hHN;   // available content px on subsequent pages
-
-  // Fixed first-page content height (separator + addresses + title)
-  const hStatic1 = mH(separatorHTML + contentTopHTML + titleHTML);
-
-  // Textblock: parse innerHTML into top-level element strings for fitting
-  const tbParser = document.createElement('div');
-  tbParser.innerHTML = useTextblock ? textblockRaw : '';
-  const tbElements = (() => {
-    if (!useTextblock) return [];
-    const kids = Array.from(tbParser.childNodes);
-    const blocks = kids.map(n => {
-      if (n.nodeType === 3) return n.textContent.trim() ? `<p>${n.textContent}</p>` : null;
-      return n.outerHTML || null;
-    }).filter(Boolean);
-    return blocks.length ? blocks : (textblockRaw.trim() ? [textblockRaw] : []);
-  })();
-
-  function tbElH(els) {
-    if (!els.length) return 0;
-    return mH(`<div class="text-block">${els.join('')}</div>`);
-  }
-  function fitElements(els, maxH) {
-    if (!els.length || maxH <= 0) return { fit: [], rest: els };
-    if (tbElH(els) <= maxH)       return { fit: els, rest: [] };
-    let lo = 0, hi = els.length;
-    while (lo < hi) {
-      const mid = Math.ceil((lo + hi) / 2);
-      if (tbElH(els.slice(0, mid)) <= maxH) lo = mid; else hi = mid - 1;
-    }
-    if (lo === 0) lo = 1;
-    return { fit: els.slice(0, lo), rest: els.slice(lo) };
-  }
-
-  // Table height helpers
-  function tableH(fromIdx, count, isLast) {
-    const slice = positions.slice(fromIdx, fromIdx + count);
-    return mH(`<table class="items-table">${tableHead}<tbody>${slice.map(rowHTML).join('')}</tbody>${tableFoot(isLast)}</table>`);
-  }
-
-  // Binary search: max rows from positions[fromIdx] that fit in maxH px
-  function fitRows(fromIdx, maxH) {
-    const rem = positions.length - fromIdx;
-    if (rem <= 0 || maxH <= 0) return { count: 0, nextIdx: fromIdx };
-    if (mH(`<table class="items-table">${tableHead}<tbody></tbody></table>`) > maxH) {
-      return { count: 0, nextIdx: fromIdx };
-    }
-    let lo = 0, hi = rem;
-    while (lo < hi) {
-      const mid = Math.ceil((lo + hi) / 2);
-      const isLast = (fromIdx + mid >= positions.length);
-      if (tableH(fromIdx, mid, isLast) <= maxH) lo = mid; else hi = mid - 1;
-    }
-    if (lo === 0) lo = 1;
-    return { count: lo, nextIdx: fromIdx + lo };
-  }
-
-  // Textblock2 (after table)
-  const tb2El   = document.getElementById('f-textblock2');
-  const tb2Raw  = tb2El ? tb2El.innerHTML : '';
-  const tb2Text = tb2El ? tb2El.innerText.trim() : '';
-  const useTb2  = visibility.textblock2 && tb2Text.length > 0;
-  const tb2Parser = document.createElement('div');
-  tb2Parser.innerHTML = useTb2 ? tb2Raw : '';
-  const tb2Elements = (() => {
-    if (!useTb2) return [];
-    const kids = Array.from(tb2Parser.childNodes);
-    const blocks = kids.map(n => {
-      if (n.nodeType === 3) return n.textContent.trim() ? `<p>${n.textContent}</p>` : null;
-      return n.outerHTML || null;
-    }).filter(Boolean);
-    return blocks.length ? blocks : (tb2Raw.trim() ? [tb2Raw] : []);
-  })();
-
-  function tb2ElH(els) {
-    if (!els.length) return 0;
-    return mH(`<div class="text-block">${els.join('')}</div>`);
-  }
-  function fitElements2(els, maxH) {
-    if (!els.length || maxH <= 0) return { fit: [], rest: els };
-    if (tb2ElH(els) <= maxH)       return { fit: els, rest: [] };
-    let lo = 0, hi = els.length;
-    while (lo < hi) {
-      const mid = Math.ceil((lo + hi) / 2);
-      if (tb2ElH(els.slice(0, mid)) <= maxH) lo = mid; else hi = mid - 1;
-    }
-    if (lo === 0) lo = 1;
-    return { fit: els.slice(0, lo), rest: els.slice(lo) };
-  }
-
-  // ── BUILD PAGES ─────────────────────────────────────────────
-  const pages = [];
-  let tbRest  = tbElements.slice();
-  let tb2Rest = tb2Elements.slice();
-  let posIdx  = 0;
-  let pageNum = 0;
-  const needTable = visibility.positionen;
-  const tableFinished = () => !needTable || posIdx >= positions.length;
-  const hasMoreContent = () =>
-    tbRest.length > 0 ||
-    (needTable && posIdx < positions.length) ||
-    tb2Rest.length > 0;
-
-  do {
-    const isFirst = pageNum === 0;
-    const avail   = isFirst ? avail1 : availN;
-    let remaining = avail - (isFirst ? hStatic1 : 0);
-    const parts   = isFirst ? [separatorHTML + contentTopHTML + titleHTML] : [];
-
-    // Fit textblock1 elements
-    if (tbRest.length > 0) {
-      const { fit, rest } = fitElements(tbRest, remaining);
-      if (fit.length > 0) {
-        parts.push(`<div class="text-block">${fit.join('')}</div>`);
-        remaining -= tbElH(fit);
-      }
-      tbRest = rest;
-    }
-
-    // Fit table rows
-    if (needTable) {
-      if (positions.length === 0) {
-        if (isFirst) {
-          parts.push(`<table class="items-table">${tableHead}<tbody></tbody>${tableFoot(true)}</table>`);
-          remaining = 0;
-        }
-      } else if (posIdx < positions.length) {
-        const { count, nextIdx } = fitRows(posIdx, remaining);
-        if (count > 0) {
-          const isLastSlice = nextIdx >= positions.length;
-          const slice = positions.slice(posIdx, nextIdx);
-          parts.push(`<table class="items-table">${tableHead}<tbody>${slice.map(rowHTML).join('')}</tbody>${tableFoot(isLastSlice)}</table>`);
-          remaining -= tableH(posIdx, count, isLastSlice);
-          posIdx = nextIdx;
-        }
-      }
-    }
-
-    // Fit textblock2 elements (only after table is fully rendered)
-    if (tableFinished() && tb2Rest.length > 0) {
-      const { fit, rest } = fitElements2(tb2Rest, remaining);
-      if (fit.length > 0) {
-        parts.push(`<div class="text-block">${fit.join('')}</div>`);
-        remaining -= tb2ElH(fit);
-      }
-      tb2Rest = rest;
-    }
-
-    pages.push(`<div class="a4-page">${buildHeader(isFirst)}<div class="page-content">${parts.join('')}</div>${buildFooter()}</div>`);
-    pageNum++;
-
-  } while (hasMoreContent());
-
-  // Cleanup measurers
-  document.body.removeChild(mC);
-  document.body.removeChild(mW);
-
-  if (pages.length === 0) {
-    pages.push(`<div class="a4-page">${buildHeader(true)}<div class="page-content">${separatorHTML}${contentTopHTML}${titleHTML}</div>${buildFooter()}</div>`);
-  }
-
-  return pages;
-}
-
-// ── VORLAGEN ────────────────────────────────────────────────────
-const TPLS_KEY = 'rechnungsgenerator_vorlagen';
-
-function loadTemplatesData() {
-  try { return JSON.parse(localStorage.getItem(TPLS_KEY) || '{}'); } catch { return {}; }
-}
-function saveTemplatesData(data) {
-  localStorage.setItem(TPLS_KEY, JSON.stringify(data));
-}
-
-let fixedVorlagen = {};
-
-async function loadVorlagen() {
-  try {
-    const res = await fetch('vorlagen.json');
-    if (res.ok) fixedVorlagen = await res.json();
-  } catch { /* no file or file:// – ignore */ }
-  buildTemplateList();
-}
-
-function buildTemplateList() {
-  const sel = document.getElementById('template-select');
-  const cur = sel.value;
-  sel.textContent = '';
-  const placeholder = document.createElement('option');
-  placeholder.value = ''; placeholder.textContent = '— Vorlage wählen —';
-  sel.appendChild(placeholder);
-
-  const fixedKeys = Object.keys(fixedVorlagen).sort();
-  const localData = loadTemplatesData();
-  const localKeys = Object.keys(localData).sort();
-
-  if (fixedKeys.length) {
-    const grp = document.createElement('optgroup');
-    grp.label = 'Fixe Vorlagen';
-    fixedKeys.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = 'fixed:' + name; opt.textContent = name;
-      grp.appendChild(opt);
-    });
-    sel.appendChild(grp);
-  }
-  if (localKeys.length) {
-    const grp = document.createElement('optgroup');
-    grp.label = 'Eigene Vorlagen';
-    localKeys.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = 'local:' + name; opt.textContent = name;
-      grp.appendChild(opt);
-    });
-    sel.appendChild(grp);
-  }
-
-  const hasCur = cur && (
-    (cur.startsWith('fixed:') && fixedVorlagen[cur.slice(6)]) ||
-    (cur.startsWith('local:') && localData[cur.slice(6)])
-  );
-  if (hasCur) sel.value = cur;
-}
-
-function collectState() {
-  const fieldIds = [
-    'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
-    'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
-    'f-col-pos','f-col-preis','f-col-menge','f-col-total','f-col-extra5','f-col-extra6','f-col-extra7','f-col-extra8',
-    'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse'
-  ];
-  const fields = {};
-  fieldIds.forEach(id => { fields[id] = val(id); });
-  const meta = [];
-  for (let i = 0; i < META_COUNT; i++) {
-    meta.push({
-      show:  document.getElementById(`mf-show-${i}`)?.checked || false,
-      label: val(`mf-label-${i}`),
-      value: val(`mf-value-${i}`)
-    });
-  }
-  const tb  = document.getElementById('f-textblock');
-  const tb2 = document.getElementById('f-textblock2');
-  return {
-    fields,
-    meta,
-    visibility: {...visibility},
-    colAlign:   {...colAlign},
-    positions:  positions.map(p => ({...p})),
-    textblock:  tb  ? tb.innerHTML  : '',
-    textblock2: tb2 ? tb2.innerHTML : '',
-    qtyTotal:   chk('chk-qty-total')
-  };
-}
-
-function syncVisBtn(key) {
-  const btn = document.getElementById('vis-' + key);
-  if (!btn) return;
-  const v = visibility[key];
-  const svgEye  = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const svgHide = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-  btn.textContent = '';
-  btn.insertAdjacentHTML('beforeend', v ? svgEye + ' sichtbar' : svgHide + ' ausgeblendet');
-  btn.classList.toggle('hidden-state', !v);
-}
-
-function applyState(state) {
-  // Restore text fields
-  Object.entries(state.fields || {}).forEach(([id, v]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = v;
-  });
-  // Restore meta fields
-  (state.meta || []).forEach((m, i) => {
-    const showEl  = document.getElementById(`mf-show-${i}`);
-    const labelEl = document.getElementById(`mf-label-${i}`);
-    const valueEl = document.getElementById(`mf-value-${i}`);
-    if (showEl)  showEl.checked = m.show;
-    if (labelEl) labelEl.value  = m.label;
-    if (valueEl) valueEl.value  = m.value;
-    toggleMetaField(i);
-  });
-  // Restore visibility toggles
-  if (state.visibility) {
-    Object.assign(visibility, state.visibility);
-    ['header','heading','empfaenger','steller','meta','titel','textblock','positionen','textblock2','bank']
-      .forEach(syncVisBtn);
-  }
-  // Restore column alignment
-  if (state.colAlign) Object.assign(colAlign, state.colAlign);
-  // Re-render column config (updates checkboxes + alignment buttons)
-  renderColConfig();
-  // Restore table rows
-  positions.length = 0;
-  expandedPositions.clear();
-  (state.positions || []).forEach(p => positions.push({...p}));
-  posId = positions.length ? Math.max(...positions.map(p => p.id)) + 1 : 0;
-  renderPositionsList();
-  // Restore RTE content via DOMParser (avoids innerHTML assignment)
-  const setRTE = (id, html) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const parsed = new DOMParser().parseFromString(html || '', 'text/html');
-    el.replaceChildren(...Array.from(parsed.body.childNodes));
-  };
-  setRTE('f-textblock',  state.textblock);
-  setRTE('f-textblock2', state.textblock2);
-  // Restore qty-total checkbox
-  const qtyEl = document.getElementById('chk-qty-total');
-  if (qtyEl) qtyEl.checked = !!state.qtyTotal;
-  render();
-}
-
-function saveTemplate() {
-  const nameEl = document.getElementById('template-name');
-  const name = nameEl.value.trim();
-  if (!name) { nameEl.focus(); return; }
-  const data = loadTemplatesData();
-  data[name] = collectState();
-  saveTemplatesData(data);
-  buildTemplateList();
-  document.getElementById('template-select').value = 'local:' + name;
-  nameEl.value = '';
-}
-
-function loadTemplate() {
-  const raw = document.getElementById('template-select').value;
-  if (!raw) return;
-  let state;
-  if (raw.startsWith('fixed:')) state = fixedVorlagen[raw.slice(6)];
-  else if (raw.startsWith('local:')) state = loadTemplatesData()[raw.slice(6)];
-  if (state) applyState(state);
-}
-
-function deleteTemplate() {
-  const raw = document.getElementById('template-select').value;
-  if (!raw) return;
-  if (raw.startsWith('fixed:')) { alert('Fixe Vorlagen können nicht gelöscht werden.'); return; }
-  const name = raw.slice(6);
-  if (!confirm(`Vorlage "${name}" löschen?`)) return;
-  const data = loadTemplatesData();
-  delete data[name];
-  saveTemplatesData(data);
-  buildTemplateList();
-}
-
-function downloadCurrentAsJSON() {
-  const nameEl = document.getElementById('template-name');
-  const name = nameEl.value.trim() || 'Vorlage';
-  const blob = new Blob([JSON.stringify({ [name]: collectState() }, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name.replace(/\s+/g, '_') + '.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function exportTemplates() {
-  const data = loadTemplatesData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'vorlagen_export.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function importTemplates(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const imported = JSON.parse(e.target.result);
-      const existing = loadTemplatesData();
-      Object.assign(existing, imported);
-      saveTemplatesData(existing);
-      buildTemplateList();
-    } catch { alert('Ungültige JSON-Datei.'); }
-  };
-  reader.readAsText(file);
-  input.value = '';
-}
-
-async function downloadPDF() {
-  const btn = document.getElementById('btn-download');
-  const loading = document.getElementById('loading');
-  btn.disabled = true; loading.classList.add('show');
-  try {
-    const { jsPDF } = window.jspdf;
-    const pages = document.querySelectorAll('#preview-wrap .a4-page');
-    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-    for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i], { scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false, width:794, height:1123 });
-      if (i > 0) pdf.addPage();
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
-    }
-    pdf.save(`${(val('f-titel')||'Rechnung').replace(/\s+/g,'_')}.pdf`);
-  } catch(e) {
-    alert('Fehler: ' + e.message);
-  } finally {
-    btn.disabled = false; loading.classList.remove('show');
-  }
-}
-
-// ══ EDITOR RESIZE ══
-(function() {
-  const handle = document.getElementById('resize-handle');
-  const editor = document.getElementById('editor');
-  let startX, startW;
-  handle.addEventListener('mousedown', e => {
-    startX = e.clientX;
-    startW = editor.offsetWidth;
-    handle.classList.add('dragging');
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    const onMove = ev => {
-      const w = Math.max(280, Math.min(800, startW + ev.clientX - startX));
-      editor.style.width = w + 'px';
-    };
-    const onUp = () => {
-      handle.classList.remove('dragging');
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-})();
-</script>
 </body>
 </html>

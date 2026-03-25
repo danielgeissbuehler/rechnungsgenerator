@@ -1,0 +1,196 @@
+// ── Supabase Configuration ──────────────────────────────────────────────────
+// 1. Erstelle ein Supabase-Projekt unter https://supabase.com
+// 2. Führe im SQL-Editor aus:
+//
+//    CREATE TABLE vorlagen (
+//      id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+//      name       TEXT UNIQUE NOT NULL,
+//      data       JSONB NOT NULL,
+//      created_at TIMESTAMPTZ DEFAULT NOW()
+//    );
+//    ALTER TABLE vorlagen ENABLE ROW LEVEL SECURITY;
+//    CREATE POLICY "public_access" ON vorlagen FOR ALL USING (true) WITH CHECK (true);
+//
+// 3. Ersetze die Werte unten mit deinen Projekt-Credentials
+//    (Settings → API → Project URL / anon public key)
+// ──────────────────────────────────────────────────────────────────────────────
+
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL      ?? 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? 'YOUR_SUPABASE_ANON_KEY';
+
+let supabase = null;
+
+export function isConfigured() {
+  return SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+}
+
+function getClient() {
+  if (supabase) return supabase;
+  if (!isConfigured()) return null;
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return supabase;
+}
+
+export async function fetchCloudTemplates() {
+  const client = getClient();
+  if (!client) return {};
+  const { data, error } = await client
+    .from('vorlagen')
+    .select('name, data')
+    .order('name');
+  if (error) { console.error('Supabase fetch:', error.message); return {}; }
+  return Object.fromEntries(data.map(r => [r.name, r.data]));
+}
+
+export async function saveCloudTemplate(name, templateState) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client
+    .from('vorlagen')
+    .upsert({ name, data: templateState }, { onConflict: 'name' });
+  if (error) { console.error('Supabase save:', error.message); return false; }
+  return true;
+}
+
+export async function deleteCloudTemplate(name) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client.from('vorlagen').delete().eq('name', name);
+  if (error) { console.error('Supabase delete:', error.message); return false; }
+  return true;
+}
+
+export async function getSession() {
+  const client = getClient();
+  if (!client) return null;
+  const { data: { session } } = await client.auth.getSession();
+  return session;
+}
+
+export async function signIn(email, password) {
+  const client = getClient();
+  if (!client) return { error: 'Supabase not configured' };
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
+  return { session: data.session };
+}
+
+export async function signOut() {
+  const client = getClient();
+  if (!client) return;
+  await client.auth.signOut();
+}
+
+// ── Absender CRUD ────────────────────────────────────────────────────────────
+export async function fetchAbsender() {
+  const client = getClient();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('absender')
+    .select('*')
+    .order('name');
+  if (error) { console.error('fetchAbsender:', error.message); return []; }
+  return data;
+}
+
+export async function saveAbsenderRecord(record) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client
+    .from('absender')
+    .upsert(record, { onConflict: 'name,user_id' });
+  if (error) { console.error('saveAbsender:', error.message); return false; }
+  return true;
+}
+
+export async function deleteAbsenderRecord(id) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client.from('absender').delete().eq('id', id);
+  if (error) { console.error('deleteAbsender:', error.message); return false; }
+  return true;
+}
+
+// ── Empfänger CRUD ───────────────────────────────────────────────────────────
+export async function fetchEmpfaenger() {
+  const client = getClient();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('empfaenger')
+    .select('*')
+    .order('name');
+  if (error) { console.error('fetchEmpfaenger:', error.message); return []; }
+  return data;
+}
+
+export async function saveEmpfaengerRecord(record) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client
+    .from('empfaenger')
+    .upsert(record, { onConflict: 'name,user_id' });
+  if (error) { console.error('saveEmpfaenger:', error.message); return false; }
+  return true;
+}
+
+export async function deleteEmpfaengerRecord(id) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client.from('empfaenger').delete().eq('id', id);
+  if (error) { console.error('deleteEmpfaenger:', error.message); return false; }
+  return true;
+}
+
+// ── Rechnungsarchiv ──────────────────────────────────────────────────────────
+export async function getNextInvoiceNumber(absenderName) {
+  const client = getClient();
+  if (!client) return null;
+  const { data, error } = await client.rpc('naechste_rechnungsnummer', { p_absender: absenderName });
+  if (error) { console.error('getNextInvoiceNumber:', error.message); return null; }
+  return data;
+}
+
+export async function saveRechnung(record) {
+  const client = getClient();
+  if (!client) return null;
+  const { data, error } = await client
+    .from('rechnungen')
+    .insert(record)
+    .select('id')
+    .single();
+  if (error) { console.error('saveRechnung:', error.message); return null; }
+  return data.id;
+}
+
+export async function fetchRechnungen() {
+  const client = getClient();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('rechnungen')
+    .select('id, nummer, absender_name, empfaenger_name, betrag, waehrung, created_at')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('fetchRechnungen:', error.message); return []; }
+  return data;
+}
+
+export async function fetchRechnungById(id) {
+  const client = getClient();
+  if (!client) return null;
+  const { data, error } = await client
+    .from('rechnungen')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error) { console.error('fetchRechnungById:', error.message); return null; }
+  return data;
+}
+
+export async function deleteRechnung(id) {
+  const client = getClient();
+  if (!client) return false;
+  const { error } = await client.from('rechnungen').delete().eq('id', id);
+  if (error) { console.error('deleteRechnung:', error.message); return false; }
+  return true;
+}
