@@ -40,10 +40,7 @@ export async function loadContacts() {
       return;
     }
   }
-  try {
-    const res = await fetch('contacts.json');
-    contacts = res.ok ? await res.json() : DEFAULT_CONTACTS;
-  } catch { contacts = DEFAULT_CONTACTS; }
+  contacts = DEFAULT_CONTACTS;
   buildContactPicker();
 }
 
@@ -97,10 +94,7 @@ export async function loadCompanies() {
       return;
     }
   }
-  try {
-    const res = await fetch('company.json');
-    companies = res.ok ? await res.json() : DEFAULT_COMPANIES;
-  } catch { companies = DEFAULT_COMPANIES; }
+  companies = DEFAULT_COMPANIES;
   buildCompanyPicker();
 }
 

@@ -28,11 +28,6 @@ function setCloudStatus(msg, type) {
 
 // ── Load all templates ─────────────────────────────────────────────────────
 export async function loadVorlagen() {
-  try {
-    const res = await fetch('vorlagen.json');
-    if (res.ok) fixedVorlagen = await res.json();
-  } catch { /* no file or file:// */ }
-
   if (cloud.isConfigured()) {
     setCloudStatus('☁ Cloud wird geladen…', 'sync-info');
     try {
