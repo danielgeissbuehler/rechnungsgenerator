@@ -1,7 +1,7 @@
 /* ══ EDITOR ══ */
 #editor { width:460px; min-width:420px; background:var(--form-bg); overflow-y:auto; padding:20px 16px 40px; border-right:1px solid var(--border); flex-shrink:0; color:var(--text); }
 #editor h1 { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#b0b8c8; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
-#logout-btn { display:none; margin-left:auto; }
+
 
 .section-block { margin-bottom:8px; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
 .section-header { display:flex; align-items:center; justify-content:space-between; padding:6px 12px; background:var(--section-header); cursor:pointer; user-select:none; font-size:10px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#5a6478; transition:background .15s; }

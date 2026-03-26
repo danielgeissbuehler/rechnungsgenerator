@@ -38,7 +38,8 @@ function showApp() {
   const login = document.getElementById('view-login');
   const app = document.getElementById('app');
   if (login) login.style.display = 'none';
-  if (app) app.style.display = '';
+  if (app) app.style.display = 'contents';
+  showLogoutButton();
 }
 
 export async function handleLogin() {
