@@ -47,6 +47,20 @@ export function showTab(tab) {
   }
 }
 
+// ── Sidebar collapse ──────────────────────────────────────────────────────
+const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
+
+export function toggleSidebarCollapse() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? '1' : '0');
+}
+
+export function restoreSidebarState() {
+  if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1') {
+    document.body.classList.add('sidebar-collapsed');
+  }
+}
+
 // ── Editor resize handle ───────────────────────────────────────────────────
 export function initResizeHandle() {
   const handle = document.getElementById('resize-handle');

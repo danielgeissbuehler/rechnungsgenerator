@@ -6,9 +6,9 @@ import { renderColConfig, toggleCol, setColAlign } from './columns.js';
 import { toggleMetaField } from './meta.js';
 import { loadContacts, loadCompanies, applyContact, applyCompany, saveCurrentAbsender, saveCurrentEmpfaenger } from './contacts.js';
 import { loadVorlagen, saveTemplate, loadTemplate, deleteTemplate, exportTemplates, importTemplates, downloadCurrentAsJSON } from './templates.js';
-import { downloadPDF } from './pdf.js';
-import { toggleSection, toggleVis, showTab, initResizeHandle } from './ui.js';
-import { bucheRechnung, ladeAusArchiv, loescheAusArchiv, neueRechnung, renderArchivListe, setReadonly, speichereEntwurf, kopieRechnung } from './archiv.js';
+import { downloadPDF, printPDF } from './pdf.js';
+import { toggleSection, toggleVis, showTab, initResizeHandle, toggleSidebarCollapse, restoreSidebarState } from './ui.js';
+import { bucheRechnung, ladeAusArchiv, ladeEntwurf, loescheAusArchiv, neueRechnung, renderArchivListe, setReadonly, speichereEntwurf, kopieRechnung, autoSave } from './archiv.js';
 import {
   showDashboard, showEditor, loadRechnungen,
   dashFilterChanged, dashSetStatusTab,
@@ -16,11 +16,61 @@ import {
   openDetailPanel, closeDetailPanel,
   handleStatusChange, handleKopieRechnung,
   renderDashboardStats,
+  dashSortBy,
 } from './dashboard.js';
+import {
+  fillSimpleEditor, renderSimplePositions,
+  addSimplePosition, removeSimplePosition,
+  syncField, syncRte,
+  applySimpleContact, applySimpleCompany,
+} from './editor-simple.js';
+
+// ── Global confirm dialog ─────────────────────────────────────────────────
+/**
+ * Show a styled confirmation dialog. Returns a Promise<boolean>.
+ * @param {string} title
+ * @param {string} [msg]
+ * @param {string} [okLabel]
+ */
+window.showConfirm = function(title, msg, okLabel) {
+  return new Promise(function(resolve) {
+    const modal    = document.getElementById('confirm-modal');
+    const titleEl  = document.getElementById('confirm-modal-title');
+    const msgEl    = document.getElementById('confirm-modal-msg');
+    const okBtn    = document.getElementById('confirm-modal-ok');
+    const cancelBtn= document.getElementById('confirm-modal-cancel');
+    if (!modal) { resolve(false); return; }
+
+    titleEl.textContent = title || '';
+    msgEl.textContent   = msg   || '';
+    okBtn.textContent   = okLabel || 'Löschen';
+    modal.style.display = 'flex';
+
+    function cleanup(result) {
+      modal.style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      modal.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    }
+    function onOk()      { cleanup(true);  }
+    function onCancel()  { cleanup(false); }
+    function onBackdrop(e) { if (e.target === modal) cleanup(false); }
+    function onKey(e)    { if (e.key === 'Escape') cleanup(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    modal.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+    // Focus the cancel button by default (safer default for destructive actions)
+    cancelBtn.focus();
+  });
+};
 
 // ── Expose globals for inline HTML event handlers ─────────────────────────
 Object.assign(window, {
-  render, addPosition, toggleSection, toggleVis, showTab, downloadPDF,
+  render, addPosition, toggleSection, toggleVis, showTab, toggleSidebarCollapse, downloadPDF, printPDF,
   saveTemplate, loadTemplate, deleteTemplate, exportTemplates, importTemplates, downloadCurrentAsJSON,
   applyContact, applyCompany, saveCurrentAbsender, saveCurrentEmpfaenger,
   toggleCol, setColAlign, toggleMetaField,
@@ -28,13 +78,18 @@ Object.assign(window, {
   rteCmd2, rteCmd2Raw, rteBlock2, rteInsertHr2, rteKeydown,
   handleLogin, handleLogout,
   bucheRechnung, ladeAusArchiv, loescheAusArchiv, neueRechnung, renderArchivListe,
-  speichereEntwurf, kopieRechnung,
+  speichereEntwurf, kopieRechnung, autoSave, ladeEntwurf,
   showDashboard, showEditor, loadRechnungen,
   dashFilterChanged, dashSetStatusTab,
   handleNeueRechnung, closeNeueRechnungModal, confirmNeueRechnung,
   openDetailPanel, closeDetailPanel,
   handleStatusChange, handleKopieRechnung,
-  renderDashboardStats,
+  renderDashboardStats, dashSortBy,
+  // Einfacher Rechnungs-Editor
+  fillSimpleEditor, renderSimplePositions,
+  addSimplePosition, removeSimplePosition,
+  syncField, syncRte,
+  applySimpleContact, applySimpleCompany,
   loadTemplateByName: function(name) {
     if (!name) return;
     const sel = document.getElementById('template-select');
@@ -60,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (avatarEl) avatarEl.textContent = initials;
   }
 
+  restoreSidebarState();
   loadRechnungen();
   renderArchivListe();
   rteInit();
@@ -89,17 +145,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   render();
   initResizeHandle();
   window.addEventListener('resize', updatePreviewScale);
-
-  // Add "Entwurf speichern" button next to the book-invoice button
-  const buchBtn = document.getElementById('buch-rechnung-btn');
-  if (buchBtn) {
-    const entwurfBtn = document.createElement('button');
-    entwurfBtn.id = 'entwurf-btn';
-    entwurfBtn.className = 'btn-secondary';
-    entwurfBtn.textContent = 'Entwurf speichern';
-    entwurfBtn.onclick = () => window.speichereEntwurf();
-    buchBtn.parentNode.insertBefore(entwurfBtn, buchBtn);
-  }
 
   loadContacts();
   loadCompanies();

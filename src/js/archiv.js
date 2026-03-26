@@ -17,9 +17,6 @@ export function setReadonly(isReadonly) {
   const banner = document.getElementById('readonly-banner');
   if (banner) banner.style.display = isReadonly ? 'block' : 'none';
 
-  const buchBtn = document.getElementById('buch-rechnung-btn');
-  if (buchBtn) buchBtn.style.display = isReadonly ? 'none' : 'inline-flex';
-
   // Disable/enable all form inputs
   const editor = document.getElementById('editor') || document.querySelector('.editor-panel');
   if (!editor) return;
@@ -111,6 +108,16 @@ export async function bucheRechnung() {
 }
 
 // ── Archiv laden ──────────────────────────────────────────────────────────────
+export async function ladeEntwurf(id) {
+  const rechnung = await fetchRechnungById(id);
+  if (!rechnung) { alert('Entwurf nicht gefunden.'); return; }
+
+  applyState(rechnung.daten);
+  setReadonly(false);
+  state.currentDraftId = id;
+  state.currentRechnungId = null;
+}
+
 export async function ladeAusArchiv(id) {
   const rechnung = await fetchRechnungById(id);
   if (!rechnung) { alert('Rechnung nicht gefunden.'); return; }
@@ -122,7 +129,11 @@ export async function ladeAusArchiv(id) {
 }
 
 export async function loescheAusArchiv(id) {
-  if (!confirm('Rechnung wirklich löschen?')) return;
+  const confirmed = await window.showConfirm(
+    'Rechnung löschen?',
+    'Diese Aktion kann nicht rückgängig gemacht werden.'
+  );
+  if (!confirmed) return;
   const ok = await deleteRechnung(id);
   if (ok) await renderArchivListe();
   else alert('Fehler beim Löschen.');
@@ -174,6 +185,22 @@ export async function speichereEntwurf() {
     setCloudStatus('Entwurf gespeichert', 'ok');
     window.loadRechnungen?.();
   }
+}
+
+// ── Auto-save (debounced Entwurf) ─────────────────────────────────────────────
+let _autoSaveTimer = null;
+
+export function autoSave() {
+  const editor = document.getElementById('view-editor');
+  if (!editor || getComputedStyle(editor).display === 'none') return;
+  if (state.isReadonly) return;
+  if (!isConfigured()) return;
+
+  setCloudStatus('Speichert…', 'sync-info');
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(async () => {
+    await speichereEntwurf();
+  }, 1500);
 }
 
 // ── Kopie einer Rechnung erstellen ────────────────────────────────────────────

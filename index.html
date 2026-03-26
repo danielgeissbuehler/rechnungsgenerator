@@ -41,42 +41,45 @@
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">R</div>
-      <div>
+      <div class="sidebar-brand-text">
         <div class="brand-name">Rechnungen</div>
         <div class="brand-sub">G Investments &amp; Real Estates AG</div>
       </div>
+      <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sidebar ein-/ausklappen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Übersicht</div>
-      <div class="nav-item active" onclick="showDashboard()">
+      <div class="nav-item active" onclick="showDashboard()" title="Dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Dashboard
+        <span class="nav-label">Dashboard</span>
       </div>
-      <div class="nav-item" onclick="showDashboard()">
+      <div class="nav-item" onclick="showDashboard()" title="Rechnungen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Rechnungen
+        <span class="nav-label">Rechnungen</span>
         <span class="nav-badge" id="nav-badge-offen" style="display:none">0</span>
       </div>
 
       <div class="nav-section-label">Stammdaten</div>
-      <div class="nav-item">
+      <div class="nav-item" title="Absender">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
-        Absender
+        <span class="nav-label">Absender</span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" title="Empfänger">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Empfänger
+        <span class="nav-label">Empfänger</span>
       </div>
-      <div class="nav-item">
+      <div class="nav-item" title="Vorlagen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        Vorlagen
+        <span class="nav-label">Vorlagen</span>
       </div>
     </nav>
 
     <div class="sidebar-user">
       <div class="db-avatar" id="sidebar-avatar">?</div>
-      <div style="flex:1;min-width:0">
+      <div class="sidebar-user-info">
         <div class="user-name" id="sidebar-user-name">—</div>
         <div class="user-email" id="sidebar-user-email">—</div>
       </div>
@@ -86,15 +89,27 @@
   <!-- MAIN -->
   <div class="db-main">
     <header class="db-topbar">
-      <span class="topbar-title">Rechnungen</span>
-      <div class="topbar-spacer"></div>
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" id="dash-search" placeholder="Suchen…" oninput="dashFilterChanged()">
+      <!-- Dashboard state -->
+      <div id="topbar-dash" style="display:contents">
+        <span class="topbar-title">Rechnungen</span>
+        <div class="topbar-spacer"></div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" id="dash-search" placeholder="Suchen…" oninput="dashFilterChanged()">
+        </div>
+        <button class="btn btn-primary" onclick="handleNeueRechnung()">
+          + Neue Rechnung
+        </button>
       </div>
-      <button class="btn btn-primary" onclick="handleNeueRechnung()">
-        + Neue Rechnung
-      </button>
+      <!-- Editor state (shown when editing) -->
+      <div id="topbar-editor" style="display:none">
+        <button class="btn btn-ghost" onclick="showDashboard()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Übersicht
+        </button>
+        <span id="editor-topbar-title" style="font-size:13px;color:var(--label,#7a8499)">Neue Rechnung</span>
+        <div class="topbar-spacer"></div>
+      </div>
     </header>
 
     <div class="db-content">
@@ -143,6 +158,25 @@
         <div id="dash-table-container">
           <!-- Rendered by JS -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DIALOG (global, controlled by showConfirm()) -->
+  <div id="confirm-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="confirm-dialog">
+      <div class="confirm-dialog-body">
+        <div class="confirm-dialog-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </div>
+        <div>
+          <div id="confirm-modal-title" class="confirm-dialog-title"></div>
+          <div id="confirm-modal-msg" class="confirm-dialog-msg"></div>
+        </div>
+      </div>
+      <div class="confirm-dialog-footer">
+        <button class="btn btn-ghost" id="confirm-modal-cancel">Abbrechen</button>
+        <button class="btn btn-danger" id="confirm-modal-ok">Löschen</button>
       </div>
     </div>
   </div>
@@ -197,13 +231,6 @@
 
 <!-- ══ EDITOR VIEW ══ -->
 <div id="view-editor">
-  <div id="editor-topbar" class="editor-topbar">
-    <button class="btn btn-ghost" onclick="showDashboard()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Übersicht
-    </button>
-    <span style="font-size:13px;color:var(--label,#7a8499)" id="editor-topbar-title">Neue Rechnung</span>
-  </div>
   <div class="editor-inner">
 
 <!-- ══ MOBILE TABS ══ -->
@@ -225,23 +252,12 @@
 <!-- ══ EDITOR PANEL ══ -->
 <div id="editor">
 
-  <!-- ── ARCHIV (visually separate, dark panel at top) ── -->
-  <div class="section-block open" id="archiv-section">
-    <div class="section-header open" onclick="toggleSection(this)">
-      <div class="section-header-label">Archiv</div>
-      <span class="toggle-icon">▲</span>
-    </div>
-    <div class="section-body open">
-      <div id="archiv-liste"></div>
-    </div>
-  </div>
-
   <div id="readonly-banner">
     Diese Rechnung wurde gebucht und ist schreibgeschützt.
     <button onclick="neueRechnung()" class="btn-secondary" style="margin-left:1rem;">Neue Rechnung</button>
   </div>
 
-  <h1>Rechnungs-Editor<button id="logout-btn" onclick="handleLogout()" title="Abmelden" class="btn-secondary">Abmelden</button></h1>
+  <h1>Rechnungs-Editor</h1>
 
   <!-- Action buttons -->
   <div id="action-btns">
@@ -249,12 +265,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       PDF
     </button>
-    <button id="btn-print" onclick="window.print()">
+    <button id="btn-print" onclick="printPDF()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Drucken
     </button>
-    <button id="buch-rechnung-btn" class="buch-btn" onclick="bucheRechnung()">
-      Rechnung buchen
+    <button id="entwurf-btn" class="btn-secondary" onclick="speichereEntwurf()">
+      Entwurf speichern
     </button>
   </div>
 
@@ -612,6 +628,106 @@
 
 
 </div><!-- /editor -->
+
+<!-- ══ EINFACHER RECHNUNGS-EDITOR ══ -->
+<div id="editor-simple">
+  <div class="se-scroll">
+
+    <!-- 1. Adressierung: Empfänger + Absender -->
+    <div class="se-card">
+      <div class="se-card-header">Adressierung</div>
+      <div class="se-card-body">
+        <div class="ig">
+          <div class="ii">
+            <label>Empfänger</label>
+            <select id="se-contact-select" onchange="applySimpleContact()"></select>
+            <input id="se-emp-name"    placeholder="Name"    oninput="syncField('f-emp-name',this);render()">
+            <input id="se-emp-strasse" placeholder="Strasse" class="sub" oninput="syncField('f-emp-strasse',this);render()">
+            <input id="se-emp-ort"     placeholder="PLZ Ort" class="sub" oninput="syncField('f-emp-ort',this);render()">
+          </div>
+          <div class="ii ro">
+            <label>Absender</label>
+            <select id="se-company-select" onchange="applySimpleCompany()"></select>
+            <input id="se-stell-name"    class="sub" readonly>
+            <input id="se-stell-adresse" class="sub" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Datum / Zeitraum / Meta-Felder (nur wenn visibility.meta) -->
+    <div class="se-card" id="se-card-meta" style="display:none">
+      <div class="se-card-header">Datum &amp; Referenz</div>
+      <div class="se-card-body">
+        <div id="se-meta-fields" class="ig"></div>
+      </div>
+    </div>
+
+    <!-- 3. Titel (nur wenn visibility.titel) -->
+    <div class="se-card" id="se-card-titel" style="display:none">
+      <div class="se-card-header">Titel</div>
+      <div class="se-card-body">
+        <div class="ii">
+          <label>Rechnungstitel</label>
+          <input id="se-titel" placeholder="z. B. Rechnung April 2026" oninput="syncField('f-titel',this);render()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Textblock vor Tabelle (nur wenn visibility.textblock) -->
+    <div class="se-card" id="se-card-textblock" style="display:none">
+      <div class="se-card-header">Textblock (vor Tabelle)</div>
+      <div class="se-card-body">
+        <textarea id="se-textblock" placeholder="Freitext vor der Positions-Tabelle…" oninput="syncRte('f-textblock',this);render()"></textarea>
+      </div>
+    </div>
+
+    <!-- 5. Positionen (nur wenn visibility.positionen) -->
+    <div class="se-card" id="se-card-positionen" style="display:none">
+      <div class="se-card-header">
+        <span>Positionen</span>
+        <div class="ii" style="flex-direction:row;align-items:center;gap:6px;padding:3px 8px;width:auto;background:transparent;border:none;">
+          <label style="margin:0;font-size:9px;">Währung</label>
+          <input id="se-currency" style="width:44px;font-size:12px;font-weight:700;background:var(--surface2,#f8f9fc);border:1px solid var(--border,#e5e7eb);border-radius:5px;padding:2px 5px;text-align:center;" oninput="syncField('f-currency',this);render()">
+        </div>
+      </div>
+      <div id="se-positions-wrap"></div>
+      <div class="se-pos-footer">
+        <button onclick="addSimplePosition()">+ Position</button>
+        <div class="se-total-row">
+          <span class="se-total-lbl">Total</span>
+          <span class="se-total-val" id="se-total">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Textblock nach Tabelle (nur wenn visibility.textblock2) -->
+    <div class="se-card" id="se-card-textblock2" style="display:none">
+      <div class="se-card-header">Textblock (nach Tabelle)</div>
+      <div class="se-card-body">
+        <textarea id="se-textblock2" placeholder="Freitext nach der Positions-Tabelle…" oninput="syncRte('f-textblock2',this);render()"></textarea>
+      </div>
+    </div>
+
+    <!-- 7. Zahlungsverbindung (nur wenn visibility.bank, readonly) -->
+    <div class="se-card" id="se-card-bank" style="display:none">
+      <div class="se-card-header">Zahlungsverbindung</div>
+      <div class="se-card-body">
+        <div class="ig">
+          <div class="ii ro">
+            <label>Bank</label>
+            <input id="se-bank-name" readonly>
+          </div>
+          <div class="ii ro">
+            <label>IBAN</label>
+            <input id="se-iban" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /se-scroll -->
+</div><!-- /editor-simple -->
 
 <!-- ══ RESIZE HANDLE ══ -->
 <div id="resize-handle"></div>

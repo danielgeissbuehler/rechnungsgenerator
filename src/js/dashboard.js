@@ -17,6 +17,9 @@ import {
   updateRechnungStatus,
   isConfigured,
 } from './supabase.js';
+import { buildPagesFromData } from './render.js';
+import { fillSimpleEditor } from './editor-simple.js';
+import { downloadPDF, printPDF } from './pdf.js';
 
 // ── Module state ─────────────────────────────────────────────────────────────
 
@@ -34,6 +37,23 @@ let filterState = {
   betragBis:  null,
   suche:      '',
 };
+
+/** @type {{ col: string, dir: 'asc'|'desc' }} Active sort column and direction */
+let sortState = { col: 'created_at', dir: 'desc' };
+
+/**
+ * Toggle sort column/direction and re-render the table.
+ * @param {string} col
+ */
+export function dashSortBy(col) {
+  if (sortState.col === col) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState.col = col;
+    sortState.dir = col === 'betrag' || col === 'created_at' ? 'desc' : 'asc';
+  }
+  renderInvoiceTable();
+}
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -130,10 +150,13 @@ function getStatusBadge(status) {
  * Show the dashboard view, hide the editor, and reload invoices.
  */
 export function showDashboard() {
-  const vDash   = document.getElementById('view-dashboard');
-  const vEditor = document.getElementById('view-editor');
-  if (vDash)   vDash.style.display   = 'flex';
-  if (vEditor) vEditor.style.display = 'none';
+  const vEditor      = document.getElementById('view-editor');
+  const topbarDash   = document.getElementById('topbar-dash');
+  const topbarEditor = document.getElementById('topbar-editor');
+
+  if (vEditor)      vEditor.style.display      = 'none';
+  if (topbarDash)   topbarDash.style.display   = 'contents';
+  if (topbarEditor) topbarEditor.style.display = 'none';
 
   // Mark first nav-item (Dashboard) active
   document.querySelectorAll('.nav-item').forEach(function(el, i) {
@@ -144,7 +167,7 @@ export function showDashboard() {
 }
 
 /**
- * Hide the dashboard and show the editor view.
+ * Show the editor view over the app shell. Dashboard sidebar stays visible.
  * @param {'new'|'edit'|'copy'} [mode='new']
  * @param {string} [titleText='Neue Rechnung']
  */
@@ -152,13 +175,21 @@ export function showEditor(mode, titleText) {
   if (mode      == null) mode      = 'new';
   if (titleText == null) titleText = 'Neue Rechnung';
 
-  const vDash   = document.getElementById('view-dashboard');
-  const vEditor = document.getElementById('view-editor');
-  if (vDash)   vDash.style.display   = 'none';
-  if (vEditor) vEditor.style.display = 'flex';
+  const vEditor      = document.getElementById('view-editor');
+  const topbarDash   = document.getElementById('topbar-dash');
+  const topbarEditor = document.getElementById('topbar-editor');
+
+  if (vEditor)      vEditor.style.display      = 'flex';
+  if (topbarDash)   topbarDash.style.display   = 'none';
+  if (topbarEditor) topbarEditor.style.display = 'contents';
 
   const titleEl = document.getElementById('editor-topbar-title');
   if (titleEl) titleEl.textContent = titleText;
+
+  // Einfacher Editor für normale Rechnungen, voller Editor nur für Vorlagen
+  const isSimple = mode !== 'vorlage';
+  if (vEditor) vEditor.classList.toggle('simple-mode', isSimple);
+  if (isSimple) fillSimpleEditor();
 }
 
 // ── Data & filter ─────────────────────────────────────────────────────────────
@@ -369,9 +400,37 @@ export function renderInvoiceTable() {
     return true;
   });
 
-  // 2. Sort by created_at DESC
+  // 2. Sort by sortState
   list = list.slice().sort(function(a, b) {
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    let va, vb;
+    switch (sortState.col) {
+      case 'nummer':
+        va = parseInt(a.nummer, 10) || 0;
+        vb = parseInt(b.nummer, 10) || 0;
+        break;
+      case 'absender_name':
+        va = (a.absender_name   || '').toLowerCase();
+        vb = (b.absender_name   || '').toLowerCase();
+        break;
+      case 'empfaenger_name':
+        va = (a.empfaenger_name || '').toLowerCase();
+        vb = (b.empfaenger_name || '').toLowerCase();
+        break;
+      case 'betrag':
+        va = parseFloat(a.betrag) || 0;
+        vb = parseFloat(b.betrag) || 0;
+        break;
+      case 'status':
+        va = a.status || '';
+        vb = b.status || '';
+        break;
+      default: // created_at
+        va = new Date(a.created_at).getTime();
+        vb = new Date(b.created_at).getTime();
+    }
+    if (va < vb) return sortState.dir === 'asc' ? -1 : 1;
+    if (va > vb) return sortState.dir === 'asc' ?  1 : -1;
+    return 0;
   });
 
   // 3. Update title
@@ -403,23 +462,75 @@ export function renderInvoiceTable() {
       + '<td class="td-amount">' + amountDisplay                        + '</td>'
       + '<td class="td-date">'   + escHtml(dateDisplay)                 + '</td>'
       + '<td>'                   + getStatusBadge(r.status)             + '</td>'
-      + '<td>'
-      +   '<button class="row-action-btn" title="Kopieren"'
-      +   ' onclick="event.stopPropagation();handleKopieRechnung(\'' + safeId + '\')">'
+      + '<td class="td-actions">'
+      +   '<button class="row-action-btn" title="Bearbeiten"'
+      +   ' onclick="event.stopPropagation();_rowEdit(\'' + safeId + '\')">'
       +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
       +       ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
-      +       '<rect x="9" y="9" width="13" height="13" rx="2"/>'
-      +       '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
+      +       '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>'
+      +       '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'
+      +     '</svg>'
+      +   '</button>'
+      +   '<button class="row-action-btn" title="PDF herunterladen"'
+      +   ' onclick="event.stopPropagation();_rowDownload(\'' + safeId + '\')">'
+      +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      +       ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+      +       '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+      +       '<polyline points="7 10 12 15 17 10"/>'
+      +       '<line x1="12" y1="15" x2="12" y2="3"/>'
+      +     '</svg>'
+      +   '</button>'
+      +   '<button class="row-action-btn" title="Drucken"'
+      +   ' onclick="event.stopPropagation();_rowPrint(\'' + safeId + '\')">'
+      +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      +       ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+      +       '<polyline points="6 9 6 2 18 2 18 9"/>'
+      +       '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>'
+      +       '<rect x="6" y="14" width="12" height="8"/>'
+      +     '</svg>'
+      +   '</button>'
+      +   '<button class="row-action-btn row-action-btn-danger" title="L\u00F6schen"'
+      +   ' onclick="event.stopPropagation();_rowDelete(\'' + safeId + '\')">'
+      +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+      +       ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+      +       '<polyline points="3 6 5 6 21 6"/>'
+      +       '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'
+      +       '<path d="M10 11v6"/><path d="M14 11v6"/>'
+      +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
       +     '</svg>'
       +   '</button>'
       + '</td>'
       + '</tr>';
   }).join('');
 
+  /**
+   * Build a sortable <th> cell.
+   * @param {string} col   — sort key (hardcoded, never user input)
+   * @param {string} label — display text (hardcoded, never user input)
+   * @returns {string}
+   */
+  function sortTh(col, label) {
+    const active = sortState.col === col;
+    const arrow  = active ? (sortState.dir === 'asc' ? ' \u2191' : ' \u2193') : ' \u2195';
+    const cls    = active ? ' class="th-sort-active"' : '';
+    return '<th' + cls + ' style="cursor:pointer;user-select:none"'
+      + ' onclick="dashSortBy(\'' + col + '\')">'
+      + label
+      + '<span style="opacity:' + (active ? '1' : '.3') + ';font-size:10px;margin-left:3px">' + arrow + '</span>'
+      + '</th>';
+  }
+
+  /* innerHTML is used intentionally; all user data in rows is sanitised via escHtml().
+     The sortTh() helper only uses hardcoded string literals — no user input. */
   container.innerHTML = '<table>'
     + '<thead><tr>'
-    +   '<th>Nr.</th><th>Absender</th><th>Empf\u00E4nger</th>'
-    +   '<th>Betrag</th><th>Datum</th><th>Status</th><th></th>'
+    +   sortTh('nummer',         'Nr.')
+    +   sortTh('absender_name',  'Absender')
+    +   sortTh('empfaenger_name','Empf\u00E4nger')
+    +   sortTh('betrag',         'Betrag')
+    +   sortTh('created_at',     'Datum')
+    +   sortTh('status',         'Status')
+    +   '<th></th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '<tfoot>'
@@ -571,6 +682,22 @@ export function closeDetailPanel() {
 }
 
 /**
+ * Render invoice A4 pages into a hidden off-screen container for PDF generation.
+ * Safe: buildPagesFromData() escapes all user-supplied values via esc() before returning HTML.
+ * @param {Object} daten - invoice.daten JSONB
+ * @returns {HTMLElement} The container — caller must call .remove() when done.
+ */
+function renderOffscreen(daten) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;pointer-events:none';
+  // buildPagesFromData() sanitises all user content via esc() — same as a4Container use below
+  const pages = buildPagesFromData(daten);
+  pages.forEach(function(pageHtml) { wrap.insertAdjacentHTML('beforeend', pageHtml); });
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+/**
  * Render the full detail panel HTML into #detail-panel.
  * All user-supplied values pass through escHtml() before innerHTML insertion.
  * @param {Object} r - full rechnung record from Supabase
@@ -653,11 +780,32 @@ function renderDetailPanel(r) {
     +   '</div>'
     + '</div>'
     + '<div class="dp-header-actions">'
-    +   '<button class="icon-btn" title="Drucken" onclick="window.print()">'
+    +   '<button class="icon-btn" title="Im Editor \u00F6ffnen" onclick="_dpOpenEditor()">'
+    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    +       '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>'
+    +       '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'
+    +     '</svg>'
+    +   '</button>'
+    +   '<button class="icon-btn" title="PDF herunterladen" onclick="_dpDownloadPDF()">'
+    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    +       '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+    +       '<polyline points="7 10 12 15 17 10"/>'
+    +       '<line x1="12" y1="15" x2="12" y2="3"/>'
+    +     '</svg>'
+    +   '</button>'
+    +   '<button class="icon-btn" title="Drucken" onclick="_dpPrint()">'
     +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
     +       '<polyline points="6 9 6 2 18 2 18 9"/>'
     +       '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>'
     +       '<rect x="6" y="14" width="12" height="8"/>'
+    +     '</svg>'
+    +   '</button>'
+    +   '<button class="icon-btn icon-btn-danger" title="L\u00F6schen" onclick="_dpDelete(\'' + safeId + '\')">'
+    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+    +       '<polyline points="3 6 5 6 21 6"/>'
+    +       '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'
+    +       '<path d="M10 11v6"/><path d="M14 11v6"/>'
+    +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
     +     '</svg>'
     +   '</button>'
     +   '<button class="icon-btn" title="Schliessen" onclick="closeDetailPanel()">'
@@ -730,7 +878,7 @@ function renderDetailPanel(r) {
     +     '</svg>'
     +   '</div>'
     +   '<div id="' + accordionBodyId + '" class="pdf-accordion-body" style="display:none">'
-    +     buildDocPreview(r)
+    +     '<div class="dp-a4-preview-wrap"><div id="dp-a4-pages"></div></div>'
     +   '</div>'
     + '</div>'
 
@@ -742,16 +890,31 @@ function renderDetailPanel(r) {
           + '</div>'
         : '')
 
-    + '</div>' // /dp-body
-
-    // Footer
-    + '<div class="dp-footer">'
-    +   '<button class="btn btn-danger" onclick="_dpDelete(\'' + safeId + '\')">L\u00F6schen</button>'
-    +   '<button class="btn btn-ghost" onclick="window.print()">Drucken</button>'
-    +   '<button class="btn btn-primary" onclick="window.downloadPDF && window.downloadPDF()">PDF herunterladen</button>'
-    + '</div>';
+    + '</div>'; // /dp-body
 
   panel.innerHTML = html;
+
+  // Inject real A4 preview pages into the accordion placeholder
+  const a4Container = document.getElementById('dp-a4-pages');
+  if (a4Container && r.daten) {
+    const pages = buildPagesFromData(r.daten);
+    // Pages HTML is generated by buildPages() which escapes all user content via esc()
+    a4Container.innerHTML = pages.join('');
+  }
+
+  // Open invoice in editor (drafts: editable + auto-save; booked: readonly)
+  window._dpOpenEditor = async function() {
+    if (r.status === 'entwurf') {
+      if (typeof window.ladeEntwurf === 'function') await window.ladeEntwurf(r.id);
+    } else {
+      if (typeof window.ladeAusArchiv === 'function') await window.ladeAusArchiv(r.id);
+    }
+    const titleText = r.status === 'entwurf'
+      ? 'Entwurf bearbeiten'
+      : 'Rechnung ' + numStr;
+    showEditor('edit', titleText);
+    closeDetailPanel();
+  };
 
   // Accordion toggle (re-bound on each panel open)
   window._dpTogglePdf = function() {
@@ -763,9 +926,29 @@ function renderDetailPanel(r) {
     if (chevron) chevron.classList.toggle('open', !wasOpen);
   };
 
+  // Download PDF using an off-screen render — no accordion flash
+  window._dpDownloadPDF = async function() {
+    const wrap     = renderOffscreen(r.daten);
+    const rawName  = (r && r.empfaenger_name) || 'Rechnung';
+    const filename = rawName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+    await downloadPDF(wrap, filename);
+    wrap.remove();
+  };
+
+  // Print using an off-screen render — no accordion flash
+  window._dpPrint = async function() {
+    const wrap = renderOffscreen(r.daten);
+    await printPDF(wrap);
+    wrap.remove();
+  };
+
   // Delete with confirmation
   window._dpDelete = async function(deleteId) {
-    if (!confirm('Rechnung wirklich l\u00F6schen? Diese Aktion kann nicht r\u00FCckg\u00E4ngig gemacht werden.')) return;
+    const ok = await window.showConfirm(
+      'Rechnung löschen?',
+      'Diese Aktion kann nicht rückgängig gemacht werden.'
+    );
+    if (!ok) return;
     try {
       const { deleteRechnung } = await import('./supabase.js');
       await deleteRechnung(deleteId);
@@ -855,6 +1038,7 @@ export async function confirmNeueRechnung() {
     if (typeof window.neueRechnung === 'function') window.neueRechnung();
     showEditor('new', 'Neue Rechnung');
     closeNeueRechnungModal();
+    window.speichereEntwurf?.();
     return;
   }
 
@@ -868,6 +1052,7 @@ export async function confirmNeueRechnung() {
     if (typeof window.loadTemplateByName === 'function') window.loadTemplateByName(vorlage);
     showEditor('new', 'Aus Vorlage');
     closeNeueRechnungModal();
+    window.speichereEntwurf?.();
     return;
   }
 
@@ -878,9 +1063,10 @@ export async function confirmNeueRechnung() {
       alert('Bitte eine Rechnung f\u00FCr die Kopie ausw\u00E4hlen.');
       return;
     }
-    if (typeof window.kopieRechnung === 'function') window.kopieRechnung(kopieId);
+    if (typeof window.kopieRechnung === 'function') await window.kopieRechnung(kopieId);
     showEditor('copy', 'Kopie');
     closeNeueRechnungModal();
+    window.speichereEntwurf?.();
     return;
   }
 }
@@ -893,6 +1079,16 @@ export async function handleKopieRechnung(id) {
   if (typeof window.kopieRechnung === 'function') window.kopieRechnung(id);
   showEditor('copy', 'Kopie von Rechnung');
 }
+
+// ── Dashboard click-to-close ──────────────────────────────────────────────────
+// Close the detail panel when clicking anywhere in the dashboard that isn't
+// the panel itself or an invoice row (which will switch to that invoice).
+document.addEventListener('click', function(e) {
+  if (!currentDetailId) return;
+  if (e.target.closest('#detail-panel')) return;
+  if (e.target.closest('#dash-table-container tbody tr')) return;
+  closeDetailPanel();
+});
 
 // ── Window exports ────────────────────────────────────────────────────────────
 // All functions invoked from HTML onclick attributes must be on window.
@@ -911,3 +1107,40 @@ window.handleKopieRechnung    = handleKopieRechnung;
 window.loadRechnungen         = loadRechnungen;
 window.renderDashboardStats   = renderDashboardStats;
 window.renderInvoiceTable     = renderInvoiceTable;
+
+// ── Table row quick-action handlers ──────────────────────────────────────────
+
+window._rowEdit = async function(id) {
+  const r = await fetchRechnungById(id);
+  if (!r) return;
+  if (r.status === 'entwurf') {
+    if (typeof window.ladeEntwurf === 'function') await window.ladeEntwurf(r.id);
+  } else {
+    if (typeof window.ladeAusArchiv === 'function') await window.ladeAusArchiv(r.id);
+  }
+  const numStr    = r.nummer ? '#' + String(r.nummer).padStart(3, '0') : 'Entwurf';
+  const titleText = r.status === 'entwurf' ? 'Entwurf bearbeiten' : 'Rechnung ' + numStr;
+  showEditor('edit', titleText);
+};
+
+window._rowDownload = async function(id) {
+  const r = await fetchRechnungById(id);
+  if (!r) return;
+  const wrap     = renderOffscreen(r.daten);
+  const rawName  = (r.empfaenger_name) || 'Rechnung';
+  const filename = rawName.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+  await downloadPDF(wrap, filename);
+  wrap.remove();
+};
+
+window._rowPrint = async function(id) {
+  const r = await fetchRechnungById(id);
+  if (!r) return;
+  const wrap = renderOffscreen(r.daten);
+  await printPDF(wrap);
+  wrap.remove();
+};
+
+window._rowDelete = async function(id) {
+  if (typeof window._dpDelete === 'function') await window._dpDelete(id);
+};

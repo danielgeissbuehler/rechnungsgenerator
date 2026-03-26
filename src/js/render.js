@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, META_COUNT } from './state.js';
 import { val, chk, esc, fmt, fmtFull, nl2br } from './utils.js';
 import { getMetaData } from './meta.js';
 
@@ -35,6 +35,7 @@ export async function render() {
 
   wrap.scrollTop = scrollTop;
   updatePreviewScale();
+  window.autoSave?.();
 }
 
 export function buildHeader(isFirst) {
@@ -311,6 +312,100 @@ export function buildPages() {
   if (pages.length === 0) {
     pages.push(`<div class="a4-page">${buildHeader(true)}<div class="page-content">${separatorHTML}${contentTopHTML}${titleHTML}</div>${buildFooter()}</div>`);
   }
+
+  return pages;
+}
+
+/**
+ * Temporarily apply stateData to DOM fields and state, build pages, then restore.
+ * Used to render an A4 preview from a saved invoice record without navigating to editor.
+ * @param {Object} stateData - saved state (fields, meta, positions, visibility, etc.)
+ * @returns {string[]} array of A4 page HTML strings
+ */
+export function buildPagesFromData(stateData) {
+  const FIELD_IDS = [
+    'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
+    'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
+    'f-col-pos','f-col-preis','f-col-menge','f-col-total',
+    'f-col-extra5','f-col-extra6','f-col-extra7','f-col-extra8',
+    'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse',
+  ];
+
+  // ── Save current state ──────────────────────────────────────────────────
+  const savedFields = {};
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) savedFields[id] = el.value;
+  });
+  const savedMeta = [];
+  for (let i = 0; i < META_COUNT; i++) {
+    savedMeta.push({
+      show:  document.getElementById(`mf-show-${i}`)?.checked ?? false,
+      label: document.getElementById(`mf-label-${i}`)?.value  ?? '',
+      value: document.getElementById(`mf-value-${i}`)?.value  ?? '',
+    });
+  }
+  const tb  = document.getElementById('f-textblock');
+  const tb2 = document.getElementById('f-textblock2');
+  const savedTb  = tb  ? tb.getHTML()  : '';
+  const savedTb2 = tb2 ? tb2.getHTML() : '';
+  const savedQty = document.getElementById('chk-qty-total')?.checked ?? false;
+  const savedVis = { ...state.visibility };
+  const savedCol = { ...state.colAlign };
+  const savedPos = state.positions.map(p => ({ ...p }));
+
+  // ── Apply snapshot data ─────────────────────────────────────────────────
+  const setRTE = (id, html) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const parsed = new DOMParser().parseFromString(html || '', 'text/html');
+    el.replaceChildren(...Array.from(parsed.body.childNodes));
+  };
+
+  Object.entries(stateData.fields || {}).forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = v;
+  });
+  (stateData.meta || []).forEach((m, i) => {
+    const showEl  = document.getElementById(`mf-show-${i}`);
+    const labelEl = document.getElementById(`mf-label-${i}`);
+    const valueEl = document.getElementById(`mf-value-${i}`);
+    if (showEl)  showEl.checked = m.show;
+    if (labelEl) labelEl.value  = m.label;
+    if (valueEl) valueEl.value  = m.value;
+  });
+  if (stateData.visibility) Object.assign(state.visibility, stateData.visibility);
+  if (stateData.colAlign)   Object.assign(state.colAlign,   stateData.colAlign);
+  state.positions.length = 0;
+  (stateData.positions || []).forEach(p => state.positions.push({ ...p }));
+  setRTE('f-textblock',  stateData.textblock);
+  setRTE('f-textblock2', stateData.textblock2);
+  const qtyEl = document.getElementById('chk-qty-total');
+  if (qtyEl) qtyEl.checked = !!stateData.qtyTotal;
+
+  // ── Build pages ─────────────────────────────────────────────────────────
+  const pages = buildPages();
+
+  // ── Restore original state ──────────────────────────────────────────────
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && id in savedFields) el.value = savedFields[id];
+  });
+  savedMeta.forEach((m, i) => {
+    const showEl  = document.getElementById(`mf-show-${i}`);
+    const labelEl = document.getElementById(`mf-label-${i}`);
+    const valueEl = document.getElementById(`mf-value-${i}`);
+    if (showEl)  showEl.checked = m.show;
+    if (labelEl) labelEl.value  = m.label;
+    if (valueEl) valueEl.value  = m.value;
+  });
+  Object.assign(state.visibility, savedVis);
+  Object.assign(state.colAlign,   savedCol);
+  state.positions.length = 0;
+  savedPos.forEach(p => state.positions.push(p));
+  setRTE('f-textblock',  savedTb);
+  setRTE('f-textblock2', savedTb2);
+  if (qtyEl) qtyEl.checked = savedQty;
 
   return pages;
 }
