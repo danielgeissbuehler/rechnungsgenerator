@@ -7,7 +7,7 @@ import { toggleMetaField } from './meta.js';
 import { loadContacts, loadCompanies, applyContact, applyCompany, saveCurrentAbsender, saveCurrentEmpfaenger } from './contacts.js';
 import { loadVorlagen, saveTemplate, loadTemplate, deleteTemplate, exportTemplates, importTemplates, downloadCurrentAsJSON } from './templates.js';
 import { downloadPDF, printPDF } from './pdf.js';
-import { toggleSection, toggleVis, showTab, initResizeHandle, toggleSidebarCollapse, restoreSidebarState } from './ui.js';
+import { toggleSection, toggleVis, showTab, initResizeHandle, scalePreview, toggleSidebarCollapse, restoreSidebarState } from './ui.js';
 import { bucheRechnung, ladeAusArchiv, ladeEntwurf, loescheAusArchiv, neueRechnung, renderArchivListe, setReadonly, speichereEntwurf, kopieRechnung, autoSave } from './archiv.js';
 import {
   showDashboard, showEditor, loadRechnungen,
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   render();
   initResizeHandle();
-  window.addEventListener('resize', updatePreviewScale);
+  window.addEventListener('resize', () => { updatePreviewScale(); scalePreview(); });
 
   loadContacts();
   loadCompanies();

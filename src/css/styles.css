@@ -1520,11 +1520,17 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
 #view-editor.se-preview-hidden #preview-wrap  { display: none; }
 #view-editor.se-preview-hidden #resize-handle { display: none; }
 
-/* Im simple-mode Vorschau ~1/3 Breite */
+/* A4-Seiten im Editor skalieren wenn Platz knapp */
+#view-editor #preview-wrap .a4-page {
+  transform-origin: top center;
+  transform: scale(var(--editor-preview-scale, 1));
+  margin-bottom: calc((var(--editor-preview-scale, 1) - 1) * 1123px);
+}
+
+/* Im simple-mode Vorschau füllt restlichen Platz */
 #view-editor.simple-mode #preview-wrap {
-  flex: 0 0 380px;
+  flex: 1;
   min-width: 200px;
-  max-width: 520px;
   background: #dde1ea;
   padding: 18px 12px;
 }

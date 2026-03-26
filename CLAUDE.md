@@ -34,9 +34,25 @@ Single-page app (Vite + vanilla JS ES modules, no framework), Supabase backend, 
 **The sidebar (`--sidebar-w: 232px`) is ALWAYS visible** — never hidden during view transitions.
 
 ### View switching
+
 - `#view-dashboard` stays `display: flex` at all times.
 - `#view-editor` is `position: fixed; top: 58px; left: var(--sidebar-w); right: 0; bottom: 0` — it overlays only the `db-main` column when open.
 - `showEditor()` / `showDashboard()` in `src/js/dashboard.js` toggle `#view-editor` visibility and swap the topbar state.
+
+### Editor modes (inside `#view-editor > .editor-inner`)
+
+Two editor panels exist, toggled via `.simple-mode` on `#view-editor`:
+- **`#editor`** — full editor (Vorlagen mode). `display: none` in simple-mode.
+- **`#editor-simple`** — simplified editor (default for normal invoices). `flex: 1`, hidden unless simple-mode.
+
+`showEditor(mode)` sets `simple-mode` for all modes except `'vorlage'`.
+
+### Resize handle & preview scaling
+
+- `#resize-handle` sits between the active editor and `#preview-wrap` in the flex row.
+- `initResizeHandle()` in `ui.js` detects which editor is visible and sets its `style.width`.
+- `scalePreview()` in `ui.js` computes `--editor-preview-scale` (fit A4 794px into available width). Called on drag, window resize, and editor open.
+- CSS applies `transform: scale(var(--editor-preview-scale, 1))` to `.a4-page` inside the editor preview.
 
 ### Topbar states (inside `.db-topbar`)
 - `#topbar-dash` — dashboard mode: title + search + "Neue Rechnung" button. Uses `display: contents` when active.
@@ -63,7 +79,8 @@ src/
     columns.js     — Table column visibility and alignment
     positions.js   — addPosition() — adds a line item row
     meta.js        — toggleMetaField() — date/period/reference fields
-    ui.js          — toggleSection, toggleVis, showTab (mobile), initResizeHandle
+    editor-simple.js — Einfacher Editor: fillSimpleEditor, syncField, addSimplePosition
+    ui.js          — toggleSection, toggleVis, showTab, initResizeHandle, scalePreview
     rte.js         — Rich-text editor commands for textblocks
     utils.js       — Shared helpers
   css/
@@ -127,7 +144,7 @@ state = {
 ## CSS Conventions
 
 - All custom properties defined in `:root` in `styles.css`
-- Key vars: `--sidebar-w: 232px`, `--accent`, `--surface`, `--border`, `--muted`, `--radius`, `--shadow`
+- Key vars: `--sidebar-w: 232px`, `--accent`, `--surface`, `--border`, `--muted`, `--radius`, `--shadow`, `--editor-preview-scale`
 - A4 invoice pages: `.a4-page` at `794×1123px`
 - Mobile breakpoints: `≤900px` (sidebar hidden), `≤600px`
 - `#view-editor` uses `position: fixed` — **do not change this to `position: absolute` or static**

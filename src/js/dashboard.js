@@ -19,6 +19,7 @@ import {
 } from './supabase.js';
 import { buildPagesFromData } from './render.js';
 import { fillSimpleEditor } from './editor-simple.js';
+import { scalePreview } from './ui.js';
 import { downloadPDF, printPDF } from './pdf.js';
 
 // ── Module state ─────────────────────────────────────────────────────────────
@@ -190,6 +191,9 @@ export function showEditor(mode, titleText) {
   const isSimple = mode !== 'vorlage';
   if (vEditor) vEditor.classList.toggle('simple-mode', isSimple);
   if (isSimple) fillSimpleEditor();
+
+  // Scale preview to fit available width after layout settles
+  requestAnimationFrame(() => scalePreview());
 }
 
 // ── Data & filter ─────────────────────────────────────────────────────────────

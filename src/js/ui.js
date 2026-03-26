@@ -61,13 +61,25 @@ export function restoreSidebarState() {
   }
 }
 
+// ── Preview fit-to-width scaling ─────────────────────────────────────────────
+export function scalePreview() {
+  const wrap = document.getElementById('preview-wrap');
+  if (!wrap) return;
+  const available = wrap.clientWidth - 40;   // minus padding (20px each side)
+  const scale = Math.min(available / 794, 1);
+  wrap.style.setProperty('--editor-preview-scale', scale);
+}
+
 // ── Editor resize handle ───────────────────────────────────────────────────
 export function initResizeHandle() {
   const handle = document.getElementById('resize-handle');
-  const editor = document.getElementById('editor');
+  const editorFull   = document.getElementById('editor');
+  const editorSimple = document.getElementById('editor-simple');
   let startX, startW;
 
   handle.addEventListener('mousedown', e => {
+    const editor = document.getElementById('view-editor')?.classList.contains('simple-mode')
+      ? editorSimple : editorFull;
     startX = e.clientX;
     startW = editor.offsetWidth;
     handle.classList.add('dragging');
@@ -77,6 +89,8 @@ export function initResizeHandle() {
     const onMove = ev => {
       const w = Math.max(280, Math.min(800, startW + ev.clientX - startX));
       editor.style.width = w + 'px';
+      editor.style.flex  = 'none';
+      scalePreview();
     };
     const onUp = () => {
       handle.classList.remove('dragging');
