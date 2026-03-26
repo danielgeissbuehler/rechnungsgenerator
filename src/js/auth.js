@@ -3,34 +3,42 @@ import { isConfigured, getSession, signIn, signOut } from './supabase.js';
 let _onAuthReady = null;
 
 export async function initAuth() {
-  if (!isConfigured()) return; // no auth needed if Supabase not configured
+  if (!isConfigured()) {
+    showApp();
+    return;
+  }
 
   const session = await getSession();
   if (session) {
     showLogoutButton();
+    showApp();
     return;
   }
 
-  // Show login modal and wait for login
+  // Show login page and wait for login
   await new Promise(resolve => {
     _onAuthReady = resolve;
-    showLoginModal();
+    showLoginPage();
   });
 }
 
 export function showLogoutButton() {
   const btn = document.getElementById('logout-btn');
-  if (btn) btn.style.display = 'inline-block';
+  if (btn) btn.style.display = '';
 }
 
-function showLoginModal() {
-  const modal = document.getElementById('login-modal');
-  if (modal) modal.style.display = 'flex';
+function showLoginPage() {
+  const login = document.getElementById('view-login');
+  const app = document.getElementById('app');
+  if (login) login.style.display = 'flex';
+  if (app) app.style.display = 'none';
 }
 
-function hideLoginModal() {
-  const modal = document.getElementById('login-modal');
-  if (modal) modal.style.display = 'none';
+function showApp() {
+  const login = document.getElementById('view-login');
+  const app = document.getElementById('app');
+  if (login) login.style.display = 'none';
+  if (app) app.style.display = '';
 }
 
 export async function handleLogin() {
@@ -55,7 +63,7 @@ export async function handleLogin() {
     return;
   }
 
-  hideLoginModal();
+  showApp();
   showLogoutButton();
   if (_onAuthReady) { _onAuthReady(); _onAuthReady = null; }
 }
@@ -64,5 +72,5 @@ export async function handleLogout() {
   await signOut();
   const btn = document.getElementById('logout-btn');
   if (btn) btn.style.display = 'none';
-  showLoginModal();
+  showLoginPage();
 }

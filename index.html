@@ -12,10 +12,13 @@
 </head>
 <body>
 
-<!-- Login Modal -->
-<div id="login-modal" class="login-backdrop" style="display:none">
+<!-- ══ LOGIN PAGE ══ -->
+<div id="view-login" class="login-page" style="display:none">
   <div class="login-card">
-    <h2 class="login-title">Anmelden</h2>
+    <div class="login-brand">
+      <div class="login-brand-icon">R</div>
+      <div class="login-brand-name">Rechnungsgenerator</div>
+    </div>
     <div class="login-form">
       <input id="login-email" class="login-input" type="email" placeholder="E-Mail" autocomplete="email">
       <input id="login-password" class="login-input" type="password" placeholder="Passwort" autocomplete="current-password"
@@ -25,6 +28,9 @@
     </div>
   </div>
 </div>
+
+<!-- ══ APP CONTAINER ══ -->
+<div id="app" style="display:none">
 
 <!-- ══ LOADING OVERLAY ══ -->
 <div id="loading"><div class="spinner"></div><span>PDF wird erstellt…</span></div>
@@ -78,6 +84,9 @@
         <div class="user-name" id="sidebar-user-name">—</div>
         <div class="user-email" id="sidebar-user-email">—</div>
       </div>
+      <button id="logout-btn" class="sidebar-logout-btn" onclick="handleLogout()" title="Abmelden" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
   </aside>
 
@@ -732,6 +741,8 @@
 
   </div><!-- /editor-inner -->
 </div><!-- /view-editor -->
+
+</div><!-- /app -->
 
 </body>
 </html>
