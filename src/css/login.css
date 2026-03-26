@@ -1,13 +1,42 @@
-/* ── Login modal ── */
-/* Note: display is toggled via JS (el.style.display = 'flex'|'none'), so display:none stays inline */
-.login-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; }
-.login-card { background:#fff; border-radius:12px; padding:2rem; width:min(400px,90vw); box-shadow:0 8px 32px rgba(0,0,0,.2); }
-.login-title { margin:0 0 1.5rem; font-size:1.25rem; font-weight:600; }
-.login-form { display:flex; flex-direction:column; gap:.75rem; }
-.login-input { padding:.6rem .75rem; border:1px solid #d1d5db; border-radius:6px; font-size:.95rem; font-family:'Open Sans',sans-serif; }
-.login-error { margin:0; color:#dc2626; font-size:.875rem; min-height:1.2em; }
-.login-btn { padding:.6rem 1rem; background:#2563eb; color:#fff; border:none; border-radius:6px; font-size:.95rem; font-weight:500; cursor:pointer; }
-.login-btn:hover { background:#1d4ed8; }
+/* ── Login page ── */
+.login-page {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface, #f8f9fb);
+  z-index: 9999;
+}
+.login-card {
+  background: #fff; border-radius: 12px; padding: 2.5rem 2rem 2rem;
+  width: min(380px, 90vw);
+  box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
+}
+.login-brand {
+  display: flex; align-items: center; gap: .75rem;
+  margin-bottom: 2rem;
+}
+.login-brand-icon {
+  width: 36px; height: 36px;
+  background: var(--accent, #2563eb); color: #fff;
+  border-radius: 8px; font-weight: 700; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-brand-name { font-weight: 600; font-size: 1.15rem; color: #1e293b; }
+.login-form { display: flex; flex-direction: column; gap: .75rem; }
+.login-input {
+  padding: .65rem .75rem; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: .95rem; font-family: 'Open Sans', sans-serif;
+  transition: border-color .15s;
+}
+.login-input:focus { outline: none; border-color: var(--accent, #2563eb); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.login-error { margin: 0; color: #dc2626; font-size: .875rem; min-height: 1.2em; }
+.login-btn {
+  padding: .65rem 1rem; margin-top: .25rem;
+  background: var(--accent, #2563eb); color: #fff; border: none; border-radius: 6px;
+  font-size: .95rem; font-weight: 500; cursor: pointer;
+  transition: background .15s;
+}
+.login-btn:hover { background: #1d4ed8; }
+.login-btn:disabled { opacity: .6; cursor: not-allowed; }
 
 /* ── New invoice modal radio option labels ── */
 .nim-option { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius); cursor:pointer; transition:.12s; }
