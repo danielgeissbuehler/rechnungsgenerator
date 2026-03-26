@@ -15,6 +15,8 @@
 
 import { state, COL_DEFS } from './state.js';
 import { render } from './render.js';
+import { fmt } from './utils.js';
+import { F } from './field-ids.js';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────────
 
@@ -48,10 +50,8 @@ function posTotal(pos) {
   return p * q;
 }
 
-/** Formatiert eine Zahl als Schweizer Apostroph-Format (1'234.00). */
-function fmtCHF(n) {
-  return n.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+/** fmtCHF → use imported fmt() from utils.js */
+const fmtCHF = fmt;
 
 // ── Haupt-Funktion: einfachen Editor befüllen ──────────────────────────────────
 
@@ -65,32 +65,32 @@ export function fillSimpleEditor() {
   const seEmpName    = el('se-emp-name');
   const seEmpStrasse = el('se-emp-strasse');
   const seEmpOrt     = el('se-emp-ort');
-  if (seEmpName)    seEmpName.value    = fVal('f-emp-name');
-  if (seEmpStrasse) seEmpStrasse.value = fVal('f-emp-strasse');
-  if (seEmpOrt)     seEmpOrt.value     = fVal('f-emp-ort');
+  if (seEmpName)    seEmpName.value    = fVal(F.EMP_NAME);
+  if (seEmpStrasse) seEmpStrasse.value = fVal(F.EMP_STRASSE);
+  if (seEmpOrt)     seEmpOrt.value     = fVal(F.EMP_ORT);
 
   // Absender-Anzeige (readonly — wird durch applySimpleCompany() aktualisiert)
   _refreshAbsenderDisplay();
 
   // Titel
   const seTitel = el('se-titel');
-  if (seTitel) seTitel.value = fVal('f-titel');
+  if (seTitel) seTitel.value = fVal(F.TITEL);
 
   // Währung
   const seCurrency = el('se-currency');
-  if (seCurrency) seCurrency.value = fVal('f-currency') || 'CHF';
+  if (seCurrency) seCurrency.value = fVal(F.CURRENCY) || 'CHF';
 
   // Textblöcke (plain text aus contenteditable)
   const seTb  = el('se-textblock');
   const seTb2 = el('se-textblock2');
-  if (seTb)  seTb.value  = el('f-textblock')?.textContent  || '';
-  if (seTb2) seTb2.value = el('f-textblock2')?.textContent || '';
+  if (seTb)  seTb.value  = el(F.TEXTBLOCK)?.textContent  || '';
+  if (seTb2) seTb2.value = el(F.TEXTBLOCK2)?.textContent || '';
 
   // Bank (readonly)
   const seBankName = el('se-bank-name');
   const seIban     = el('se-iban');
-  if (seBankName) seBankName.value = fVal('f-bank-name');
-  if (seIban)     seIban.value     = fVal('f-iban');
+  if (seBankName) seBankName.value = fVal(F.BANK_NAME);
+  if (seIban)     seIban.value     = fVal(F.IBAN);
 
   // Sektionen ein-/ausblenden
   setVisible('se-card-meta',       state.visibility.meta);
@@ -280,7 +280,7 @@ function _updateSimpleTotal() {
   const wrap = el('se-total');
   if (!wrap) return;
 
-  const currency = el('se-currency')?.value || fVal('f-currency') || 'CHF';
+  const currency = el('se-currency')?.value || fVal(F.CURRENCY) || 'CHF';
   const total = state.positions.reduce((sum, p) => sum + posTotal(p), 0);
 
   while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
@@ -372,9 +372,9 @@ export function applySimpleContact() {
   const seEmpName    = el('se-emp-name');
   const seEmpStrasse = el('se-emp-strasse');
   const seEmpOrt     = el('se-emp-ort');
-  if (seEmpName)    seEmpName.value    = fVal('f-emp-name');
-  if (seEmpStrasse) seEmpStrasse.value = fVal('f-emp-strasse');
-  if (seEmpOrt)     seEmpOrt.value     = fVal('f-emp-ort');
+  if (seEmpName)    seEmpName.value    = fVal(F.EMP_NAME);
+  if (seEmpStrasse) seEmpStrasse.value = fVal(F.EMP_STRASSE);
+  if (seEmpOrt)     seEmpOrt.value     = fVal(F.EMP_ORT);
 }
 
 /**
@@ -390,16 +390,16 @@ export function applySimpleCompany() {
   // Bank readonly-Felder nachführen
   const seBankName = el('se-bank-name');
   const seIban     = el('se-iban');
-  if (seBankName) seBankName.value = fVal('f-bank-name');
-  if (seIban)     seIban.value     = fVal('f-iban');
+  if (seBankName) seBankName.value = fVal(F.BANK_NAME);
+  if (seIban)     seIban.value     = fVal(F.IBAN);
 }
 
 /** Aktualisiert die readonly Absender-Anzeige aus den #f-stell-* Feldern. */
 function _refreshAbsenderDisplay() {
   const nameEl  = el('se-stell-name');
   const addrEl  = el('se-stell-adresse');
-  if (nameEl) nameEl.value  = fVal('f-stell-name');
-  if (addrEl) addrEl.value  = [fVal('f-stell-adresse'), fVal('f-stell-ort')].filter(Boolean).join(', ');
+  if (nameEl) nameEl.value  = fVal(F.STELL_NAME);
+  if (addrEl) addrEl.value  = [fVal(F.STELL_ADRESSE), fVal(F.STELL_ORT)].filter(Boolean).join(', ');
 }
 
 /** Synchronisiert den se-contact-select mit dem Haupt-Picker. */

@@ -1,3 +1,4 @@
+import { F } from './field-ids.js';
 import { initAuth, handleLogin, handleLogout } from './auth.js';
 import { rteInit, rteCmd, rteCmdRaw, rteBlockBtn, rteInsertHr, rteCmd2, rteCmd2Raw, rteBlock2, rteInsertHr2, rteKeydown } from './rte.js';
 import { render, updatePreviewScale } from './render.js';
@@ -17,7 +18,7 @@ import {
   handleStatusChange, handleKopieRechnung,
   renderDashboardStats,
   dashSortBy,
-} from './dashboard.js';
+} from './dashboard/index.js';
 import {
   fillSimpleEditor, renderSimplePositions,
   addSimplePosition, removeSimplePosition,
@@ -120,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderArchivListe();
   rteInit();
 
-  const rteEl = document.getElementById('f-textblock');
+  const rteEl = document.getElementById(F.TEXTBLOCK);
   if (rteEl) {
     rteEl.addEventListener('focus', () => {
       document.execCommand('defaultParagraphSeparator', false, 'p');

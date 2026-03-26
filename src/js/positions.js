@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { val, fmt } from './utils.js';
 import { render } from './render.js';
+import { F } from './field-ids.js';
 
 export function addPosition(desc = '', price = 0, qty = 1) {
   const id = state.posId++;
@@ -39,7 +40,7 @@ export function renderPositionsList() {
   const { positions, visibility: vis, expandedPositions } = state;
   const c1 = vis.col1, c2 = vis.col2, c3 = vis.col3, c4 = vis.col4;
   const c5 = vis.col5, c6 = vis.col6, c7 = vis.col7, c8 = vis.col8;
-  const currency = val('f-currency') || 'CHF';
+  const currency = val(F.CURRENCY) || 'CHF';
 
   const list = document.getElementById('positions-list');
   list.replaceChildren();
@@ -147,7 +148,7 @@ export function renderPositionsList() {
 
       if (c1) {
         const w = mkWrap();
-        w.appendChild(mkLabel(val('f-col-pos') || 'Position'));
+        w.appendChild(mkLabel(val(F.COL_POS) || 'Position'));
         const ta = document.createElement('textarea');
         ta.rows = 2; ta.value = pos.desc; ta.placeholder = 'Beschreibung';
         ta.style.cssText = 'width:100%;font-size:11.5px;resize:vertical;min-height:34px;max-height:120px;font-family:inherit;line-height:1.4;';
@@ -173,12 +174,12 @@ export function renderPositionsList() {
       if (c5) {
         const i = document.createElement('input'); i.type = 'text'; i.value = pos.col5 || ''; i.placeholder = '–';
         i.addEventListener('input', function () { updatePosition(pos.id, 'col5', this.value); });
-        addField(val('f-col-extra5') || 'Spalte 2', i);
+        addField(val(F.COL_EXTRA5) || 'Spalte 2', i);
       }
       if (c6) {
         const i = document.createElement('input'); i.type = 'text'; i.value = pos.col6 || ''; i.placeholder = '–';
         i.addEventListener('input', function () { updatePosition(pos.id, 'col6', this.value); });
-        addField(val('f-col-extra6') || 'Spalte 3', i);
+        addField(val(F.COL_EXTRA6) || 'Spalte 3', i);
       }
       if (c2) {
         const i = document.createElement('input'); i.type = 'number'; i.value = pos.price; i.min = '0'; i.step = '0.01';
@@ -186,12 +187,12 @@ export function renderPositionsList() {
           updatePosition(pos.id, 'price', this.value);
           numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
         });
-        addField(val('f-col-preis') || 'Preis', i);
+        addField(val(F.COL_PREIS) || 'Preis', i);
       }
       if (c7) {
         const i = document.createElement('input'); i.type = 'text'; i.value = pos.col7 || ''; i.placeholder = '–';
         i.addEventListener('input', function () { updatePosition(pos.id, 'col7', this.value); });
-        addField(val('f-col-extra7') || 'Spalte 5', i);
+        addField(val(F.COL_EXTRA7) || 'Spalte 5', i);
       }
       if (c3) {
         const i = document.createElement('input'); i.type = 'number'; i.value = pos.qty; i.step = '1';
@@ -199,18 +200,18 @@ export function renderPositionsList() {
           updatePosition(pos.id, 'qty', this.value);
           numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
         });
-        addField(val('f-col-menge') || 'Menge', i);
+        addField(val(F.COL_MENGE) || 'Menge', i);
       }
       if (c8) {
         const i = document.createElement('input'); i.type = 'text'; i.value = pos.col8 || ''; i.placeholder = '–';
         i.addEventListener('input', function () { updatePosition(pos.id, 'col8', this.value); });
-        addField(val('f-col-extra8') || 'Spalte 7', i);
+        addField(val(F.COL_EXTRA8) || 'Spalte 7', i);
       }
       if (c4) {
         const i = document.createElement('input'); i.type = 'text'; i.readOnly = true;
         i.value = currency + ' ' + fmt(pos.price * pos.qty);
         i.className = 'pos-total-readonly';
-        addField((val('f-col-total') || 'Total') + ' (' + currency + ')', i);
+        addField((val(F.COL_TOTAL) || 'Total') + ' (' + currency + ')', i);
       }
 
       if (grid.children.length) detail.appendChild(grid);

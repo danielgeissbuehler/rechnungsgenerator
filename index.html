@@ -13,20 +13,15 @@
 <body>
 
 <!-- Login Modal -->
-<div id="login-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;padding:2rem;width:min(400px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.2);">
-    <h2 style="margin:0 0 1.5rem;font-size:1.25rem;font-weight:600;">Anmelden</h2>
-    <div style="display:flex;flex-direction:column;gap:.75rem;">
-      <input id="login-email" type="email" placeholder="E-Mail" autocomplete="email"
-        style="padding:.6rem .75rem;border:1px solid #d1d5db;border-radius:6px;font-size:.95rem;">
-      <input id="login-password" type="password" placeholder="Passwort" autocomplete="current-password"
-        style="padding:.6rem .75rem;border:1px solid #d1d5db;border-radius:6px;font-size:.95rem;"
+<div id="login-modal" class="login-backdrop" style="display:none">
+  <div class="login-card">
+    <h2 class="login-title">Anmelden</h2>
+    <div class="login-form">
+      <input id="login-email" class="login-input" type="email" placeholder="E-Mail" autocomplete="email">
+      <input id="login-password" class="login-input" type="password" placeholder="Passwort" autocomplete="current-password"
         onkeydown="if(event.key==='Enter')handleLogin()">
-      <p id="login-error" style="margin:0;color:#dc2626;font-size:.875rem;min-height:1.2em;"></p>
-      <button id="login-btn" onclick="handleLogin()"
-        style="padding:.6rem 1rem;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:.95rem;font-weight:500;cursor:pointer;">
-        Anmelden
-      </button>
+      <p id="login-error" class="login-error"></p>
+      <button id="login-btn" class="login-btn" onclick="handleLogin()">Anmelden</button>
     </div>
   </div>
 </div>
@@ -199,11 +194,11 @@
         <button class="btn btn-ghost" onclick="closeNeueRechnungModal()" style="padding:6px 12px;font-size:12px">✕</button>
       </div>
       <div class="nim-body" style="padding:24px 26px;display:flex;flex-direction:column;gap:12px">
-        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <label class="nim-option">
           <input type="radio" name="neue-rechnung-typ" value="leer" checked style="accent-color:var(--accent)">
           <div><div style="font-weight:600;font-size:14px">Leere Rechnung</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Neues Formular, alle Felder leer</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <label class="nim-option">
           <input type="radio" name="neue-rechnung-typ" value="vorlage" style="accent-color:var(--accent)">
           <div style="flex:1">
             <div style="font-weight:600;font-size:14px">Aus Vorlage</div>
@@ -211,7 +206,7 @@
             <select id="modal-vorlage-select" style="margin-top:8px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit" onclick="document.querySelector('[name=neue-rechnung-typ][value=vorlage]').checked=true"><option value="">— Vorlage wählen —</option></select>
           </div>
         </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <label class="nim-option">
           <input type="radio" name="neue-rechnung-typ" value="kopie" style="accent-color:var(--accent)">
           <div style="flex:1">
             <div style="font-weight:600;font-size:14px">Kopie von bestehender Rechnung</div>

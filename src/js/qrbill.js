@@ -1,4 +1,5 @@
 import { SwissQRBill } from 'swissqrbill/svg';
+import { F } from './field-ids.js';
 
 /**
  * Parse a combined "PLZ ORT" string into { zip, city }.
@@ -21,18 +22,18 @@ function parseZipCity(str) {
  * @returns {Promise<string|null>} HTML string for the QR page, or null if IBAN is missing.
  */
 export async function buildQRPage(total) {
-  const iban = document.getElementById('f-iban')?.value?.trim();
+  const iban = document.getElementById(F.IBAN)?.value?.trim();
   if (!iban) return null;
 
-  const creditorName    = document.getElementById('f-stell-name')?.value?.trim()    || '';
-  const creditorAddress = document.getElementById('f-stell-adresse')?.value?.trim() || '';
-  const creditorOrt     = document.getElementById('f-stell-ort')?.value?.trim()     || '';
+  const creditorName    = document.getElementById(F.STELL_NAME)?.value?.trim()    || '';
+  const creditorAddress = document.getElementById(F.STELL_ADRESSE)?.value?.trim() || '';
+  const creditorOrt     = document.getElementById(F.STELL_ORT)?.value?.trim()     || '';
 
-  const debtorName    = document.getElementById('f-emp-name')?.value?.trim()    || '';
-  const debtorAddress = document.getElementById('f-emp-strasse')?.value?.trim() || '';
-  const debtorOrt     = document.getElementById('f-emp-ort')?.value?.trim()     || '';
+  const debtorName    = document.getElementById(F.EMP_NAME)?.value?.trim()    || '';
+  const debtorAddress = document.getElementById(F.EMP_STRASSE)?.value?.trim() || '';
+  const debtorOrt     = document.getElementById(F.EMP_ORT)?.value?.trim()     || '';
 
-  const currency = document.getElementById('f-currency')?.value?.trim() || 'CHF';
+  const currency = document.getElementById(F.CURRENCY)?.value?.trim() || 'CHF';
 
   // Try to find a reference value from the meta fields (label contains "REFERENZ")
   let reference;

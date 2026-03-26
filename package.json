@@ -12,6 +12,7 @@
     "swissqrbill": "^4.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "playwright": "^1.58.2",
     "vite": "^6.2.4"
   }

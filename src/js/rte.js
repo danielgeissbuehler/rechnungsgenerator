@@ -1,3 +1,5 @@
+import { F } from './field-ids.js';
+
 export function rteInit() {
   document.execCommand('defaultParagraphSeparator', false, 'p');
   document.execCommand('styleWithCSS', false, false);
@@ -86,13 +88,13 @@ export function rteInsertHrInEditor(editorId) {
 }
 
 // ── Shorthands for Editor 1 (f-textblock) ──
-export function rteCmd(cmd)      { rteInline(cmd === 'bold' ? 'b' : cmd === 'italic' ? 'i' : 'u', 'f-textblock'); }
+export function rteCmd(cmd)      { rteInline(cmd === 'bold' ? 'b' : cmd === 'italic' ? 'i' : 'u', F.TEXTBLOCK); }
 export function rteCmdRaw(cmd)   { document.execCommand('styleWithCSS', false, false); document.execCommand(cmd, false, null); }
-export function rteBlockBtn(tag) { rteBlock(tag, 'f-textblock'); }
-export function rteInsertHr()    { rteInsertHrInEditor('f-textblock'); }
+export function rteBlockBtn(tag) { rteBlock(tag, F.TEXTBLOCK); }
+export function rteInsertHr()    { rteInsertHrInEditor(F.TEXTBLOCK); }
 
 // ── Shorthands for Editor 2 (f-textblock2) ──
-export function rteCmd2(cmd)     { rteInline(cmd === 'bold' ? 'b' : cmd === 'italic' ? 'i' : 'u', 'f-textblock2'); }
+export function rteCmd2(cmd)     { rteInline(cmd === 'bold' ? 'b' : cmd === 'italic' ? 'i' : 'u', F.TEXTBLOCK2); }
 export function rteCmd2Raw(cmd)  { document.execCommand('styleWithCSS', false, false); document.execCommand(cmd, false, null); }
-export function rteBlock2(tag)   { rteBlock(tag, 'f-textblock2'); }
-export function rteInsertHr2()   { rteInsertHrInEditor('f-textblock2'); }
+export function rteBlock2(tag)   { rteBlock(tag, F.TEXTBLOCK2); }
+export function rteInsertHr2()   { rteInsertHrInEditor(F.TEXTBLOCK2); }

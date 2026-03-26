@@ -5,6 +5,7 @@ import { renderColConfig } from './columns.js';
 import { renderPositionsList } from './positions.js';
 import { toggleMetaField } from './meta.js';
 import * as cloud from './supabase.js';
+import { F, ALL_FIELD_IDS } from './field-ids.js';
 
 let fixedVorlagen  = {};
 let cloudVorlagen  = {};
@@ -78,13 +79,7 @@ export function buildTemplateList() {
 
 // ── Collect / Apply state ──────────────────────────────────────────────────
 export function collectState() {
-  const fieldIds = [
-    'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
-    'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
-    'f-col-pos','f-col-preis','f-col-menge','f-col-total',
-    'f-col-extra5','f-col-extra6','f-col-extra7','f-col-extra8',
-    'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse',
-  ];
+  const fieldIds = ALL_FIELD_IDS;
   const fields = {};
   fieldIds.forEach(id => { fields[id] = val(id); });
 
@@ -97,8 +92,8 @@ export function collectState() {
     });
   }
 
-  const tb  = document.getElementById('f-textblock');
-  const tb2 = document.getElementById('f-textblock2');
+  const tb  = document.getElementById(F.TEXTBLOCK);
+  const tb2 = document.getElementById(F.TEXTBLOCK2);
   return {
     fields,
     meta,
@@ -161,8 +156,8 @@ export function applyState(stateData) {
     const parsed = new DOMParser().parseFromString(html || '', 'text/html');
     el.replaceChildren(...Array.from(parsed.body.childNodes));
   };
-  setRTE('f-textblock',  stateData.textblock);
-  setRTE('f-textblock2', stateData.textblock2);
+  setRTE(F.TEXTBLOCK,  stateData.textblock);
+  setRTE(F.TEXTBLOCK2, stateData.textblock2);
 
   const qtyEl = document.getElementById('chk-qty-total');
   if (qtyEl) qtyEl.checked = !!stateData.qtyTotal;

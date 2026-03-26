@@ -1,0 +1,97 @@
+/* ── Readonly mode ── */
+#readonly-banner {
+  display: none;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: .6rem 1rem;
+  margin-bottom: 1rem;
+  font-size: .875rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+/* When the editor has .readonly class, dim all section content but keep
+   the archiv panel, top bar, and action buttons fully interactive. */
+#editor.readonly #archiv-section { opacity: 1; pointer-events: auto; }
+#editor.readonly .section-block {
+  opacity: 0.5;
+  pointer-events: none;
+}
+#editor.readonly input:disabled,
+#editor.readonly textarea:disabled,
+#editor.readonly select:disabled {
+  background: #e9ecef;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+#editor.readonly [contenteditable="false"] {
+  background: #e9ecef;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ── Archiv panel — visually separate from editor ── */
+#archiv-section {
+  /* Bleed to full editor width, sit flush at top */
+  margin: -20px -16px 24px;
+  background: #1e2133;
+  border-bottom: 3px solid #2d3251;
+  border-radius: 0;
+  border: none;
+}
+#archiv-section .section-header {
+  background: #252a42;
+  color: #a0aac4;
+  border-bottom: 1px solid #2d3251;
+}
+#archiv-section .section-header:hover { background: #2c3250; }
+#archiv-section .toggle-icon { color: #5a6480; }
+#archiv-section .section-body {
+  background: #1e2133;
+  padding: 12px 14px;
+}
+#archiv-liste { max-height: 260px; overflow-y: auto; }
+
+/* Archiv table */
+.archiv-table { width: 100%; border-collapse: collapse; }
+.archiv-table thead th {
+  padding: .3rem .4rem;
+  text-align: left;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: #5a6480;
+  border-bottom: 1px solid #2d3251;
+}
+.archiv-table tbody tr {
+  cursor: pointer;
+  transition: background .1s;
+  border-bottom: 1px solid #272c44;
+}
+.archiv-table tbody tr:last-child { border-bottom: none; }
+.archiv-table tbody tr:hover { background: rgba(79,142,247,.12); }
+.archiv-table tbody td {
+  padding: .4rem .4rem;
+  font-size: 10px;
+  color: #c8d0e8;
+  white-space: nowrap;
+}
+.archiv-table tbody td.archiv-td-name { white-space: normal; color: #e0e4f0; }
+.archiv-hint { font-size: 10px; color: #5a6480; letter-spacing: .2px; }
+
+.buch-btn {
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: .5rem 1rem;
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.buch-btn:hover {
+  background: #047857;
+}

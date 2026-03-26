@@ -18,18 +18,20 @@ export const state = {
 export const META_COUNT = 5;
 export const TPLS_KEY = 'rechnungsgenerator_vorlagen';
 
+import { F } from './field-ids.js';
+
 export const COL_DEFS = [
-  { n:1, label:'Spalte 1',       inputId:'f-col-pos',    ph:'POSITION',     extra:false },
-  { n:5, label:'Spalte 2 opt.',  inputId:'f-col-extra5', ph:'z.B. Einheit', extra:true  },
-  { n:6, label:'Spalte 3 opt.',  inputId:'f-col-extra6', ph:'z.B. Rabatt',  extra:true  },
-  { n:2, label:'Spalte 4',       inputId:'f-col-preis',  ph:'PREIS',        extra:false },
-  { n:7, label:'Spalte 5 opt.',  inputId:'f-col-extra7', ph:'z.B. Stunden', extra:true  },
-  { n:3, label:'Spalte 6',       inputId:'f-col-menge',  ph:'MENGE',        extra:false },
-  { n:8, label:'Spalte 7 opt.',  inputId:'f-col-extra8', ph:'z.B. MwSt.',   extra:true  },
-  { n:4, label:'Spalte 8 (CHF)', inputId:'f-col-total',  ph:'TOTAL',        extra:false },
+  { n:1, label:'Spalte 1',       inputId:F.COL_POS,    ph:'POSITION',     extra:false },
+  { n:5, label:'Spalte 2 opt.',  inputId:F.COL_EXTRA5, ph:'z.B. Einheit', extra:true  },
+  { n:6, label:'Spalte 3 opt.',  inputId:F.COL_EXTRA6, ph:'z.B. Rabatt',  extra:true  },
+  { n:2, label:'Spalte 4',       inputId:F.COL_PREIS,  ph:'PREIS',        extra:false },
+  { n:7, label:'Spalte 5 opt.',  inputId:F.COL_EXTRA7, ph:'z.B. Stunden', extra:true  },
+  { n:3, label:'Spalte 6',       inputId:F.COL_MENGE,  ph:'MENGE',        extra:false },
+  { n:8, label:'Spalte 7 opt.',  inputId:F.COL_EXTRA8, ph:'z.B. MwSt.',   extra:true  },
+  { n:4, label:'Spalte 8 (CHF)', inputId:F.COL_TOTAL,  ph:'TOTAL',        extra:false },
 ];
 
 export const COL_DEFAULTS = {
-  'f-col-pos': 'POSITION', 'f-col-preis': 'PREIS', 'f-col-menge': 'MENGE', 'f-col-total': 'TOTAL',
-  'f-col-extra5': '', 'f-col-extra6': '', 'f-col-extra7': '', 'f-col-extra8': '',
+  [F.COL_POS]: 'POSITION', [F.COL_PREIS]: 'PREIS', [F.COL_MENGE]: 'MENGE', [F.COL_TOTAL]: 'TOTAL',
+  [F.COL_EXTRA5]: '', [F.COL_EXTRA6]: '', [F.COL_EXTRA7]: '', [F.COL_EXTRA8]: '',
 };

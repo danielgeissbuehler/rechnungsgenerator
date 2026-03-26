@@ -1,0 +1,11 @@
+/* ── Mobile responsive for dashboard ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .db-content { padding: 16px; }
+  .db-topbar { padding: 0 16px; }
+}
+
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}

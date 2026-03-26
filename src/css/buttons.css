@@ -1,0 +1,9 @@
+/* ══ GLOBAL BUTTON STYLES ══ */
+/* Green save/confirm — use anywhere an action persists data */
+.btn-save { background:#4caf86; border:1px solid #3a9870; border-radius:4px; color:#fff; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; padding:6px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; width:100%; }
+.btn-save:hover { background:#3a9870; }
+/* Gray secondary — use for cancel / logout / utility actions */
+.btn-secondary { background:#edf0f5; border:1px solid var(--border); border-radius:4px; color:#5a6478; cursor:pointer; font-family:'Open Sans',sans-serif; font-size:10px; font-weight:600; letter-spacing:.8px; padding:5px 10px; text-transform:uppercase; transition:background .15s; white-space:nowrap; }
+.btn-secondary:hover { background:#dde1e7; }
+/* Hint / description text inside section bodies */
+.section-hint { font-size:10px; color:var(--label); line-height:1.6; letter-spacing:.2px; }

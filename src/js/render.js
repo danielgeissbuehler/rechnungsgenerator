@@ -1,6 +1,7 @@
 import { state, META_COUNT } from './state.js';
 import { val, chk, esc, fmt, fmtFull, nl2br } from './utils.js';
 import { getMetaData } from './meta.js';
+import { F, ALL_FIELD_IDS } from './field-ids.js';
 
 export function updatePreviewScale() {
   const isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -41,7 +42,7 @@ export async function render() {
 export function buildHeader(isFirst) {
   const sub  = isFirst ? '' : ' page-header--sub';
   const hide = !state.visibility.header ? ' style="visibility:hidden"' : '';
-  const lines = [val('f-company'), val('f-email')].filter(Boolean);
+  const lines = [val(F.COMPANY), val(F.EMAIL)].filter(Boolean);
   return `<div class="page-header${sub}"${hide}>${
     lines.length ? `<div class="company-name">${lines.map(esc).join('<br>')}</div>` : ''
   }</div>`;
@@ -49,8 +50,8 @@ export function buildHeader(isFirst) {
 
 export function buildFooter() {
   const vis       = state.visibility.bank ? '' : ' inv-hidden';
-  const bankLines = [val('f-bank-name'), val('f-bank-adresse'), val('f-bank-strasse')].filter(Boolean);
-  const iban      = val('f-iban');
+  const bankLines = [val(F.BANK_NAME), val(F.BANK_ADRESSE), val(F.BANK_STRASSE)].filter(Boolean);
+  const iban      = val(F.IBAN);
   return `<div class="page-footer${vis}">
     <hr class="footer-line">
     <div class="footer-content">
@@ -65,30 +66,30 @@ export function buildFooter() {
 export function buildPages() {
   const { visibility: vis, positions, colAlign } = state;
 
-  const empName    = val('f-emp-name');
-  const empStrasse = val('f-emp-strasse');
-  const empOrt     = val('f-emp-ort');
-  const stName     = val('f-stell-name');
-  const stAdresse  = val('f-stell-adresse');
-  const stOrt      = val('f-stell-ort');
-  const titel      = val('f-titel');
-  const heading    = val('f-heading');
-  const currency   = val('f-currency') || 'CHF';
+  const empName    = val(F.EMP_NAME);
+  const empStrasse = val(F.EMP_STRASSE);
+  const empOrt     = val(F.EMP_ORT);
+  const stName     = val(F.STELL_NAME);
+  const stAdresse  = val(F.STELL_ADRESSE);
+  const stOrt      = val(F.STELL_ORT);
+  const titel      = val(F.TITEL);
+  const heading    = val(F.HEADING);
+  const currency   = val(F.CURRENCY) || 'CHF';
   const showQtyTot = chk('chk-qty-total');
 
-  const colPos    = val('f-col-pos')    || 'POSITION';
-  const colPreis  = val('f-col-preis')  || 'PREIS';
-  const colMenge  = val('f-col-menge')  || 'MENGE';
-  const colTotal  = val('f-col-total')  || 'TOTAL';
-  const colExtra5 = val('f-col-extra5');
-  const colExtra6 = val('f-col-extra6');
-  const colExtra7 = val('f-col-extra7');
-  const colExtra8 = val('f-col-extra8');
+  const colPos    = val(F.COL_POS)    || 'POSITION';
+  const colPreis  = val(F.COL_PREIS)  || 'PREIS';
+  const colMenge  = val(F.COL_MENGE)  || 'MENGE';
+  const colTotal  = val(F.COL_TOTAL)  || 'TOTAL';
+  const colExtra5 = val(F.COL_EXTRA5);
+  const colExtra6 = val(F.COL_EXTRA6);
+  const colExtra7 = val(F.COL_EXTRA7);
+  const colExtra8 = val(F.COL_EXTRA8);
 
   const useCol1 = vis.col1, useCol2 = vis.col2, useCol3 = vis.col3, useCol4 = vis.col4;
   const useCol5 = vis.col5, useCol6 = vis.col6, useCol7 = vis.col7, useCol8 = vis.col8;
 
-  const textblockEl   = document.getElementById('f-textblock');
+  const textblockEl   = document.getElementById(F.TEXTBLOCK);
   const textblockRaw  = textblockEl ? textblockEl.getHTML() : '';
   const textblockText = textblockEl ? textblockEl.innerText.trim() : '';
   const useTextblock  = vis.textblock && textblockText.length > 0;
@@ -229,7 +230,7 @@ export function buildPages() {
   };
 
   // Textblock 2
-  const tb2El      = document.getElementById('f-textblock2');
+  const tb2El      = document.getElementById(F.TEXTBLOCK2);
   const tb2Raw     = tb2El ? tb2El.getHTML() : '';
   const tb2Text    = tb2El ? tb2El.innerText.trim() : '';
   const useTb2     = vis.textblock2 && tb2Text.length > 0;
@@ -322,14 +323,8 @@ export function buildPages() {
  * @param {Object} stateData - saved state (fields, meta, positions, visibility, etc.)
  * @returns {string[]} array of A4 page HTML strings
  */
-export function buildPagesFromData(stateData) {
-  const FIELD_IDS = [
-    'f-company','f-email','f-heading','f-emp-name','f-emp-strasse','f-emp-ort',
-    'f-stell-name','f-stell-adresse','f-stell-ort','f-titel','f-currency',
-    'f-col-pos','f-col-preis','f-col-menge','f-col-total',
-    'f-col-extra5','f-col-extra6','f-col-extra7','f-col-extra8',
-    'f-bank-name','f-bank-adresse','f-iban','f-bank-strasse',
-  ];
+export async function buildPagesFromData(stateData) {
+  const FIELD_IDS = ALL_FIELD_IDS;
 
   // ── Save current state ──────────────────────────────────────────────────
   const savedFields = {};
@@ -345,8 +340,8 @@ export function buildPagesFromData(stateData) {
       value: document.getElementById(`mf-value-${i}`)?.value  ?? '',
     });
   }
-  const tb  = document.getElementById('f-textblock');
-  const tb2 = document.getElementById('f-textblock2');
+  const tb  = document.getElementById(F.TEXTBLOCK);
+  const tb2 = document.getElementById(F.TEXTBLOCK2);
   const savedTb  = tb  ? tb.getHTML()  : '';
   const savedTb2 = tb2 ? tb2.getHTML() : '';
   const savedQty = document.getElementById('chk-qty-total')?.checked ?? false;
@@ -378,13 +373,21 @@ export function buildPagesFromData(stateData) {
   if (stateData.colAlign)   Object.assign(state.colAlign,   stateData.colAlign);
   state.positions.length = 0;
   (stateData.positions || []).forEach(p => state.positions.push({ ...p }));
-  setRTE('f-textblock',  stateData.textblock);
-  setRTE('f-textblock2', stateData.textblock2);
+  setRTE(F.TEXTBLOCK,  stateData.textblock);
+  setRTE(F.TEXTBLOCK2, stateData.textblock2);
   const qtyEl = document.getElementById('chk-qty-total');
   if (qtyEl) qtyEl.checked = !!stateData.qtyTotal;
 
   // ── Build pages ─────────────────────────────────────────────────────────
   const pages = buildPages();
+
+  // ── QR Bill (if enabled in snapshot) ───────────────────────────────────
+  if (stateData.visibility && stateData.visibility.qrBill) {
+    const total = state.positions.reduce((s, p) => s + p.price * p.qty, 0);
+    const { buildQRPage } = await import('./qrbill.js');
+    const qrHtml = await buildQRPage(Math.round(total * 20) / 20);
+    if (qrHtml) pages.push(qrHtml);
+  }
 
   // ── Restore original state ──────────────────────────────────────────────
   FIELD_IDS.forEach(id => {
@@ -403,8 +406,8 @@ export function buildPagesFromData(stateData) {
   Object.assign(state.colAlign,   savedCol);
   state.positions.length = 0;
   savedPos.forEach(p => state.positions.push(p));
-  setRTE('f-textblock',  savedTb);
-  setRTE('f-textblock2', savedTb2);
+  setRTE(F.TEXTBLOCK,  savedTb);
+  setRTE(F.TEXTBLOCK2, savedTb2);
   if (qtyEl) qtyEl.checked = savedQty;
 
   return pages;

@@ -1,5 +1,6 @@
 import { render } from './render.js';
 import { isConfigured, fetchAbsender, fetchEmpfaenger, saveAbsenderRecord, saveEmpfaengerRecord, deleteAbsenderRecord, deleteEmpfaengerRecord } from './supabase.js';
+import { F } from './field-ids.js';
 
 const DEFAULT_CONTACTS = [
   { strasse: "Gerbestrasse 22",    ort: "3550 Langnau i. E.", namen: ["Pneu Service Heinz Gerber","Herr Daniel Burkhalter","Herr Novotny Leos","Herr Krisztian Gombas"] },
@@ -66,9 +67,9 @@ export function applyContact() {
   if (!sel.value) return;
   const [li, ni] = sel.value.split(',').map(Number);
   const loc = contacts[li];
-  document.getElementById('f-emp-name').value    = loc.namen[ni];
-  document.getElementById('f-emp-strasse').value = loc.strasse;
-  document.getElementById('f-emp-ort').value     = loc.ort;
+  document.getElementById(F.EMP_NAME).value    = loc.namen[ni];
+  document.getElementById(F.EMP_STRASSE).value = loc.strasse;
+  document.getElementById(F.EMP_ORT).value     = loc.ort;
   render();
 }
 
@@ -116,32 +117,32 @@ export function applyCompany() {
   const sel = document.getElementById('company-select');
   if (sel.value === '') return;
   const c = companies[Number(sel.value)];
-  document.getElementById('f-company').value       = c.header_name;
-  document.getElementById('f-email').value         = c.header_email;
-  document.getElementById('f-stell-name').value    = c.absender_name;
-  document.getElementById('f-stell-adresse').value = c.absender_strasse;
-  document.getElementById('f-stell-ort').value     = c.absender_ort;
-  document.getElementById('f-bank-name').value     = c.bank_name;
-  document.getElementById('f-bank-adresse').value  = c.bank_strasse;
-  document.getElementById('f-bank-strasse').value  = c.bank_ort;
-  document.getElementById('f-iban').value          = c.iban;
-  const startNrEl = document.getElementById('f-stell-start-nr');
+  document.getElementById(F.COMPANY).value       = c.header_name;
+  document.getElementById(F.EMAIL).value         = c.header_email;
+  document.getElementById(F.STELL_NAME).value    = c.absender_name;
+  document.getElementById(F.STELL_ADRESSE).value = c.absender_strasse;
+  document.getElementById(F.STELL_ORT).value     = c.absender_ort;
+  document.getElementById(F.BANK_NAME).value     = c.bank_name;
+  document.getElementById(F.BANK_ADRESSE).value  = c.bank_strasse;
+  document.getElementById(F.BANK_STRASSE).value  = c.bank_ort;
+  document.getElementById(F.IBAN).value          = c.iban;
+  const startNrEl = document.getElementById(F.STELL_START_NR);
   if (startNrEl && c.start_nummer) startNrEl.value = c.start_nummer;
   render();
 }
 
 export async function saveCurrentAbsender() {
   const record = {
-    name:         document.getElementById('f-stell-name')?.value?.trim(),
-    strasse:      document.getElementById('f-stell-adresse')?.value?.trim(),
-    ort:          document.getElementById('f-stell-ort')?.value?.trim(),
-    header_name:  document.getElementById('f-stell-name')?.value?.trim(),
-    header_email: document.getElementById('f-stell-email')?.value?.trim() || '',
-    bank_name:    document.getElementById('f-bank-name')?.value?.trim() || '',
-    bank_strasse: document.getElementById('f-bank-strasse')?.value?.trim() || '',
-    bank_ort:     document.getElementById('f-bank-ort')?.value?.trim() || '',
-    iban:         document.getElementById('f-iban')?.value?.trim() || '',
-    start_nummer: parseInt(document.getElementById('f-stell-start-nr')?.value || '1', 10),
+    name:         document.getElementById(F.STELL_NAME)?.value?.trim(),
+    strasse:      document.getElementById(F.STELL_ADRESSE)?.value?.trim(),
+    ort:          document.getElementById(F.STELL_ORT)?.value?.trim(),
+    header_name:  document.getElementById(F.STELL_NAME)?.value?.trim(),
+    header_email: document.getElementById(F.STELL_EMAIL)?.value?.trim() || '',
+    bank_name:    document.getElementById(F.BANK_NAME)?.value?.trim() || '',
+    bank_strasse: document.getElementById(F.BANK_STRASSE)?.value?.trim() || '',
+    bank_ort:     document.getElementById(F.BANK_ORT)?.value?.trim() || '',
+    iban:         document.getElementById(F.IBAN)?.value?.trim() || '',
+    start_nummer: parseInt(document.getElementById(F.STELL_START_NR)?.value || '1', 10),
   };
   if (!record.name) { alert('Bitte Absender-Name eingeben.'); return; }
   const ok = await saveAbsenderRecord(record);
@@ -151,9 +152,9 @@ export async function saveCurrentAbsender() {
 
 export async function saveCurrentEmpfaenger() {
   const record = {
-    name:    document.getElementById('f-emp-name')?.value?.trim(),
-    strasse: document.getElementById('f-emp-strasse')?.value?.trim() || '',
-    ort:     document.getElementById('f-emp-ort')?.value?.trim() || '',
+    name:    document.getElementById(F.EMP_NAME)?.value?.trim(),
+    strasse: document.getElementById(F.EMP_STRASSE)?.value?.trim() || '',
+    ort:     document.getElementById(F.EMP_ORT)?.value?.trim() || '',
   };
   if (!record.name) { alert('Bitte Empfänger-Name eingeben.'); return; }
   const ok = await saveEmpfaengerRecord(record);

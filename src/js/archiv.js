@@ -9,6 +9,7 @@ import {
   fetchRechnungById,
   deleteRechnung,
 } from './supabase.js';
+import { F } from './field-ids.js';
 
 // ── Readonly Mode ─────────────────────────────────────────────────────────────
 export function setReadonly(isReadonly) {
@@ -42,13 +43,13 @@ export async function bucheRechnung() {
     return;
   }
 
-  const absenderName = document.getElementById('f-stell-name')?.value?.trim();
+  const absenderName = document.getElementById(F.STELL_NAME)?.value?.trim();
   if (!absenderName) {
     alert('Bitte zuerst den Absender (Firma/Name) ausfüllen.');
     return;
   }
 
-  const empfaengerName = document.getElementById('f-emp-name')?.value?.trim() || '';
+  const empfaengerName = document.getElementById(F.EMP_NAME)?.value?.trim() || '';
 
   if (!confirm('Rechnung buchen?\n\nDie Rechnung wird gespeichert und kann danach nicht mehr verändert werden.')) {
     return;
@@ -62,7 +63,7 @@ export async function bucheRechnung() {
   }
 
   // Set the number in the title field if it exists
-  const titelEl = document.getElementById('f-titel');
+  const titelEl = document.getElementById(F.TITEL);
   if (titelEl && !titelEl.value) {
     titelEl.value = `Rechnung Nr. ${nummer}`;
   }
@@ -72,7 +73,7 @@ export async function bucheRechnung() {
     return sum + (parseFloat(p.qty || 0) * parseFloat(p.price || 0));
   }, 0);
 
-  const waehrung = document.getElementById('f-currency')?.value || 'CHF';
+  const waehrung = document.getElementById(F.CURRENCY)?.value || 'CHF';
 
   // Collect full state snapshot
   const snapshot = collectState();
@@ -145,7 +146,7 @@ export async function neueRechnung() {
   state.currentDraftId = null;
   state.currentRechnungId = null;
   // Clear key fields for a new invoice
-  const titelEl = document.getElementById('f-titel');
+  const titelEl = document.getElementById(F.TITEL);
   if (titelEl) titelEl.value = '';
 }
 
@@ -158,14 +159,14 @@ export async function speichereEntwurf() {
 
   const snapshot = collectState();
 
-  const absenderName = document.getElementById('f-stell-name')?.value?.trim() || '';
-  const empfaengerName = document.getElementById('f-emp-name')?.value?.trim() || '';
+  const absenderName = document.getElementById(F.STELL_NAME)?.value?.trim() || '';
+  const empfaengerName = document.getElementById(F.EMP_NAME)?.value?.trim() || '';
 
   const betrag = state.positions.reduce((sum, p) => {
     return sum + (parseFloat(p.qty || 0) * parseFloat(p.price || 0));
   }, 0);
 
-  const waehrung = document.getElementById('f-currency')?.value || 'CHF';
+  const waehrung = document.getElementById(F.CURRENCY)?.value || 'CHF';
 
   const record = {
     absender_name:   absenderName,
@@ -214,7 +215,7 @@ export async function kopieRechnung(id) {
   state.currentRechnungId = null;
 
   // Clear the title field so it doesn't carry over the original invoice number
-  const titelEl = document.getElementById('f-titel');
+  const titelEl = document.getElementById(F.TITEL);
   if (titelEl) titelEl.value = '';
 }
 
