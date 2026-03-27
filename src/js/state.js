@@ -5,6 +5,7 @@ export const state = {
   isReadonly: false,
   currentDraftId: null,
   currentRechnungId: null,
+  currentVorlageName: null,
   visibility: {
     header: true, heading: true, empfaenger: true, steller: true, meta: true,
     titel: true, textblock: false, positionen: true, textblock2: false, bank: true,

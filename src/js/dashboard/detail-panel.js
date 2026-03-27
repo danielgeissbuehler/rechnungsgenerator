@@ -227,16 +227,16 @@ async function renderDetailPanel(r) {
   var s = r && r.status;
   if (s === 'offen') {
     statusActions =
-      '<button class="btn btn-ghost" onclick="handleStatusChange(\'' + safeId + '\',\'versendet\')">Als versendet markieren</button>'
-      + '<button class="btn btn-ghost" style="color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
+      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versendet\')">Rechnung versenden</button>'
+      + '<button class="btn btn-ghost" style="color:var(--green);border-color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
       + '<button class="btn btn-danger" onclick="handleStatusChange(\'' + safeId + '\',\'storniert\')">Stornieren</button>';
   } else if (s === 'versendet') {
     statusActions =
-      '<button class="btn btn-ghost" style="color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
+      '<button class="btn btn-ghost" style="color:var(--green);border-color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
       + '<button class="btn btn-danger" onclick="handleStatusChange(\'' + safeId + '\',\'storniert\')">Stornieren</button>';
   } else if (s === 'entwurf') {
     statusActions =
-      '<button class="btn btn-primary" onclick="window.bucheRechnung && window.bucheRechnung(\'' + safeId + '\')">Rechnung buchen</button>';
+      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="window.bucheRechnung && window.bucheRechnung(\'' + safeId + '\')">Rechnung versenden</button>';
   }
 
   const accordionBodyId = 'dp-pdf-accordion-body';
@@ -430,7 +430,7 @@ async function renderDetailPanel(r) {
       await loadRechnungen();
     } catch (err) {
       console.error('_dpDelete:', err);
-      alert('Fehler beim L\u00F6schen der Rechnung.');
+      window.showToast?.('Fehler beim Löschen der Rechnung.', 'error');
     }
   };
 }
@@ -443,12 +443,27 @@ async function renderDetailPanel(r) {
  * @param {string} newStatus
  */
 export async function handleStatusChange(id, newStatus) {
+  const labels = {
+    versendet:  { title: 'Rechnung versenden',      msg: 'Status auf «Versendet» setzen?', ok: 'Versenden',   theme: 'amber', icon: 'send' },
+    bezahlt:    { title: 'Als bezahlt markieren',    msg: 'Status auf «Bezahlt» setzen?',   ok: 'Bestätigen',  theme: 'green', icon: 'check' },
+    storniert:  { title: 'Rechnung stornieren',      msg: 'Diese Rechnung wirklich stornieren? Dies kann nicht rückgängig gemacht werden.', ok: 'Stornieren', theme: 'danger', icon: 'ban' },
+  };
+  const lbl = labels[newStatus];
+  if (lbl) {
+    const ok = await window.showConfirm(lbl.title, lbl.msg, lbl.ok, { theme: lbl.theme, icon: lbl.icon });
+    if (!ok) return;
+  }
+
   try {
     await updateRechnungStatus(id, newStatus);
   } catch (err) {
     console.error('handleStatusChange:', err);
+    window.showToast?.('Fehler beim Statuswechsel.', 'error');
     return;
   }
+
+  const toastLabels = { versendet: 'Rechnung versendet', bezahlt: 'Als bezahlt markiert', storniert: 'Rechnung storniert' };
+  window.showToast?.(toastLabels[newStatus] || 'Status geändert', 'success');
 
   // Re-fetch updated record and refresh panel
   try {

@@ -53,26 +53,22 @@
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Übersicht</div>
-      <div class="nav-item active" onclick="showDashboard()" title="Dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        <span class="nav-label">Dashboard</span>
-      </div>
-      <div class="nav-item" onclick="showDashboard()" title="Rechnungen">
+      <div class="nav-item active" data-nav="dashboard" onclick="showDashboard()" title="Rechnungen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span class="nav-label">Rechnungen</span>
         <span class="nav-badge" id="nav-badge-offen" style="display:none">0</span>
       </div>
 
       <div class="nav-section-label">Stammdaten</div>
-      <div class="nav-item" title="Absender">
+      <div class="nav-item" data-nav="absender" onclick="showStammdatenView('absender')" title="Absender">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
         <span class="nav-label">Absender</span>
       </div>
-      <div class="nav-item" title="Empfänger">
+      <div class="nav-item" data-nav="empfaenger" onclick="showStammdatenView('empfaenger')" title="Empfänger">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span class="nav-label">Empfänger</span>
       </div>
-      <div class="nav-item" title="Vorlagen">
+      <div class="nav-item" data-nav="vorlagen" onclick="showStammdatenView('vorlagen')" title="Vorlagen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         <span class="nav-label">Vorlagen</span>
       </div>
@@ -99,13 +95,6 @@
       <div id="topbar-dash" style="display:contents">
         <span class="topbar-title">Rechnungen</span>
         <div class="topbar-spacer"></div>
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" type="text" id="dash-search" placeholder="Suchen…" oninput="dashFilterChanged()">
-        </div>
-        <button class="btn btn-primary" onclick="handleNeueRechnung()">
-          + Neue Rechnung
-        </button>
       </div>
       <!-- Editor state (shown when editing) -->
       <div id="topbar-editor" style="display:none">
@@ -131,11 +120,17 @@
       <div class="filter-bar" id="dash-filter-bar">
         <div class="filter-group">
           <label class="filter-label">Absender</label>
-          <select id="filter-absender" onchange="dashFilterChanged()"><option value="">Alle</option></select>
+          <div class="multiselect" id="ms-absender">
+            <button type="button" class="ms-toggle" onclick="toggleMultiselect('ms-absender')"><span class="ms-label">Alle</span></button>
+            <div class="ms-dropdown" id="ms-absender-list"></div>
+          </div>
         </div>
         <div class="filter-group">
           <label class="filter-label">Empfänger</label>
-          <select id="filter-empfaenger" onchange="dashFilterChanged()"><option value="">Alle</option></select>
+          <div class="multiselect" id="ms-empfaenger">
+            <button type="button" class="ms-toggle" onclick="toggleMultiselect('ms-empfaenger')"><span class="ms-label">Alle</span></button>
+            <div class="ms-dropdown" id="ms-empfaenger-list"></div>
+          </div>
         </div>
         <div class="filter-group">
           <label class="filter-label">Betrag von</label>
@@ -145,10 +140,15 @@
           <label class="filter-label">bis</label>
           <input type="number" id="filter-betrag-bis" placeholder="∞" oninput="dashFilterChanged()">
         </div>
+        <div class="filter-spacer"></div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" id="dash-search" oninput="dashFilterChanged()">
+        </div>
       </div>
 
-      <!-- Table card -->
-      <div class="table-card">
+      <!-- Table card (Rechnungen) -->
+      <div class="table-card" id="rechnungen-card">
         <div class="table-toolbar">
           <span class="table-title" id="dash-table-title">Rechnungen</span>
           <div class="filter-tabs" id="dash-status-tabs">
@@ -160,10 +160,41 @@
             <div class="ftab" data-status="storniert" onclick="dashSetStatusTab(this)">Storniert</div>
           </div>
           <div class="toolbar-spacer"></div>
+          <button class="btn btn-primary" onclick="handleNeueRechnung()">+ Neue Rechnung</button>
         </div>
         <div id="dash-table-container">
           <!-- Rendered by JS -->
         </div>
+      </div>
+
+      <!-- Stammdaten: Absender -->
+      <div class="table-card stamm-container" id="stamm-absender">
+        <div class="table-toolbar">
+          <span class="table-title">Absender</span>
+          <div class="toolbar-spacer"></div>
+          <button class="btn btn-primary" onclick="openAbsenderModal()">+ Neuer Absender</button>
+        </div>
+        <div id="stamm-absender-table"></div>
+      </div>
+
+      <!-- Stammdaten: Empfänger -->
+      <div class="table-card stamm-container" id="stamm-empfaenger">
+        <div class="table-toolbar">
+          <span class="table-title">Empfänger</span>
+          <div class="toolbar-spacer"></div>
+          <button class="btn btn-primary" onclick="openEmpfaengerModal()">+ Neuer Empfänger</button>
+        </div>
+        <div id="stamm-empfaenger-table"></div>
+      </div>
+
+      <!-- Stammdaten: Vorlagen -->
+      <div class="table-card stamm-container" id="stamm-vorlagen">
+        <div class="table-toolbar">
+          <span class="table-title">Vorlagen</span>
+          <div class="toolbar-spacer"></div>
+          <button class="btn btn-primary" onclick="openVorlageEditor()">+ Neue Vorlage</button>
+        </div>
+        <div id="stamm-vorlagen-table"></div>
       </div>
     </div>
   </div>
@@ -172,9 +203,7 @@
   <div id="confirm-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
     <div class="confirm-dialog">
       <div class="confirm-dialog-body">
-        <div class="confirm-dialog-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </div>
+        <div class="confirm-dialog-icon" id="confirm-modal-icon"></div>
         <div>
           <div id="confirm-modal-title" class="confirm-dialog-title"></div>
           <div id="confirm-modal-msg" class="confirm-dialog-msg"></div>
@@ -182,10 +211,13 @@
       </div>
       <div class="confirm-dialog-footer">
         <button class="btn btn-ghost" id="confirm-modal-cancel">Abbrechen</button>
-        <button class="btn btn-danger" id="confirm-modal-ok">Löschen</button>
+        <button id="confirm-modal-ok">Löschen</button>
       </div>
     </div>
   </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
 
   <!-- DETAIL PANEL (hidden by default) -->
   <div class="panel-backdrop" id="detail-panel-backdrop" style="display:none">
@@ -265,6 +297,13 @@
 
   <h1>Rechnungs-Editor</h1>
 
+  <!-- Vorlagename (nur im Vorlage-Modus sichtbar) -->
+  <div id="vorlage-name-wrap">
+    <label>Vorlagename</label>
+    <input type="text" id="vorlage-name-input" placeholder="Vorlagename…" oninput="renameVorlageDebounced(this.value)">
+    <div id="vorlage-save-status"></div>
+  </div>
+
   <!-- Action buttons -->
   <div id="action-btns">
     <button id="btn-download" onclick="downloadPDF()">
@@ -275,35 +314,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Drucken
     </button>
-    <button id="entwurf-btn" class="btn-secondary" onclick="speichereEntwurf()">
-      Entwurf speichern
-    </button>
   </div>
 
-  <!-- ── VORLAGEN ── -->
-  <div class="section-block" style="margin-bottom:16px">
-    <div class="section-header open" onclick="toggleSection(this)">
-      <div class="section-header-label">Vorlagen</div>
-      <span class="toggle-icon">▲</span>
-    </div>
-    <div class="section-body open" style="gap:6px">
-      <div class="field-row" style="align-items:center">
-        <select id="template-select"><option value="">— Vorlage wählen —</option></select>
-        <button class="btn-tpl-load" onclick="loadTemplate()">Laden</button>
-        <button class="btn-tpl-del" onclick="deleteTemplate()" title="Vorlage löschen">×</button>
-      </div>
-      <div class="field-row" style="align-items:center">
-        <input type="text" id="template-name" placeholder="Vorlagenname…" style="flex:1" onkeydown="if(event.key==='Enter')saveTemplate()">
-        <button class="btn-tpl-save" onclick="saveTemplate()">Speichern</button>
-      </div>
-      <div id="cloud-status"></div>
-      <div class="field-row" style="gap:4px">
-        <button class="btn-tpl-io" style="flex:1" onclick="exportTemplates()">↓ Alle exportieren</button>
-        <label class="btn-tpl-io" style="flex:1">↑ Importieren<input type="file" accept=".json" style="display:none" onchange="importTemplates(this)"></label>
-      </div>
-      <button class="btn-tpl-io" style="width:100%;margin-top:2px" onclick="downloadCurrentAsJSON()">↓ Aktuell als JSON herunterladen</button>
-    </div>
-  </div>
+  <!-- ═══ GRUPPE: KOPFZEILE ═══ -->
+  <div class="editor-group">
+  <div class="editor-group-label">Kopfzeile</div>
 
   <!-- ── ABSENDER / HEADER ── -->
   <div class="section-block">
@@ -337,6 +352,12 @@
       </div>
     </div>
   </div>
+
+  </div><!-- /editor-group Kopfzeile -->
+
+  <!-- ═══ GRUPPE: BRIEFKOPF ═══ -->
+  <div class="editor-group">
+  <div class="editor-group-label">Briefkopf</div>
 
   <!-- ── EMPFÄNGER ── -->
   <div class="section-block">
@@ -452,6 +473,12 @@
       </div>
     </div>
   </div>
+
+  </div><!-- /editor-group Briefkopf -->
+
+  <!-- ═══ GRUPPE: INHALT ═══ -->
+  <div class="editor-group">
+  <div class="editor-group-label">Inhalt</div>
 
   <!-- ── TITEL ── -->
   <div class="section-block">
@@ -596,6 +623,12 @@
     </div>
   </div>
 
+  </div><!-- /editor-group Inhalt -->
+
+  <!-- ═══ GRUPPE: FUSSZEILE ═══ -->
+  <div class="editor-group">
+  <div class="editor-group-label">Fusszeile</div>
+
   <!-- ── BANK / FOOTER ── -->
   <div class="section-block">
     <div class="section-header" onclick="toggleSection(this)">
@@ -632,6 +665,7 @@
     </div>
   </div>
 
+  </div><!-- /editor-group Fusszeile -->
 
 </div><!-- /editor -->
 
@@ -684,7 +718,34 @@
     <div class="se-card" id="se-card-textblock" style="display:none">
       <div class="se-card-header">Textblock (vor Tabelle)</div>
       <div class="se-card-body">
-        <textarea id="se-textblock" placeholder="Freitext vor der Positions-Tabelle…" oninput="syncRte('f-textblock',this);render()"></textarea>
+        <div class="se-rte-wrap">
+          <div class="rte-toolbar se-rte-toolbar">
+            <button title="Fett" onmousedown="event.preventDefault();seRteCmd('bold','se-textblock')"><b>B</b></button>
+            <button title="Kursiv" onmousedown="event.preventDefault();seRteCmd('italic','se-textblock')"><i>I</i></button>
+            <button title="Unterstrichen" onmousedown="event.preventDefault();seRteCmd('underline','se-textblock')"><u>U</u></button>
+            <span class="rte-sep"></span>
+            <button title="Überschrift 1" onmousedown="event.preventDefault();seRteBlock('h1','se-textblock')">H1</button>
+            <button title="Überschrift 2" onmousedown="event.preventDefault();seRteBlock('h2','se-textblock')">H2</button>
+            <button title="Überschrift 3" onmousedown="event.preventDefault();seRteBlock('h3','se-textblock')">H3</button>
+            <button title="Normal" onmousedown="event.preventDefault();seRteBlock('p','se-textblock')">¶</button>
+            <span class="rte-sep"></span>
+            <button title="Aufzählung" onmousedown="event.preventDefault();seRteRaw('insertUnorderedList','se-textblock')">• Liste</button>
+            <button title="Nummeriert" onmousedown="event.preventDefault();seRteRaw('insertOrderedList','se-textblock')">1. Liste</button>
+            <span class="rte-sep"></span>
+            <button title="Linksbündig" onmousedown="event.preventDefault();seRteRaw('justifyLeft','se-textblock')">⬤≡</button>
+            <button title="Zentriert" onmousedown="event.preventDefault();seRteRaw('justifyCenter','se-textblock')">≡≡≡</button>
+            <button title="Rechtsbündig" onmousedown="event.preventDefault();seRteRaw('justifyRight','se-textblock')">≡⬤</button>
+            <span class="rte-sep"></span>
+            <button title="Einzug mehr" onmousedown="event.preventDefault();seRteRaw('indent','se-textblock')">→|</button>
+            <button title="Einzug weniger" onmousedown="event.preventDefault();seRteRaw('outdent','se-textblock')">|←</button>
+            <span class="rte-sep"></span>
+            <button title="Linie einfügen" onmousedown="event.preventDefault();seRteHr('se-textblock')">──</button>
+          </div>
+          <div id="se-textblock" contenteditable="true" class="rte-body se-rte-body"
+            placeholder="Freitext vor der Positions-Tabelle…"
+            onkeydown="seRteKeydown(event,'se-textblock')"
+            oninput="syncRteHtml('f-textblock',this);render()"></div>
+        </div>
       </div>
     </div>
 
@@ -711,7 +772,34 @@
     <div class="se-card" id="se-card-textblock2" style="display:none">
       <div class="se-card-header">Textblock (nach Tabelle)</div>
       <div class="se-card-body">
-        <textarea id="se-textblock2" placeholder="Freitext nach der Positions-Tabelle…" oninput="syncRte('f-textblock2',this);render()"></textarea>
+        <div class="se-rte-wrap">
+          <div class="rte-toolbar se-rte-toolbar">
+            <button title="Fett" onmousedown="event.preventDefault();seRteCmd('bold','se-textblock2')"><b>B</b></button>
+            <button title="Kursiv" onmousedown="event.preventDefault();seRteCmd('italic','se-textblock2')"><i>I</i></button>
+            <button title="Unterstrichen" onmousedown="event.preventDefault();seRteCmd('underline','se-textblock2')"><u>U</u></button>
+            <span class="rte-sep"></span>
+            <button title="Überschrift 1" onmousedown="event.preventDefault();seRteBlock('h1','se-textblock2')">H1</button>
+            <button title="Überschrift 2" onmousedown="event.preventDefault();seRteBlock('h2','se-textblock2')">H2</button>
+            <button title="Überschrift 3" onmousedown="event.preventDefault();seRteBlock('h3','se-textblock2')">H3</button>
+            <button title="Normal" onmousedown="event.preventDefault();seRteBlock('p','se-textblock2')">¶</button>
+            <span class="rte-sep"></span>
+            <button title="Aufzählung" onmousedown="event.preventDefault();seRteRaw('insertUnorderedList','se-textblock2')">• Liste</button>
+            <button title="Nummeriert" onmousedown="event.preventDefault();seRteRaw('insertOrderedList','se-textblock2')">1. Liste</button>
+            <span class="rte-sep"></span>
+            <button title="Linksbündig" onmousedown="event.preventDefault();seRteRaw('justifyLeft','se-textblock2')">⬤≡</button>
+            <button title="Zentriert" onmousedown="event.preventDefault();seRteRaw('justifyCenter','se-textblock2')">≡≡≡</button>
+            <button title="Rechtsbündig" onmousedown="event.preventDefault();seRteRaw('justifyRight','se-textblock2')">≡⬤</button>
+            <span class="rte-sep"></span>
+            <button title="Einzug mehr" onmousedown="event.preventDefault();seRteRaw('indent','se-textblock2')">→|</button>
+            <button title="Einzug weniger" onmousedown="event.preventDefault();seRteRaw('outdent','se-textblock2')">|←</button>
+            <span class="rte-sep"></span>
+            <button title="Linie einfügen" onmousedown="event.preventDefault();seRteHr('se-textblock2')">──</button>
+          </div>
+          <div id="se-textblock2" contenteditable="true" class="rte-body se-rte-body"
+            placeholder="Freitext nach der Positions-Tabelle…"
+            onkeydown="seRteKeydown(event,'se-textblock2')"
+            oninput="syncRteHtml('f-textblock2',this);render()"></div>
+        </div>
       </div>
     </div>
 

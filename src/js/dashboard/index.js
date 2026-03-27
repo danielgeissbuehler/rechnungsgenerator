@@ -9,22 +9,24 @@ import { downloadPDF, printPDF } from '../pdf.js';
 import { currentDetailId } from './state.js';
 
 // ── Re-exports ────────────────────────────────────────────────────────────────
-export { showDashboard, showEditor } from './views.js';
+export { showDashboard, showEditor, showStammdatenView } from './views.js';
 export { loadRechnungen } from './data.js';
 export { renderDashboardStats } from './stats.js';
-export { dashFilterChanged, dashSetStatusTab } from './filters.js';
+export { dashFilterChanged, dashSetStatusTab, toggleMultiselect, msCheckChanged } from './filters.js';
 export { renderInvoiceTable, dashSortBy } from './table.js';
 export { openDetailPanel, closeDetailPanel, handleStatusChange } from './detail-panel.js';
 export { handleNeueRechnung, closeNeueRechnungModal, confirmNeueRechnung, handleKopieRechnung } from './new-invoice.js';
+export { openAbsenderModal, openEmpfaengerModal, openVorlageEditor } from './stammdaten.js';
 
 // ── Imports for window assignments ────────────────────────────────────────────
-import { showDashboard, showEditor } from './views.js';
+import { showDashboard, showEditor, showStammdatenView } from './views.js';
 import { loadRechnungen } from './data.js';
 import { renderDashboardStats } from './stats.js';
-import { dashFilterChanged, dashSetStatusTab } from './filters.js';
+import { dashFilterChanged, dashSetStatusTab, toggleMultiselect, msCheckChanged } from './filters.js';
 import { renderInvoiceTable, dashSortBy } from './table.js';
 import { openDetailPanel, closeDetailPanel, handleStatusChange } from './detail-panel.js';
 import { handleNeueRechnung, closeNeueRechnungModal, confirmNeueRechnung, handleKopieRechnung } from './new-invoice.js';
+import { openAbsenderModal, openEmpfaengerModal, openVorlageEditor } from './stammdaten.js';
 
 // ── Dashboard click-to-close ──────────────────────────────────────────────────
 // Close the detail panel when clicking anywhere in the dashboard that isn't
@@ -41,8 +43,11 @@ document.addEventListener('click', function(e) {
 
 window.showDashboard          = showDashboard;
 window.showEditor             = showEditor;
+window.showStammdatenView     = showStammdatenView;
 window.dashFilterChanged      = dashFilterChanged;
 window.dashSetStatusTab       = dashSetStatusTab;
+window.toggleMultiselect      = toggleMultiselect;
+window.msCheckChanged         = msCheckChanged;
 window.openDetailPanel        = openDetailPanel;
 window.closeDetailPanel       = closeDetailPanel;
 window.handleStatusChange     = handleStatusChange;
@@ -53,6 +58,9 @@ window.handleKopieRechnung    = handleKopieRechnung;
 window.loadRechnungen         = loadRechnungen;
 window.renderDashboardStats   = renderDashboardStats;
 window.renderInvoiceTable     = renderInvoiceTable;
+window.openAbsenderModal      = openAbsenderModal;
+window.openEmpfaengerModal    = openEmpfaengerModal;
+window.openVorlageEditor      = openVorlageEditor;
 
 // ── Table row quick-action handlers ──────────────────────────────────────────
 

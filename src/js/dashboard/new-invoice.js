@@ -4,20 +4,36 @@
 
 import { escHtml } from '../utils.js';
 import { showEditor } from './views.js';
+import { getModalVorlagen, loadTemplateByKey } from '../templates.js';
+import { allRechnungen } from './state.js';
 
 /**
  * Open the new-invoice modal and populate the Vorlage dropdown.
  */
 export function handleNeueRechnung() {
+  // Populate Vorlage dropdown from cloud + local templates
   const vorlagenSelect = document.getElementById('modal-vorlage-select');
   if (vorlagenSelect) {
-    const data = window._vorlagenData || {};
-    const keys = Object.keys(data).sort();
+    const vorlagen = getModalVorlagen();
     vorlagenSelect.innerHTML =
       '<option value="">\u2014 Vorlage w\u00E4hlen \u2014</option>'
-      + keys.map(function(k) {
-          return '<option value="' + escHtml(k) + '">' + escHtml(k) + '</option>';
+      + vorlagen.map(function(v) {
+          return '<option value="' + escHtml(v.key) + '">' + escHtml(v.label) + '</option>';
         }).join('');
+  }
+
+  // Refresh Kopie dropdown from current invoice list
+  const kopieEl = document.getElementById('modal-kopie-select');
+  if (kopieEl) {
+    const opts = allRechnungen
+      .filter(function(r) { return r.status !== 'entwurf'; })
+      .map(function(r) {
+        const numPart = r.nummer ? 'Nr.\u00A0' + r.nummer : 'Entwurf';
+        const label   = numPart + ' \u2013 ' + (r.empfaenger_name || '\u2014');
+        return '<option value="' + escHtml(r.id) + '">' + escHtml(label) + '</option>';
+      })
+      .join('');
+    kopieEl.innerHTML = '<option value="">\u2014 Rechnung w\u00E4hlen \u2014</option>' + opts;
   }
 
   const overlay = document.getElementById('new-invoice-overlay');
@@ -53,12 +69,13 @@ export async function confirmNeueRechnung() {
 
   if (typ === 'vorlage') {
     const vorlageSelect = document.getElementById('modal-vorlage-select');
-    const vorlage       = (vorlageSelect && vorlageSelect.value) || '';
-    if (!vorlage) {
-      alert('Bitte eine Vorlage ausw\u00E4hlen.');
+    const vorlageKey    = (vorlageSelect && vorlageSelect.value) || '';
+    if (!vorlageKey) {
+      window.showToast?.('Bitte eine Vorlage auswählen.', 'warning');
       return;
     }
-    if (typeof window.loadTemplateByName === 'function') window.loadTemplateByName(vorlage);
+    // vorlageKey is already prefixed (e.g. 'cloud:Name' or 'local:Name')
+    loadTemplateByKey(vorlageKey);
     showEditor('new', 'Aus Vorlage');
     closeNeueRechnungModal();
     window.speichereEntwurf?.();
@@ -69,7 +86,7 @@ export async function confirmNeueRechnung() {
     const kopieSelect = document.getElementById('modal-kopie-select');
     const kopieId     = (kopieSelect && kopieSelect.value) || '';
     if (!kopieId) {
-      alert('Bitte eine Rechnung f\u00FCr die Kopie ausw\u00E4hlen.');
+      window.showToast?.('Bitte eine Rechnung für die Kopie auswählen.', 'warning');
       return;
     }
     if (typeof window.kopieRechnung === 'function') await window.kopieRechnung(kopieId);
@@ -85,6 +102,6 @@ export async function confirmNeueRechnung() {
  * @param {string} id
  */
 export async function handleKopieRechnung(id) {
-  if (typeof window.kopieRechnung === 'function') window.kopieRechnung(id);
+  if (typeof window.kopieRechnung === 'function') await window.kopieRechnung(id);
   showEditor('copy', 'Kopie von Rechnung');
 }

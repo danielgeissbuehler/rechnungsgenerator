@@ -9,8 +9,8 @@ export let allRechnungen = [];
 export let currentDetailId = null;
 
 export let filterState = {
-  absender:   '',
-  empfaenger: '',
+  absender:   [],
+  empfaenger: [],
   status:     'alle',
   betragVon:  null,
   betragBis:  null,

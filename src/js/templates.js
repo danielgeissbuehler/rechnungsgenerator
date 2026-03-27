@@ -8,7 +8,7 @@ import * as cloud from './supabase.js';
 import { F, ALL_FIELD_IDS } from './field-ids.js';
 
 let fixedVorlagen  = {};
-let cloudVorlagen  = {};
+export let cloudVorlagen  = {};
 
 // ── Local storage helpers ───────────────────────────────────────────────────
 export function loadTemplatesData() {
@@ -18,63 +18,35 @@ export function saveTemplatesData(data) {
   localStorage.setItem(TPLS_KEY, JSON.stringify(data));
 }
 
-// ── Cloud status indicator ─────────────────────────────────────────────────
-export function setCloudStatus(msg, type) {
-  const el = document.getElementById('cloud-status');
+// ── Vorlage save status indicator ───────────────────────────────────────────
+function setVorlageStatus(msg, type) {
+  const el = document.getElementById('vorlage-save-status');
   if (!el) return;
   el.textContent = msg;
-  el.className   = type;
-  el.style.display = msg ? 'block' : 'none';
+  el.className   = type || '';
 }
 
 // ── Load all templates ─────────────────────────────────────────────────────
 export async function loadVorlagen() {
   if (cloud.isConfigured()) {
-    setCloudStatus('☁ Cloud wird geladen…', 'sync-info');
     try {
       cloudVorlagen = await cloud.fetchCloudTemplates();
-      const count   = Object.keys(cloudVorlagen).length;
-      setCloudStatus(`☁ ${count} Cloud-Vorlage${count !== 1 ? 'n' : ''} geladen`, 'sync-ok');
-      setTimeout(() => setCloudStatus('', ''), 3000);
     } catch (e) {
-      setCloudStatus('☁ Cloud nicht erreichbar', 'sync-error');
+      console.error('Cloud-Vorlagen nicht erreichbar', e);
     }
   }
-
-  buildTemplateList();
 }
 
-export function buildTemplateList() {
-  const sel = document.getElementById('template-select');
-  const cur = sel.value;
-  sel.replaceChildren();
-
-  const placeholder = document.createElement('option');
-  placeholder.value = ''; placeholder.textContent = '— Vorlage wählen —';
-  sel.appendChild(placeholder);
-
-  const addGroup = (label, keys, prefix) => {
-    if (!keys.length) return;
-    const grp = document.createElement('optgroup');
-    grp.label = label;
-    keys.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = prefix + name; opt.textContent = name;
-      grp.appendChild(opt);
-    });
-    sel.appendChild(grp);
-  };
-
-  addGroup('Fixe Vorlagen',        Object.keys(fixedVorlagen).sort(),              'fixed:');
-  addGroup('☁ Cloud Vorlagen',     Object.keys(cloudVorlagen).sort(),              'cloud:');
-  addGroup('Eigene Vorlagen (lokal)', Object.keys(loadTemplatesData()).sort(),      'local:');
-
-  const hasCur = cur && (
-    (cur.startsWith('fixed:') && fixedVorlagen[cur.slice(6)]) ||
-    (cur.startsWith('cloud:') && cloudVorlagen[cur.slice(6)]) ||
-    (cur.startsWith('local:') && loadTemplatesData()[cur.slice(6)])
-  );
-  if (hasCur) sel.value = cur;
+// ── Modal integration ───────────────────────────────────────────────────────
+export function getModalVorlagen() {
+  const result = [];
+  Object.keys(cloudVorlagen).sort().forEach(name => {
+    result.push({ key: 'cloud:' + name, label: name, source: 'cloud' });
+  });
+  Object.keys(loadTemplatesData()).sort().forEach(name => {
+    result.push({ key: 'local:' + name, label: name, source: 'local' });
+  });
+  return result;
 }
 
 // ── Collect / Apply state ──────────────────────────────────────────────────
@@ -165,102 +137,83 @@ export function applyState(stateData) {
   render();
 }
 
-// ── Save ───────────────────────────────────────────────────────────────────
-export async function saveTemplate() {
-  const nameEl = document.getElementById('template-name');
-  const name   = nameEl.value.trim();
-  if (!name) { nameEl.focus(); return; }
-
-  const tplState = collectState();
-
-  // Always save locally
-  const localData = loadTemplatesData();
-  localData[name] = tplState;
-  saveTemplatesData(localData);
-
-  // Save to cloud if configured
-  if (cloud.isConfigured()) {
-    setCloudStatus('☁ Wird gespeichert…', 'sync-pending');
-    const ok = await cloud.saveCloudTemplate(name, tplState);
-    if (ok) { cloudVorlagen[name] = tplState; setCloudStatus('☁ In Cloud gespeichert', 'sync-ok'); }
-    else                                       setCloudStatus('☁ Cloud-Fehler – nur lokal gespeichert', 'sync-error');
-    setTimeout(() => setCloudStatus('', ''), 3000);
-  }
-
-  buildTemplateList();
-  document.getElementById('template-select').value = 'local:' + name;
-  nameEl.value = '';
-}
-
-// ── Load ───────────────────────────────────────────────────────────────────
-export function loadTemplate() {
-  const raw = document.getElementById('template-select').value;
-  if (!raw) return;
+// ── Load template by prefixed key (used by modal / stammdaten) ─────────────
+export function loadTemplateByKey(prefixedKey) {
+  if (!prefixedKey) return;
   let tplState;
-  if      (raw.startsWith('fixed:')) tplState = fixedVorlagen[raw.slice(6)];
-  else if (raw.startsWith('cloud:')) tplState = cloudVorlagen[raw.slice(6)];
-  else if (raw.startsWith('local:')) tplState = loadTemplatesData()[raw.slice(6)];
+  if      (prefixedKey.startsWith('fixed:')) tplState = fixedVorlagen[prefixedKey.slice(6)];
+  else if (prefixedKey.startsWith('cloud:')) tplState = cloudVorlagen[prefixedKey.slice(6)];
+  else if (prefixedKey.startsWith('local:')) tplState = loadTemplatesData()[prefixedKey.slice(6)];
   if (tplState) applyState(tplState);
 }
 
-// ── Delete ─────────────────────────────────────────────────────────────────
-export async function deleteTemplate() {
-  const raw = document.getElementById('template-select').value;
-  if (!raw) return;
-  if (raw.startsWith('fixed:')) { alert('Fixe Vorlagen können nicht gelöscht werden.'); return; }
+// ── Auto-save for Vorlagen (debounced) ──────────────────────────────────────
+let _vorlageAutoSaveTimer = null;
 
-  const name = raw.slice(raw.indexOf(':') + 1);
-  if (!confirm(`Vorlage "${name}" löschen?`)) return;
+export function autoSaveVorlage() {
+  const editor = document.getElementById('view-editor');
+  if (!editor || getComputedStyle(editor).display === 'none') return;
+  if (editor.classList.contains('simple-mode')) return;
+  if (!state.currentVorlageName) return;
+  if (!cloud.isConfigured()) return;
 
-  if (raw.startsWith('cloud:')) {
-    setCloudStatus('☁ Wird gelöscht…', 'sync-pending');
-    const ok = await cloud.deleteCloudTemplate(name);
-    if (ok) { delete cloudVorlagen[name]; setCloudStatus('☁ Aus Cloud gelöscht', 'sync-ok'); }
-    else                                   setCloudStatus('☁ Cloud-Fehler', 'sync-error');
-    setTimeout(() => setCloudStatus('', ''), 3000);
-  } else {
-    const data = loadTemplatesData();
-    delete data[name];
-    saveTemplatesData(data);
-  }
-
-  buildTemplateList();
+  setVorlageStatus('Speichert…');
+  clearTimeout(_vorlageAutoSaveTimer);
+  _vorlageAutoSaveTimer = setTimeout(async () => {
+    const name = state.currentVorlageName;
+    if (!name) return;
+    const tplState = collectState();
+    const ok = await cloud.saveCloudTemplate(name, tplState);
+    if (ok) {
+      cloudVorlagen[name] = tplState;
+      setVorlageStatus('Gespeichert');
+      setTimeout(() => setVorlageStatus(''), 2000);
+    } else {
+      setVorlageStatus('Fehler beim Speichern', 'error');
+    }
+  }, 1500);
 }
 
-// ── Import / Export ────────────────────────────────────────────────────────
-export function downloadCurrentAsJSON() {
-  const nameEl = document.getElementById('template-name');
-  const name   = nameEl.value.trim() || 'Vorlage';
-  const blob   = new Blob([JSON.stringify({ [name]: collectState() }, null, 2)], { type:'application/json' });
-  const a      = document.createElement('a');
-  a.href       = URL.createObjectURL(blob);
-  a.download   = name.replace(/\s+/g, '_') + '.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+// ── Rename Vorlage (debounced) ──────────────────────────────────────────────
+let _renameTimer = null;
 
-export function exportTemplates() {
-  const blob = new Blob([JSON.stringify(loadTemplatesData(), null, 2)], { type:'application/json' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = 'vorlagen_export.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+export function renameVorlageDebounced(newName) {
+  newName = (newName || '').trim();
+  clearTimeout(_renameTimer);
+  if (!newName) return;
 
-export function importTemplates(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const imported = JSON.parse(e.target.result);
-      const existing = loadTemplatesData();
-      Object.assign(existing, imported);
-      saveTemplatesData(existing);
-      buildTemplateList();
-    } catch { alert('Ungültige JSON-Datei.'); }
-  };
-  reader.readAsText(file);
-  input.value = '';
+  _renameTimer = setTimeout(async () => {
+    const oldName = state.currentVorlageName;
+    if (!oldName || oldName === newName) {
+      // Name unchanged or first save — just update state and save
+      state.currentVorlageName = newName;
+      autoSaveVorlage();
+      return;
+    }
+
+    if (!cloud.isConfigured()) return;
+
+    setVorlageStatus('Umbenennen…');
+    const tplState = collectState();
+
+    // Save with new name
+    const ok = await cloud.saveCloudTemplate(newName, tplState);
+    if (!ok) {
+      setVorlageStatus('Fehler: Name evtl. bereits vergeben', 'error');
+      return;
+    }
+
+    // Delete old name
+    await cloud.deleteCloudTemplate(oldName);
+    delete cloudVorlagen[oldName];
+    cloudVorlagen[newName] = tplState;
+    state.currentVorlageName = newName;
+
+    // Update topbar title
+    const titleEl = document.getElementById('editor-topbar-title');
+    if (titleEl) titleEl.textContent = 'Vorlage: ' + newName;
+
+    setVorlageStatus('Umbenannt');
+    setTimeout(() => setVorlageStatus(''), 2000);
+  }, 1500);
 }

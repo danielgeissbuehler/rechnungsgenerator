@@ -36,7 +36,7 @@ export async function downloadPDF(containerEl = null, filename = null) {
     const name = filename || (val(F.TITEL) || 'Rechnung').replace(/\s+/g, '_');
     pdf.save(`${name}.pdf`);
   } catch (e) {
-    alert('Fehler: ' + e.message);
+    window.showToast?.('PDF-Fehler: ' + e.message, 'error');
   } finally {
     if (btn) btn.disabled = false;
     if (loading) loading.classList.remove('show');

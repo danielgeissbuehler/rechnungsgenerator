@@ -9,15 +9,14 @@ import { renderInvoiceTable } from './table.js';
  * Read current filter input values and re-render the invoice table.
  */
 export function dashFilterChanged() {
-  const absEl = document.getElementById('filter-absender');
-  const empEl = document.getElementById('filter-empfaenger');
   const srcEl = document.getElementById('dash-search');
   const vonEl = document.getElementById('filter-betrag-von');
   const bisEl = document.getElementById('filter-betrag-bis');
 
-  filterState.absender   = (absEl && absEl.value)  || '';
-  filterState.empfaenger = (empEl && empEl.value)  || '';
-  filterState.suche      = (srcEl && srcEl.value)  || '';
+  // Multiselect: read checked values
+  filterState.absender   = _readMultiselect('ms-absender-list');
+  filterState.empfaenger = _readMultiselect('ms-empfaenger-list');
+  filterState.suche      = (srcEl && srcEl.value) || '';
 
   const von = vonEl ? vonEl.value : '';
   const bis = bisEl ? bisEl.value : '';
@@ -26,6 +25,57 @@ export function dashFilterChanged() {
 
   renderInvoiceTable();
 }
+
+/** Read checked checkbox values from a multiselect list container. */
+function _readMultiselect(listId) {
+  const list = document.getElementById(listId);
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('input[type=checkbox]:checked'))
+    .map(function(cb) { return cb.value; });
+}
+
+/** Toggle open/close of a multiselect dropdown. */
+export function toggleMultiselect(msId) {
+  const ms = document.getElementById(msId);
+  if (!ms) return;
+  const wasOpen = ms.classList.contains('open');
+  // Close all open multiselects first
+  document.querySelectorAll('.multiselect.open').forEach(function(el) {
+    el.classList.remove('open');
+  });
+  if (!wasOpen) ms.classList.add('open');
+}
+
+/** Update the toggle button label based on selected values. */
+function _updateToggleLabel(msId) {
+  const ms = document.getElementById(msId);
+  if (!ms) return;
+  const label = ms.querySelector('.ms-label');
+  if (!label) return;
+  const checked = Array.from(ms.querySelectorAll('input[type=checkbox]:checked'));
+  if (checked.length === 0) {
+    label.textContent = 'Alle';
+  } else if (checked.length === 1) {
+    label.textContent = checked[0].value;
+  } else {
+    label.textContent = checked.length + ' ausgewählt';
+  }
+}
+
+/** Handle checkbox change inside a multiselect. */
+export function msCheckChanged(msId) {
+  _updateToggleLabel(msId);
+  dashFilterChanged();
+}
+
+// Close multiselects on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.multiselect')) {
+    document.querySelectorAll('.multiselect.open').forEach(function(el) {
+      el.classList.remove('open');
+    });
+  }
+});
 
 /**
  * Activate a status filter tab.

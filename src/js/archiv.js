@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { collectState, applyState, setCloudStatus } from './templates.js';
+import { collectState, applyState } from './templates.js';
 import {
   isConfigured,
   getNextInvoiceNumber,
@@ -39,26 +39,30 @@ export async function bucheRechnung() {
   if (state.isReadonly) return;
 
   if (!isConfigured()) {
-    alert('Supabase nicht konfiguriert. Buchen nicht möglich.');
+    window.showToast?.('Supabase nicht konfiguriert.', 'error');
     return;
   }
 
   const absenderName = document.getElementById(F.STELL_NAME)?.value?.trim();
   if (!absenderName) {
-    alert('Bitte zuerst den Absender (Firma/Name) ausfüllen.');
+    window.showToast?.('Bitte zuerst den Absender ausfüllen.', 'warning');
     return;
   }
 
   const empfaengerName = document.getElementById(F.EMP_NAME)?.value?.trim() || '';
 
-  if (!confirm('Rechnung buchen?\n\nDie Rechnung wird gespeichert und kann danach nicht mehr verändert werden.')) {
-    return;
-  }
+  const ok = await window.showConfirm(
+    'Rechnung versenden',
+    'Die Rechnung wird gespeichert und kann danach nicht mehr verändert werden.',
+    'Versenden',
+    { theme: 'amber', icon: 'send' },
+  );
+  if (!ok) return;
 
   // Get next number
   const nummer = await getNextInvoiceNumber(absenderName);
   if (nummer === null) {
-    alert('Fehler beim Abrufen der Rechnungsnummer.');
+    window.showToast?.('Fehler beim Abrufen der Rechnungsnummer.', 'error');
     return;
   }
 
@@ -94,7 +98,7 @@ export async function bucheRechnung() {
 
   const id = await saveRechnung(record);
   if (!id) {
-    alert('Fehler beim Speichern der Rechnung.');
+    window.showToast?.('Fehler beim Speichern der Rechnung.', 'error');
     return;
   }
 
@@ -104,14 +108,14 @@ export async function bucheRechnung() {
   setReadonly(true);
   await renderArchivListe();
   window.loadRechnungen?.();
-  alert(`Rechnung Nr. ${nummer} wurde gebucht.`);
+  window.showToast?.(`Rechnung Nr. ${nummer} wurde gebucht.`, 'success');
   setTimeout(() => window.showDashboard?.(), 300);
 }
 
 // ── Archiv laden ──────────────────────────────────────────────────────────────
 export async function ladeEntwurf(id) {
   const rechnung = await fetchRechnungById(id);
-  if (!rechnung) { alert('Entwurf nicht gefunden.'); return; }
+  if (!rechnung) { window.showToast?.('Entwurf nicht gefunden.', 'error'); return; }
 
   applyState(rechnung.daten);
   setReadonly(false);
@@ -121,7 +125,7 @@ export async function ladeEntwurf(id) {
 
 export async function ladeAusArchiv(id) {
   const rechnung = await fetchRechnungById(id);
-  if (!rechnung) { alert('Rechnung nicht gefunden.'); return; }
+  if (!rechnung) { window.showToast?.('Rechnung nicht gefunden.', 'error'); return; }
 
   applyState(rechnung.daten);
   setReadonly(true);
@@ -137,11 +141,14 @@ export async function loescheAusArchiv(id) {
   if (!confirmed) return;
   const ok = await deleteRechnung(id);
   if (ok) await renderArchivListe();
-  else alert('Fehler beim Löschen.');
+  else window.showToast?.('Fehler beim Löschen.', 'error');
 }
 
 export async function neueRechnung() {
-  if (state.isReadonly && !confirm('Aktuelle gebuchte Rechnung verlassen? Änderungen sind nicht möglich.')) return;
+  if (state.isReadonly) {
+    const ok = await window.showConfirm('Rechnung verlassen', 'Aktuelle gebuchte Rechnung verlassen?', 'Verlassen');
+    if (!ok) return;
+  }
   setReadonly(false);
   state.currentDraftId = null;
   state.currentRechnungId = null;
@@ -153,7 +160,7 @@ export async function neueRechnung() {
 // ── Entwurf speichern ─────────────────────────────────────────────────────────
 export async function speichereEntwurf() {
   if (!isConfigured()) {
-    alert('Supabase nicht konfiguriert. Speichern nicht möglich.');
+    window.showToast?.('Supabase nicht konfiguriert.', 'error');
     return;
   }
 
@@ -183,7 +190,6 @@ export async function speichereEntwurf() {
   const id = await saveEntwurf(record);
   if (id) {
     state.currentDraftId = id;
-    setCloudStatus('Entwurf gespeichert', 'ok');
     window.loadRechnungen?.();
   }
 }
@@ -197,7 +203,6 @@ export function autoSave() {
   if (state.isReadonly) return;
   if (!isConfigured()) return;
 
-  setCloudStatus('Speichert…', 'sync-info');
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(async () => {
     await speichereEntwurf();

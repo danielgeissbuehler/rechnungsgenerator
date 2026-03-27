@@ -37,6 +37,7 @@ export async function render() {
   wrap.scrollTop = scrollTop;
   updatePreviewScale();
   window.autoSave?.();
+  window.autoSaveVorlage?.();
 }
 
 export function buildHeader(isFirst) {

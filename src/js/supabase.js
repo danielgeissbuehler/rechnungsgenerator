@@ -38,10 +38,21 @@ export async function fetchCloudTemplates() {
   if (!client) return {};
   const { data, error } = await client
     .from('vorlagen')
-    .select('name, data')
+    .select('name, data, created_at')
     .order('name');
   if (error) { console.error('Supabase fetch:', error.message); return {}; }
-  return Object.fromEntries(data.map(r => [r.name, r.data]));
+  return Object.fromEntries(data.map(r => [r.name, { ...r.data, _created_at: r.created_at }]));
+}
+
+export async function fetchCloudTemplateRows() {
+  const client = getClient();
+  if (!client) return [];
+  const { data, error } = await client
+    .from('vorlagen')
+    .select('id, name, created_at')
+    .order('name');
+  if (error) { console.error('fetchCloudTemplateRows:', error.message); return []; }
+  return data;
 }
 
 export async function saveCloudTemplate(name, templateState) {
@@ -98,10 +109,14 @@ export async function fetchAbsender() {
 export async function saveAbsenderRecord(record) {
   const client = getClient();
   if (!client) return false;
-  const { error } = await client
-    .from('absender')
-    .upsert(record, { onConflict: 'name,user_id' });
-  if (error) { console.error('saveAbsender:', error.message); return false; }
+  if (record.id) {
+    const { id, ...fields } = record;
+    const { error } = await client.from('absender').update(fields).eq('id', id);
+    if (error) { console.error('saveAbsender (update):', error.message); return false; }
+  } else {
+    const { error } = await client.from('absender').insert(record);
+    if (error) { console.error('saveAbsender (insert):', error.message); return false; }
+  }
   return true;
 }
 
@@ -128,10 +143,14 @@ export async function fetchEmpfaenger() {
 export async function saveEmpfaengerRecord(record) {
   const client = getClient();
   if (!client) return false;
-  const { error } = await client
-    .from('empfaenger')
-    .upsert(record, { onConflict: 'name,user_id' });
-  if (error) { console.error('saveEmpfaenger:', error.message); return false; }
+  if (record.id) {
+    const { id, ...fields } = record;
+    const { error } = await client.from('empfaenger').update(fields).eq('id', id);
+    if (error) { console.error('saveEmpfaenger (update):', error.message); return false; }
+  } else {
+    const { error } = await client.from('empfaenger').insert(record);
+    if (error) { console.error('saveEmpfaenger (insert):', error.message); return false; }
+  }
   return true;
 }
 

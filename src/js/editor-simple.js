@@ -17,6 +17,7 @@ import { state, COL_DEFS } from './state.js';
 import { render } from './render.js';
 import { fmt } from './utils.js';
 import { F } from './field-ids.js';
+import { rteInline, rteBlock, rteInsertHrInEditor, rteKeydown } from './rte.js';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────────
 
@@ -80,11 +81,13 @@ export function fillSimpleEditor() {
   const seCurrency = el('se-currency');
   if (seCurrency) seCurrency.value = fVal(F.CURRENCY) || 'CHF';
 
-  // Textblöcke (plain text aus contenteditable)
+  // Textblöcke (HTML aus contenteditable → contenteditable)
   const seTb  = el('se-textblock');
   const seTb2 = el('se-textblock2');
-  if (seTb)  seTb.value  = el(F.TEXTBLOCK)?.textContent  || '';
-  if (seTb2) seTb2.value = el(F.TEXTBLOCK2)?.textContent || '';
+  const mainTb  = el(F.TEXTBLOCK);
+  const mainTb2 = el(F.TEXTBLOCK2);
+  if (seTb  && mainTb)  seTb.innerHTML  = mainTb.innerHTML  || '';
+  if (seTb2 && mainTb2) seTb2.innerHTML = mainTb2.innerHTML || '';
 
   // Bank (readonly)
   const seBankName = el('se-bank-name');
@@ -277,28 +280,12 @@ export function renderSimplePositions() {
 
 /** Aktualisiert die Total-Anzeige unter der Tabelle. */
 function _updateSimpleTotal() {
-  const wrap = el('se-total');
-  if (!wrap) return;
+  const totalEl = el('se-total');
+  if (!totalEl) return;
 
   const currency = el('se-currency')?.value || fVal(F.CURRENCY) || 'CHF';
   const total = state.positions.reduce((sum, p) => sum + posTotal(p), 0);
-
-  while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
-
-  const row = document.createElement('div');
-  row.className = 'se-total-row';
-
-  const lbl = document.createElement('span');
-  lbl.className   = 'se-total-lbl';
-  lbl.textContent = 'Total';
-
-  const val = document.createElement('span');
-  val.className   = 'se-total-val';
-  val.textContent = currency + ' ' + fmtCHF(total);
-
-  row.appendChild(lbl);
-  row.appendChild(val);
-  wrap.appendChild(row);
+  totalEl.textContent = currency + ' ' + fmtCHF(total);
 }
 
 // ── Positions CRUD ─────────────────────────────────────────────────────────────
@@ -341,6 +328,60 @@ export function syncField(targetId, inputEl) {
 export function syncRte(targetId, textareaEl) {
   const t = el(targetId);
   if (t) t.textContent = textareaEl.value;
+}
+
+/** Sync HTML from a contenteditable div to the hidden full editor's contenteditable. */
+export function syncRteHtml(targetId, sourceEl) {
+  const t = el(targetId);
+  if (t && sourceEl) {
+    t.innerHTML = sourceEl.innerHTML;
+  }
+}
+
+/** Map simple editor ID → hidden full editor ID */
+function _seTarget(editorId) {
+  return editorId === 'se-textblock' ? F.TEXTBLOCK : F.TEXTBLOCK2;
+}
+
+/** Sync simple editor → hidden editor + render. Called after every RTE action. */
+function _seAfter(editorId) {
+  const editor = el(editorId);
+  if (editor) syncRteHtml(_seTarget(editorId), editor);
+  render();
+}
+
+/** RTE inline command (bold/italic/underline). */
+export function seRteCmd(cmd, editorId) {
+  const tagMap = { bold: 'b', italic: 'i', underline: 'u' };
+  rteInline(tagMap[cmd] || cmd, editorId);
+  _seAfter(editorId);
+}
+
+/** RTE block command (h1/h2/h3/p). */
+export function seRteBlock(tag, editorId) {
+  rteBlock(tag, editorId);
+  _seAfter(editorId);
+}
+
+/** RTE raw execCommand (lists, alignment, indent). */
+export function seRteRaw(cmd, editorId) {
+  const editor = el(editorId);
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('styleWithCSS', false, false);
+  document.execCommand(cmd, false, null);
+  _seAfter(editorId);
+}
+
+/** Insert horizontal rule. */
+export function seRteHr(editorId) {
+  rteInsertHrInEditor(editorId);
+  _seAfter(editorId);
+}
+
+/** Keydown handler for heading → paragraph on Enter. */
+export function seRteKeydown(e, editorId) {
+  rteKeydown(e, editorId);
 }
 
 /**

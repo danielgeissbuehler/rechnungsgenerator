@@ -27,8 +27,8 @@ export function dashSortBy(col) {
 export function renderInvoiceTable() {
   // 1. Filter
   let list = allRechnungen.filter(function(r) {
-    if (filterState.absender   && r.absender_name   !== filterState.absender)   return false;
-    if (filterState.empfaenger && r.empfaenger_name !== filterState.empfaenger) return false;
+    if (filterState.absender.length   && filterState.absender.indexOf(r.absender_name)     === -1) return false;
+    if (filterState.empfaenger.length && filterState.empfaenger.indexOf(r.empfaenger_name) === -1) return false;
     if (filterState.status !== 'alle' && r.status !== filterState.status)        return false;
     if (filterState.betragVon != null && (parseFloat(r.betrag) || 0) < filterState.betragVon) return false;
     if (filterState.betragBis != null && (parseFloat(r.betrag) || 0) > filterState.betragBis) return false;
