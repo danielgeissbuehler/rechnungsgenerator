@@ -1,9 +1,47 @@
 import { render } from './render.js';
 import { isConfigured, fetchAbsender, fetchEmpfaenger, saveAbsenderRecord, saveEmpfaengerRecord, deleteAbsenderRecord, deleteEmpfaengerRecord } from './supabase.js';
 import { F } from './field-ids.js';
+import { createSearchableSelect } from './searchable-select.js';
 
 let contacts  = [];
 let companies = [];
+
+/** @type {ReturnType<typeof createSearchableSelect>|null} */
+let contactPicker = null;
+/** @type {ReturnType<typeof createSearchableSelect>|null} */
+let companyPicker = null;
+/** @type {ReturnType<typeof createSearchableSelect>|null} */
+let seContactPicker = null;
+/** @type {ReturnType<typeof createSearchableSelect>|null} */
+let seCompanyPicker = null;
+
+// ── Helpers ──
+
+function contactItems() {
+  return contacts.map((loc, li) => {
+    const streetLine = [loc.strasse, loc.hausnummer].filter(Boolean).join(' ');
+    const ortLine    = [loc.plz, loc.ort].filter(Boolean).join(' ');
+    return {
+      value: `${li},0`,
+      label: loc.namen[0],
+      subtitle: [streetLine, ortLine].filter(Boolean).join(', '),
+    };
+  });
+}
+
+function companyItems() {
+  return companies.map((c, i) => {
+    const streetLine = [c.absender_strasse, c.absender_hausnummer].filter(Boolean).join(' ');
+    const ortLine    = [c.absender_plz, c.absender_ort].filter(Boolean).join(' ');
+    return {
+      value: String(i),
+      label: c.name,
+      subtitle: [streetLine, ortLine].filter(Boolean).join(', '),
+    };
+  });
+}
+
+// ── Contact (Empfänger) ──
 
 export async function loadContacts() {
   contacts = [];
@@ -23,44 +61,49 @@ export async function loadContacts() {
 
 export function buildContactPicker() {
   const wrap = document.getElementById('contact-picker-wrap');
-  const sel  = document.getElementById('contact-select');
-  if (!wrap || !sel) return;
-  // Clear existing options before rebuilding
-  sel.replaceChildren();
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '\u2014 Empf\u00E4nger w\u00E4hlen \u2014';
-  sel.appendChild(placeholder);
-  wrap.style.display = contacts.length ? 'flex' : 'none';
-  contacts.forEach((loc, li) => {
-    const grp = document.createElement('optgroup');
-    const streetLine = [loc.strasse, loc.hausnummer].filter(Boolean).join(' ');
-    const ortLine    = [loc.plz, loc.ort].filter(Boolean).join(' ');
-    grp.label = [streetLine, ortLine].filter(Boolean).join(', ');
-    loc.namen.forEach((name, ni) => {
-      const opt = document.createElement('option');
-      opt.value = `${li},${ni}`; opt.textContent = name;
-      grp.appendChild(opt);
+  if (!wrap) return;
+
+  const items = contactItems();
+  wrap.style.display = items.length ? 'flex' : 'none';
+
+  const container = document.getElementById('contact-select');
+  if (!container) return;
+
+  if (contactPicker) {
+    contactPicker.update(items, '');
+  } else {
+    contactPicker = createSearchableSelect(container, {
+      placeholder: '— Empfänger wählen —',
+      items,
+      onSelect: (v) => {
+        applyContact(v);
+        // Sync simple editor picker
+        if (seContactPicker) seContactPicker.setValue(v);
+      },
     });
-    sel.appendChild(grp);
-  });
-  // Force simple editor to re-sync on next fillSimpleEditor()
-  const seSel = document.getElementById('se-contact-select');
-  if (seSel) seSel.replaceChildren();
+  }
+
+  // Force simple editor to rebuild
+  if (seContactPicker) {
+    seContactPicker.update(items, contactPicker.getValue());
+  }
 }
 
-export function applyContact() {
-  const sel = document.getElementById('contact-select');
-  if (!sel.value) return;
-  const [li, ni] = sel.value.split(',').map(Number);
+export function applyContact(val) {
+  const v = val ?? contactPicker?.getValue();
+  if (!v) return;
+  const [li] = v.split(',').map(Number);
   const loc = contacts[li];
-  document.getElementById(F.EMP_NAME).value      = loc.namen[ni];
+  if (!loc) return;
+  document.getElementById(F.EMP_NAME).value      = loc.namen[0];
   document.getElementById(F.EMP_STRASSE).value   = loc.strasse;
   document.getElementById(F.EMP_HAUSNUMMER).value = loc.hausnummer;
   document.getElementById(F.EMP_PLZ).value       = loc.plz;
   document.getElementById(F.EMP_ORT).value       = loc.ort;
   render();
 }
+
+// ── Company (Absender) ──
 
 export async function loadCompanies() {
   companies = [];
@@ -90,33 +133,44 @@ export async function loadCompanies() {
 
 export function buildCompanyPicker() {
   const wrap = document.getElementById('company-picker-wrap');
-  const sel  = document.getElementById('company-select');
-  if (!wrap || !sel) return;
-  // Clear existing options before rebuilding
-  sel.replaceChildren();
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '\u2014 Absender w\u00E4hlen \u2014';
-  sel.appendChild(placeholder);
-  wrap.style.display = companies.length ? 'flex' : 'none';
-  companies.forEach((c, i) => {
-    const opt = document.createElement('option');
-    opt.value = i; opt.textContent = c.name;
-    sel.appendChild(opt);
-  });
-  if (companies.length) {
-    sel.value = '0';
-    applyCompany();
+  if (!wrap) return;
+
+  const items = companyItems();
+  wrap.style.display = items.length ? 'flex' : 'none';
+
+  const container = document.getElementById('company-select');
+  if (!container) return;
+
+  if (companyPicker) {
+    companyPicker.update(items, companies.length ? '0' : '');
+  } else {
+    companyPicker = createSearchableSelect(container, {
+      placeholder: '— Absender wählen —',
+      items,
+      selectedValue: companies.length ? '0' : '',
+      onSelect: (v) => {
+        applyCompany(v);
+        // Sync simple editor picker
+        if (seCompanyPicker) seCompanyPicker.setValue(v);
+      },
+    });
   }
-  // Force simple editor to re-sync on next fillSimpleEditor()
-  const seSel = document.getElementById('se-company-select');
-  if (seSel) seSel.replaceChildren();
+
+  if (companies.length) {
+    applyCompany('0');
+  }
+
+  // Force simple editor to rebuild
+  if (seCompanyPicker) {
+    seCompanyPicker.update(items, companyPicker.getValue());
+  }
 }
 
-export function applyCompany() {
-  const sel = document.getElementById('company-select');
-  if (sel.value === '') return;
-  const c = companies[Number(sel.value)];
+export function applyCompany(val) {
+  const v = val ?? companyPicker?.getValue();
+  if (v === '' || v == null) return;
+  const c = companies[Number(v)];
+  if (!c) return;
   document.getElementById(F.COMPANY).value          = c.header_name;
   document.getElementById(F.EMAIL).value            = c.header_email;
   document.getElementById(F.STELL_NAME).value       = c.absender_name;
@@ -134,6 +188,76 @@ export function applyCompany() {
   if (startNrEl && c.start_nummer) startNrEl.value = c.start_nummer;
   render();
 }
+
+// ── Simple editor pickers (created on first sync) ──
+
+export function initSimpleContactPicker() {
+  const container = document.getElementById('se-contact-select');
+  if (!container || seContactPicker) return;
+  seContactPicker = createSearchableSelect(container, {
+    placeholder: '— Empfänger wählen —',
+    items: contactItems(),
+    selectedValue: contactPicker?.getValue() || '',
+    onSelect: (v) => {
+      // Mirror to main picker
+      if (contactPicker) contactPicker.setValue(v);
+      applyContact(v);
+      window._refreshEmpfaengerDisplay?.();
+    },
+  });
+}
+
+export function initSimpleCompanyPicker() {
+  const container = document.getElementById('se-company-select');
+  if (!container || seCompanyPicker) return;
+  seCompanyPicker = createSearchableSelect(container, {
+    placeholder: '— Absender wählen —',
+    items: companyItems(),
+    selectedValue: companyPicker?.getValue() || '',
+    onSelect: (v) => {
+      if (companyPicker) companyPicker.setValue(v);
+      applyCompany(v);
+      window._refreshAbsenderDisplay?.();
+      // Bank readonly-Felder nachführen
+      const seBankName = document.getElementById('se-bank-name');
+      const seIban     = document.getElementById('se-iban');
+      if (seBankName) seBankName.value = document.getElementById(F.BANK_NAME)?.value || '';
+      if (seIban)     seIban.value     = document.getElementById(F.IBAN)?.value || '';
+    },
+  });
+}
+
+export function syncSimpleContactValue() {
+  if (seContactPicker && contactPicker) {
+    seContactPicker.update(contactItems(), contactPicker.getValue());
+  }
+}
+
+export function syncSimpleCompanyValue() {
+  if (seCompanyPicker && companyPicker) {
+    seCompanyPicker.update(companyItems(), companyPicker.getValue());
+  }
+}
+
+export function getContactPickerValue() {
+  return contactPicker?.getValue() || '';
+}
+
+export function getCompanyPickerValue() {
+  return companyPicker?.getValue() || '';
+}
+
+export function setContactPickerValue(v) {
+  contactPicker?.setValue(v);
+  if (seContactPicker) seContactPicker.setValue(v);
+}
+
+export function setCompanyPickerValue(v) {
+  companyPicker?.setValue(v);
+  if (seCompanyPicker) seCompanyPicker.setValue(v);
+}
+
+// ── Save ──
 
 export async function saveCurrentAbsender() {
   const record = {
@@ -167,9 +291,9 @@ export async function saveCurrentEmpfaenger() {
     plz:        document.getElementById(F.EMP_PLZ)?.value?.trim() || '',
     ort:        document.getElementById(F.EMP_ORT)?.value?.trim() || '',
   };
-  if (!record.name) { window.showToast?.('Bitte Empf\u00E4nger-Name eingeben.', 'warning'); return; }
+  if (!record.name) { window.showToast?.('Bitte Empfänger-Name eingeben.', 'warning'); return; }
   const result = await saveEmpfaengerRecord(record);
-  if (result.ok) { window.showToast?.('Empf\u00E4nger gespeichert.', 'success'); await loadContacts(); }
-  else if (result.duplicate) window.showToast?.('Ein Empf\u00E4nger mit diesem Namen existiert bereits.', 'warning');
+  if (result.ok) { window.showToast?.('Empfänger gespeichert.', 'success'); await loadContacts(); }
+  else if (result.duplicate) window.showToast?.('Ein Empfänger mit diesem Namen existiert bereits.', 'warning');
   else window.showToast?.('Fehler beim Speichern.', 'error');
 }

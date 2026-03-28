@@ -25,6 +25,7 @@ import {
   addSimplePosition, removeSimplePosition,
   syncField, syncRte, syncRteHtml, seRteCmd, seRteBlock, seRteRaw, seRteHr, seRteKeydown,
   applySimpleContact, applySimpleCompany,
+  _refreshEmpfaengerDisplay, _refreshAbsenderDisplay,
 } from './editor-simple.js';
 
 // ── SVG icon paths ───────────────────────────────────────────────────────
@@ -147,6 +148,7 @@ Object.assign(window, {
   addSimplePosition, removeSimplePosition,
   syncField, syncRte, syncRteHtml, seRteCmd, seRteBlock, seRteRaw, seRteHr, seRteKeydown,
   applySimpleContact, applySimpleCompany,
+  _refreshEmpfaengerDisplay, _refreshAbsenderDisplay,
 });
 
 // ── App initialisation ────────────────────────────────────────────────────

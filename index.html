@@ -373,9 +373,7 @@
     <div class="section-body open">
       <div class="contact-picker-wrap" id="contact-picker-wrap" style="display:none">
         <label>Kontakt wählen</label>
-        <select id="contact-select" onchange="applyContact()">
-          <option value="">— Kontakt wählen —</option>
-        </select>
+        <div id="contact-select"></div>
         <div class="picker-divider">oder manuell</div>
       </div>
       <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Empfänger" oninput="render()"></div>
@@ -404,9 +402,7 @@
     <div class="section-body">
       <div class="contact-picker-wrap" id="company-picker-wrap" style="display:none">
         <label>Firma wählen</label>
-        <select id="company-select" onchange="applyCompany()">
-          <option value="">— Firma wählen —</option>
-        </select>
+        <div id="company-select"></div>
         <div class="picker-divider">oder manuell</div>
       </div>
       <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Absender" oninput="render()"></div>
@@ -701,13 +697,13 @@
         <div class="ig">
           <div class="ii ro">
             <label>Empfänger</label>
-            <select id="se-contact-select" onchange="applySimpleContact()"></select>
+            <div id="se-contact-select"></div>
             <input id="se-emp-display-name"    class="sub" readonly>
             <input id="se-emp-display-adresse" class="sub" readonly>
           </div>
           <div class="ii ro">
             <label>Absender</label>
-            <select id="se-company-select" onchange="applySimpleCompany()"></select>
+            <div id="se-company-select"></div>
             <input id="se-stell-name"    class="sub" readonly>
             <input id="se-stell-adresse" class="sub" readonly>
           </div>

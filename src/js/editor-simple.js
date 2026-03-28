@@ -18,6 +18,7 @@ import { render } from './render.js';
 import { fmt } from './utils.js';
 import { F } from './field-ids.js';
 import { rteInline, rteBlock, rteInsertHrInEditor, rteKeydown } from './rte.js';
+import { initSimpleContactPicker, initSimpleCompanyPicker, syncSimpleContactValue, syncSimpleCompanyValue } from './contacts.js';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────────
 
@@ -103,8 +104,10 @@ export function fillSimpleEditor() {
   renderSimplePositions();
 
   // Contact/Company Picker synchronisieren
-  _syncContactPicker();
-  _syncCompanyPicker();
+  initSimpleContactPicker();
+  initSimpleCompanyPicker();
+  syncSimpleContactValue();
+  syncSimpleCompanyValue();
 }
 
 // ── Meta-Felder (Datum & Zeitraum) ────────────────────────────────────────────
@@ -413,39 +416,13 @@ function _syncPositionToHidden(pos) {
 
 // ── Absender / Empfänger ───────────────────────────────────────────────────────
 
-/**
- * Wird aufgerufen wenn der Empfänger-Dropdown im simple editor geändert wird.
- * Kopiert die Werte in die #f-* Felder und aktualisiert die se-* Felder.
- */
-export function applySimpleContact() {
-  const sel = el('se-contact-select');
-  const mainSel = el('contact-select');
-  if (!sel || !mainSel) return;
-  // Wert in den Haupt-Picker spiegeln und applyContact() aufrufen
-  mainSel.value = sel.value;
-  if (typeof window.applyContact === 'function') window.applyContact();
-  _refreshEmpfaengerDisplay();
-}
-
-/**
- * Wird aufgerufen wenn der Absender-Dropdown im simple editor geändert wird.
- */
-export function applySimpleCompany() {
-  const sel = el('se-company-select');
-  const mainSel = el('company-select');
-  if (!sel || !mainSel) return;
-  mainSel.value = sel.value;
-  if (typeof window.applyCompany === 'function') window.applyCompany();
-  _refreshAbsenderDisplay();
-  // Bank readonly-Felder nachführen
-  const seBankName = el('se-bank-name');
-  const seIban     = el('se-iban');
-  if (seBankName) seBankName.value = fVal(F.BANK_NAME);
-  if (seIban)     seIban.value     = fVal(F.IBAN);
-}
+// applySimpleContact / applySimpleCompany are now handled by SearchableSelect
+// callbacks in contacts.js — kept as no-ops for backwards compat with window.*
+export function applySimpleContact() {}
+export function applySimpleCompany() {}
 
 /** Aktualisiert die readonly Empfänger-Anzeige aus den #f-emp-* Feldern. */
-function _refreshEmpfaengerDisplay() {
+export function _refreshEmpfaengerDisplay() {
   const nameEl = el('se-emp-display-name');
   const addrEl = el('se-emp-display-adresse');
   if (nameEl) nameEl.value = fVal(F.EMP_NAME);
@@ -457,7 +434,7 @@ function _refreshEmpfaengerDisplay() {
 }
 
 /** Aktualisiert die readonly Absender-Anzeige aus den #f-stell-* Feldern. */
-function _refreshAbsenderDisplay() {
+export function _refreshAbsenderDisplay() {
   const nameEl  = el('se-stell-name');
   const addrEl  = el('se-stell-adresse');
   if (nameEl) nameEl.value = fVal(F.STELL_NAME);
@@ -468,38 +445,4 @@ function _refreshAbsenderDisplay() {
   }
 }
 
-/** Synchronisiert den se-contact-select mit dem Haupt-Picker. */
-function _syncContactPicker() {
-  const mainSel = el('contact-select');
-  const seSel   = el('se-contact-select');
-  if (!mainSel || !seSel) return;
-
-  // Optionen klonen wenn leer
-  if (seSel.options.length <= 1) {
-    // Leere Option
-    while (seSel.firstChild) seSel.removeChild(seSel.firstChild);
-    const blank = document.createElement('option');
-    blank.value = '';
-    blank.textContent = '— Kontakt wählen —';
-    seSel.appendChild(blank);
-    // Optgroups/Options aus Haupt-Picker übernehmen
-    Array.from(mainSel.children).forEach(child => {
-      seSel.appendChild(child.cloneNode(true));
-    });
-  }
-  seSel.value = mainSel.value;
-}
-
-/** Synchronisiert den se-company-select mit dem Haupt-Picker. */
-function _syncCompanyPicker() {
-  const mainSel = el('company-select');
-  const seSel   = el('se-company-select');
-  if (!mainSel || !seSel) return;
-
-  if (seSel.options.length === 0) {
-    Array.from(mainSel.options).forEach(opt => {
-      seSel.appendChild(opt.cloneNode(true));
-    });
-  }
-  seSel.value = mainSel.value;
-}
+// _syncContactPicker / _syncCompanyPicker removed — replaced by SearchableSelect in contacts.js
