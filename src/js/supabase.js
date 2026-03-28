@@ -250,15 +250,13 @@ export async function saveEntwurf(record) {
       nummer: null,
     };
     if (record.id) {
-      // Update existing draft
-      const { id, ...fields } = payload;
+      // Upsert: aktualisiert wenn vorhanden, legt neu an falls zwischenzeitlich gelöscht
       const { data, error } = await client
         .from('rechnungen')
-        .update(fields)
-        .eq('id', record.id)
+        .upsert(payload, { onConflict: 'id' })
         .select('id')
         .single();
-      if (error) { console.error('saveEntwurf (update):', error.message); return null; }
+      if (error) { console.error('saveEntwurf (upsert):', error.message); return null; }
       return data.id;
     }
     // Insert new draft
