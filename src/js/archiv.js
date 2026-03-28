@@ -202,6 +202,7 @@ export function autoSave() {
   if (!editor || getComputedStyle(editor).display === 'none') return;
   if (state.isReadonly) return;
   if (!isConfigured()) return;
+  if (state.currentVorlageName) return; // Vorlage-Modus — kein Entwurf speichern
 
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(async () => {
