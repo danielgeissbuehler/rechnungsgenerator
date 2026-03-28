@@ -180,13 +180,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Set today's date
+  // Set today's date + Zahlbar bis (today + 1 month)
   const today = new Date();
   const dd    = String(today.getDate()).padStart(2, '0');
   const mm    = String(today.getMonth() + 1).padStart(2, '0');
   const yyyy  = today.getFullYear();
   const datumEl = document.getElementById('mf-value-0');
   if (datumEl) datumEl.value = `${dd}.${mm}.${yyyy}`;
+
+  const due = new Date(today);
+  due.setMonth(due.getMonth() + 1);
+  const dd2  = String(due.getDate()).padStart(2, '0');
+  const mm2  = String(due.getMonth() + 1).padStart(2, '0');
+  const yyyy2 = due.getFullYear();
+  const zahlbarEl = document.getElementById('mf-value-2');
+  if (zahlbarEl) zahlbarEl.value = `${dd2}.${mm2}.${yyyy2}`;
 
   renderColConfig();
   for (let i = 0; i < 5; i++) toggleMetaField(i);

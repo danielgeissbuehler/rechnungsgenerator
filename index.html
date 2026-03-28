@@ -699,18 +699,11 @@
       <div class="se-card-header">Adressierung</div>
       <div class="se-card-body">
         <div class="ig">
-          <div class="ii">
+          <div class="ii ro">
             <label>Empfänger</label>
             <select id="se-contact-select" onchange="applySimpleContact()"></select>
-            <input id="se-emp-name"       placeholder="Name"    oninput="syncField('f-emp-name',this);render()">
-            <div class="f-addr-row">
-              <input id="se-emp-strasse"    placeholder="Strasse"  class="sub f-addr-street" oninput="syncField('f-emp-strasse',this);render()">
-              <input id="se-emp-hausnummer" placeholder="Nr."      class="sub f-addr-nr"     oninput="syncField('f-emp-hausnummer',this);render()">
-            </div>
-            <div class="f-addr-row">
-              <input id="se-emp-plz"        placeholder="PLZ"      class="sub f-addr-plz"    oninput="syncField('f-emp-plz',this);render()">
-              <input id="se-emp-ort"        placeholder="Ort"      class="sub f-addr-city"   oninput="syncField('f-emp-ort',this);render()">
-            </div>
+            <input id="se-emp-display-name"    class="sub" readonly>
+            <input id="se-emp-display-adresse" class="sub" readonly>
           </div>
           <div class="ii ro">
             <label>Absender</label>

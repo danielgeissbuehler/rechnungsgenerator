@@ -56,14 +56,15 @@ export function buildFooter() {
   const bankOrtStr    = [val(F.BANK_PLZ), val(F.BANK_ORT)].filter(Boolean).join(' ') || val(F.BANK_STRASSE);
   const bankLines     = [val(F.BANK_NAME), bankStraNum, bankOrtStr].filter(Boolean);
   const iban      = val(F.IBAN);
+  const hasContent = bankLines.length || iban;
   return `<div class="page-footer${vis}">
     <hr class="footer-line">
-    <div class="footer-content">
+    ${hasContent ? `<div class="footer-content">
       <div class="footer-left">
         ${bankLines.length ? `<span class="footer-bank-label">BANK</span><div>${bankLines.map(esc).join('<br>')}</div>` : ''}
       </div>
       ${iban ? `<div class="footer-iban">IBAN &nbsp; ${esc(iban)}</div>` : ''}
-    </div>
+    </div>` : ''}
   </div>`;
 }
 

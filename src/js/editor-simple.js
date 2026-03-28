@@ -62,17 +62,8 @@ const fmtCHF = fmt;
  * Wird von showEditor() aufgerufen, nachdem applyState() die Daten geladen hat.
  */
 export function fillSimpleEditor() {
-  // Empfänger
-  const seEmpName       = el('se-emp-name');
-  const seEmpStrasse    = el('se-emp-strasse');
-  const seEmpHausnummer = el('se-emp-hausnummer');
-  const seEmpPlz        = el('se-emp-plz');
-  const seEmpOrt        = el('se-emp-ort');
-  if (seEmpName)       seEmpName.value       = fVal(F.EMP_NAME);
-  if (seEmpStrasse)    seEmpStrasse.value    = fVal(F.EMP_STRASSE);
-  if (seEmpHausnummer) seEmpHausnummer.value = fVal(F.EMP_HAUSNUMMER);
-  if (seEmpPlz)        seEmpPlz.value        = fVal(F.EMP_PLZ);
-  if (seEmpOrt)        seEmpOrt.value        = fVal(F.EMP_ORT);
+  // Empfänger (readonly — wird durch applySimpleContact() aktualisiert)
+  _refreshEmpfaengerDisplay();
 
   // Absender-Anzeige (readonly — wird durch applySimpleCompany() aktualisiert)
   _refreshAbsenderDisplay();
@@ -156,6 +147,25 @@ export function renderSimpleMeta() {
  * @param {string} labelText - Label-Text (z.B. "DATUM")
  * @param {string} valueText - Aktueller Wert
  */
+/**
+ * Konvertiert TT.MM.JJJJ → YYYY-MM-DD (für date input).
+ */
+function _chToIso(ch) {
+  const m = (ch || '').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+}
+
+/**
+ * Konvertiert YYYY-MM-DD → TT.MM.JJJJ (Schweizer Format).
+ */
+function _isoToCh(iso) {
+  const m = (iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
+}
+
+/** Indices der Meta-Felder die einen Date-Picker erhalten. */
+const DATE_META_INDICES = new Set([0, 2]);
+
 function _buildMetaItem(i, labelText, valueText) {
   const item = document.createElement('div');
   item.className = 'ii';
@@ -164,14 +174,15 @@ function _buildMetaItem(i, labelText, valueText) {
   lbl.textContent = labelText;
   item.appendChild(lbl);
 
+  const isDate = DATE_META_INDICES.has(i);
   const inp = document.createElement('input');
-  inp.type        = 'text';
-  inp.value       = valueText;
-  inp.placeholder = '—';
+  inp.type            = isDate ? 'date' : 'text';
+  inp.value           = isDate ? _chToIso(valueText) : valueText;
+  inp.placeholder     = '—';
   inp.dataset.metaIndex = i;
   inp.addEventListener('input', function() {
     const mfVal = el('mf-value-' + i);
-    if (mfVal) mfVal.value = this.value;
+    if (mfVal) mfVal.value = isDate ? _isoToCh(this.value) : this.value;
     render();
   });
   item.appendChild(inp);
@@ -413,17 +424,7 @@ export function applySimpleContact() {
   // Wert in den Haupt-Picker spiegeln und applyContact() aufrufen
   mainSel.value = sel.value;
   if (typeof window.applyContact === 'function') window.applyContact();
-  // Se-Felder nachführen
-  const seEmpName       = el('se-emp-name');
-  const seEmpStrasse    = el('se-emp-strasse');
-  const seEmpHausnummer = el('se-emp-hausnummer');
-  const seEmpPlz        = el('se-emp-plz');
-  const seEmpOrt        = el('se-emp-ort');
-  if (seEmpName)       seEmpName.value       = fVal(F.EMP_NAME);
-  if (seEmpStrasse)    seEmpStrasse.value    = fVal(F.EMP_STRASSE);
-  if (seEmpHausnummer) seEmpHausnummer.value = fVal(F.EMP_HAUSNUMMER);
-  if (seEmpPlz)        seEmpPlz.value        = fVal(F.EMP_PLZ);
-  if (seEmpOrt)        seEmpOrt.value        = fVal(F.EMP_ORT);
+  _refreshEmpfaengerDisplay();
 }
 
 /**
@@ -441,6 +442,18 @@ export function applySimpleCompany() {
   const seIban     = el('se-iban');
   if (seBankName) seBankName.value = fVal(F.BANK_NAME);
   if (seIban)     seIban.value     = fVal(F.IBAN);
+}
+
+/** Aktualisiert die readonly Empfänger-Anzeige aus den #f-emp-* Feldern. */
+function _refreshEmpfaengerDisplay() {
+  const nameEl = el('se-emp-display-name');
+  const addrEl = el('se-emp-display-adresse');
+  if (nameEl) nameEl.value = fVal(F.EMP_NAME);
+  if (addrEl) {
+    const strasse = [fVal(F.EMP_STRASSE), fVal(F.EMP_HAUSNUMMER)].filter(Boolean).join(' ');
+    const ort     = [fVal(F.EMP_PLZ), fVal(F.EMP_ORT)].filter(Boolean).join(' ');
+    addrEl.value  = [strasse, ort].filter(Boolean).join(', ');
+  }
 }
 
 /** Aktualisiert die readonly Absender-Anzeige aus den #f-stell-* Feldern. */
