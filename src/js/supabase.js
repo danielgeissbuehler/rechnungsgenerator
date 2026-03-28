@@ -114,7 +114,8 @@ export async function saveAbsenderRecord(record) {
     const { error } = await client.from('absender').update(fields).eq('id', id);
     if (error) { console.error('saveAbsender (update):', error.message); return false; }
   } else {
-    const { error } = await client.from('absender').insert(record);
+    const { data: { user } } = await client.auth.getUser();
+    const { error } = await client.from('absender').insert({ ...record, user_id: user.id });
     if (error) { console.error('saveAbsender (insert):', error.message); return false; }
   }
   return true;
@@ -148,7 +149,8 @@ export async function saveEmpfaengerRecord(record) {
     const { error } = await client.from('empfaenger').update(fields).eq('id', id);
     if (error) { console.error('saveEmpfaenger (update):', error.message); return false; }
   } else {
-    const { error } = await client.from('empfaenger').insert(record);
+    const { data: { user } } = await client.auth.getUser();
+    const { error } = await client.from('empfaenger').insert({ ...record, user_id: user.id });
     if (error) { console.error('saveEmpfaenger (insert):', error.message); return false; }
   }
   return true;
