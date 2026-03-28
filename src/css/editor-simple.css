@@ -116,6 +116,14 @@
   min-width: 120px;
 }
 
+/* Meta-Felder (Datum/Referenz): immer volle Breite */
+.ig-meta {
+  justify-content: flex-start;
+}
+.ig-meta > .ii {
+  flex: 1 1 0;
+}
+
 /* Info-Item — Ebene 3: #f8f9fc auf weissem Card (wie .info-item im Detail-Panel) */
 .ii {
   background: var(--surface2, #f8f9fc);
