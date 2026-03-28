@@ -2,8 +2,8 @@ import { SwissQRBill } from 'swissqrbill/svg';
 import { F } from './field-ids.js';
 
 /**
- * Parse a combined "PLZ ORT" string into { zip, city }.
- * Handles formats like "3504 Oberhünigen" or "3504 Oberhünigen BE".
+ * Fallback: parse a combined "PLZ ORT" string into { zip, city }.
+ * Only used for old archived invoices that still have the combined format.
  */
 function parseZipCity(str) {
   const s = (str || '').trim();
@@ -11,8 +11,15 @@ function parseZipCity(str) {
   if (match) {
     return { zip: match[1], city: match[2] };
   }
-  // fallback: use full string as city with placeholder zip
   return { zip: '0000', city: s || 'Unbekannt' };
+}
+
+function getZipCity(plzFieldId, ortFieldId) {
+  const plz = document.getElementById(plzFieldId)?.value?.trim() || '';
+  const ort = document.getElementById(ortFieldId)?.value?.trim() || '';
+  if (plz && ort) return { zip: plz, city: ort };
+  // Backward compat: combined PLZ/Ort not yet split
+  return parseZipCity([plz, ort].filter(Boolean).join(' '));
 }
 
 /**
@@ -25,13 +32,15 @@ export async function buildQRPage(total) {
   const iban = document.getElementById(F.IBAN)?.value?.trim();
   if (!iban) return null;
 
-  const creditorName    = document.getElementById(F.STELL_NAME)?.value?.trim()    || '';
-  const creditorAddress = document.getElementById(F.STELL_ADRESSE)?.value?.trim() || '';
-  const creditorOrt     = document.getElementById(F.STELL_ORT)?.value?.trim()     || '';
+  const creditorName        = document.getElementById(F.STELL_NAME)?.value?.trim()        || '';
+  const creditorStrasse     = document.getElementById(F.STELL_ADRESSE)?.value?.trim()     || '';
+  const creditorHausnummer  = document.getElementById(F.STELL_HAUSNUMMER)?.value?.trim()  || '';
+  const creditorAddress     = [creditorStrasse, creditorHausnummer].filter(Boolean).join(' ');
 
-  const debtorName    = document.getElementById(F.EMP_NAME)?.value?.trim()    || '';
-  const debtorAddress = document.getElementById(F.EMP_STRASSE)?.value?.trim() || '';
-  const debtorOrt     = document.getElementById(F.EMP_ORT)?.value?.trim()     || '';
+  const debtorName          = document.getElementById(F.EMP_NAME)?.value?.trim()          || '';
+  const debtorStrasse       = document.getElementById(F.EMP_STRASSE)?.value?.trim()       || '';
+  const debtorHausnummer    = document.getElementById(F.EMP_HAUSNUMMER)?.value?.trim()    || '';
+  const debtorAddress       = [debtorStrasse, debtorHausnummer].filter(Boolean).join(' ');
 
   const currency = document.getElementById(F.CURRENCY)?.value?.trim() || 'CHF';
 
@@ -48,7 +57,7 @@ export async function buildQRPage(total) {
 
   if (!creditorName || !creditorAddress) return null;
 
-  const creditorZipCity = parseZipCity(creditorOrt);
+  const creditorZipCity = getZipCity(F.STELL_PLZ, F.STELL_ORT);
 
   const data = {
     currency,
@@ -68,15 +77,17 @@ export async function buildQRPage(total) {
   }
 
   // Include debtor if we have enough data
-  if (debtorName && debtorAddress && debtorOrt) {
-    const debtorZipCity = parseZipCity(debtorOrt);
-    data.debtor = {
-      name:    debtorName.slice(0, 70),
-      address: debtorAddress.slice(0, 70),
-      zip:     debtorZipCity.zip,
-      city:    debtorZipCity.city.slice(0, 35),
-      country: 'CH',
-    };
+  if (debtorName && debtorAddress) {
+    const debtorZipCity = getZipCity(F.EMP_PLZ, F.EMP_ORT);
+    if (debtorZipCity.zip !== '0000') {
+      data.debtor = {
+        name:    debtorName.slice(0, 70),
+        address: debtorAddress.slice(0, 70),
+        zip:     debtorZipCity.zip,
+        city:    debtorZipCity.city.slice(0, 35),
+        country: 'CH',
+      };
+    }
   }
 
   if (reference) {

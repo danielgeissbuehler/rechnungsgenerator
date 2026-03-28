@@ -63,12 +63,16 @@ const fmtCHF = fmt;
  */
 export function fillSimpleEditor() {
   // Empfänger
-  const seEmpName    = el('se-emp-name');
-  const seEmpStrasse = el('se-emp-strasse');
-  const seEmpOrt     = el('se-emp-ort');
-  if (seEmpName)    seEmpName.value    = fVal(F.EMP_NAME);
-  if (seEmpStrasse) seEmpStrasse.value = fVal(F.EMP_STRASSE);
-  if (seEmpOrt)     seEmpOrt.value     = fVal(F.EMP_ORT);
+  const seEmpName       = el('se-emp-name');
+  const seEmpStrasse    = el('se-emp-strasse');
+  const seEmpHausnummer = el('se-emp-hausnummer');
+  const seEmpPlz        = el('se-emp-plz');
+  const seEmpOrt        = el('se-emp-ort');
+  if (seEmpName)       seEmpName.value       = fVal(F.EMP_NAME);
+  if (seEmpStrasse)    seEmpStrasse.value    = fVal(F.EMP_STRASSE);
+  if (seEmpHausnummer) seEmpHausnummer.value = fVal(F.EMP_HAUSNUMMER);
+  if (seEmpPlz)        seEmpPlz.value        = fVal(F.EMP_PLZ);
+  if (seEmpOrt)        seEmpOrt.value        = fVal(F.EMP_ORT);
 
   // Absender-Anzeige (readonly — wird durch applySimpleCompany() aktualisiert)
   _refreshAbsenderDisplay();
@@ -410,12 +414,16 @@ export function applySimpleContact() {
   mainSel.value = sel.value;
   if (typeof window.applyContact === 'function') window.applyContact();
   // Se-Felder nachführen
-  const seEmpName    = el('se-emp-name');
-  const seEmpStrasse = el('se-emp-strasse');
-  const seEmpOrt     = el('se-emp-ort');
-  if (seEmpName)    seEmpName.value    = fVal(F.EMP_NAME);
-  if (seEmpStrasse) seEmpStrasse.value = fVal(F.EMP_STRASSE);
-  if (seEmpOrt)     seEmpOrt.value     = fVal(F.EMP_ORT);
+  const seEmpName       = el('se-emp-name');
+  const seEmpStrasse    = el('se-emp-strasse');
+  const seEmpHausnummer = el('se-emp-hausnummer');
+  const seEmpPlz        = el('se-emp-plz');
+  const seEmpOrt        = el('se-emp-ort');
+  if (seEmpName)       seEmpName.value       = fVal(F.EMP_NAME);
+  if (seEmpStrasse)    seEmpStrasse.value    = fVal(F.EMP_STRASSE);
+  if (seEmpHausnummer) seEmpHausnummer.value = fVal(F.EMP_HAUSNUMMER);
+  if (seEmpPlz)        seEmpPlz.value        = fVal(F.EMP_PLZ);
+  if (seEmpOrt)        seEmpOrt.value        = fVal(F.EMP_ORT);
 }
 
 /**
@@ -439,8 +447,12 @@ export function applySimpleCompany() {
 function _refreshAbsenderDisplay() {
   const nameEl  = el('se-stell-name');
   const addrEl  = el('se-stell-adresse');
-  if (nameEl) nameEl.value  = fVal(F.STELL_NAME);
-  if (addrEl) addrEl.value  = [fVal(F.STELL_ADRESSE), fVal(F.STELL_ORT)].filter(Boolean).join(', ');
+  if (nameEl) nameEl.value = fVal(F.STELL_NAME);
+  if (addrEl) {
+    const strasse = [fVal(F.STELL_ADRESSE), fVal(F.STELL_HAUSNUMMER)].filter(Boolean).join(' ');
+    const ort     = [fVal(F.STELL_PLZ), fVal(F.STELL_ORT)].filter(Boolean).join(' ');
+    addrEl.value  = [strasse, ort].filter(Boolean).join(', ');
+  }
 }
 
 /** Synchronisiert den se-contact-select mit dem Haupt-Picker. */

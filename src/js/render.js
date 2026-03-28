@@ -50,8 +50,11 @@ export function buildHeader(isFirst) {
 }
 
 export function buildFooter() {
-  const vis       = state.visibility.bank ? '' : ' inv-hidden';
-  const bankLines = [val(F.BANK_NAME), val(F.BANK_ADRESSE), val(F.BANK_STRASSE)].filter(Boolean);
+  const vis           = state.visibility.bank ? '' : ' inv-hidden';
+  const bankStraNum   = [val(F.BANK_ADRESSE), val(F.BANK_HAUSNUMMER)].filter(Boolean).join(' ');
+  // Backward compat: fall back to legacy combined field (f-bank-strasse) for old invoices
+  const bankOrtStr    = [val(F.BANK_PLZ), val(F.BANK_ORT)].filter(Boolean).join(' ') || val(F.BANK_STRASSE);
+  const bankLines     = [val(F.BANK_NAME), bankStraNum, bankOrtStr].filter(Boolean);
   const iban      = val(F.IBAN);
   return `<div class="page-footer${vis}">
     <hr class="footer-line">
@@ -68,11 +71,12 @@ export function buildPages() {
   const { visibility: vis, positions, colAlign } = state;
 
   const empName    = val(F.EMP_NAME);
-  const empStrasse = val(F.EMP_STRASSE);
-  const empOrt     = val(F.EMP_ORT);
+  // Combine split address fields for display; backward compat: if hausnummer/plz empty, strasse/ort used as-is
+  const empStrasse = [val(F.EMP_STRASSE), val(F.EMP_HAUSNUMMER)].filter(Boolean).join(' ');
+  const empOrt     = [val(F.EMP_PLZ), val(F.EMP_ORT)].filter(Boolean).join(' ');
   const stName     = val(F.STELL_NAME);
-  const stAdresse  = val(F.STELL_ADRESSE);
-  const stOrt      = val(F.STELL_ORT);
+  const stAdresse  = [val(F.STELL_ADRESSE), val(F.STELL_HAUSNUMMER)].filter(Boolean).join(' ');
+  const stOrt      = [val(F.STELL_PLZ), val(F.STELL_ORT)].filter(Boolean).join(' ');
   const titel      = val(F.TITEL);
   const heading    = val(F.HEADING);
   const currency   = val(F.CURRENCY) || 'CHF';

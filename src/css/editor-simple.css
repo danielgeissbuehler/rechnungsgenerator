@@ -167,6 +167,11 @@
 /* Kleinere Unterzeile (Strasse, Ort) */
 .ii input.sub { font-size: 12px; font-weight: 400; color: var(--muted, #6b7280); }
 
+/* Adress-Split-Zeile im Simple Editor */
+.ii .f-addr-row { display: flex; gap: 6px; }
+.ii .f-addr-row .f-addr-street, .ii .f-addr-row .f-addr-city { flex: 3; min-width: 0; }
+.ii .f-addr-row .f-addr-nr, .ii .f-addr-row .f-addr-plz { flex: 1; min-width: 0; }
+
 /* Textareas in Card-Body (Textblöcke) */
 .se-card-body textarea {
   width: 100%;

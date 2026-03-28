@@ -211,14 +211,14 @@ async function renderDetailPanel(r) {
   // Info values — use actual snapshot field IDs from templates.js collectState()
   const empName = escHtml(field(r,F.EMP_NAME)    || (r && r.empfaenger_name) || '\u2014');
   const empAddr = [
-    field(r,F.EMP_STRASSE),
-    field(r,F.EMP_ORT),
+    [field(r,F.EMP_STRASSE), field(r,F.EMP_HAUSNUMMER)].filter(Boolean).join(' '),
+    [field(r,F.EMP_PLZ),     field(r,F.EMP_ORT)].filter(Boolean).join(' '),
   ].filter(Boolean).join(', ');
 
   const absName = escHtml(field(r,F.STELL_NAME) || (r && r.absender_name) || '\u2014');
   const absAddr = [
-    field(r,F.STELL_ADRESSE),
-    field(r,F.STELL_ORT),
+    [field(r,F.STELL_ADRESSE), field(r,F.STELL_HAUSNUMMER)].filter(Boolean).join(' '),
+    [field(r,F.STELL_PLZ),     field(r,F.STELL_ORT)].filter(Boolean).join(' '),
   ].filter(Boolean).join(', ');
 
   // Datum/Zahlbar from meta array (label-based lookup)

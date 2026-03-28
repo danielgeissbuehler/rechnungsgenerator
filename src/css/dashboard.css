@@ -496,7 +496,8 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
   white-space: nowrap;
 }
 .table-card thead th.th-sort-active { color: var(--accent); }
-.table-card thead th:hover { color: #111827; }
+.table-card thead th.th-sortable { cursor: pointer; user-select: none; }
+.table-card thead th.th-sortable:hover { color: var(--accent); }
 
 .table-card tbody td {
   padding: 13px 20px;

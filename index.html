@@ -378,8 +378,14 @@
         <div class="picker-divider">oder manuell</div>
       </div>
       <div><label>Name</label><input type="text" id="f-emp-name" value="Name Empfänger" placeholder="Name Empfänger" oninput="render()"></div>
-      <div><label>Strasse</label><input type="text" id="f-emp-strasse" value="Strasse Empfänger" placeholder="Strasse Empfänger" oninput="render()"></div>
-      <div><label>Ort</label><input type="text" id="f-emp-ort" value="PLZ / ORT Empfänger" placeholder="Ort Empfänger" oninput="render()"></div>
+      <div class="f-addr-row">
+        <div class="f-addr-street"><label>Strasse</label><input type="text" id="f-emp-strasse" value="" placeholder="Strasse" oninput="render()"></div>
+        <div class="f-addr-nr"><label>Nr.</label><input type="text" id="f-emp-hausnummer" value="" placeholder="Nr." oninput="render()"></div>
+      </div>
+      <div class="f-addr-row">
+        <div class="f-addr-plz"><label>PLZ</label><input type="text" id="f-emp-plz" value="" placeholder="PLZ" oninput="render()"></div>
+        <div class="f-addr-city"><label>Ort</label><input type="text" id="f-emp-ort" value="" placeholder="Ort" oninput="render()"></div>
+      </div>
       <button type="button" onclick="saveCurrentEmpfaenger()" class="btn-save">Empfänger speichern</button>
     </div>
   </div>
@@ -403,8 +409,14 @@
         <div class="picker-divider">oder manuell</div>
       </div>
       <div><label>Name</label><input type="text" id="f-stell-name" value="G Investments &amp; Real Estates AG" placeholder="Name Absender" oninput="render()"></div>
-      <div><label>Adresse</label><input type="text" id="f-stell-adresse" value="Stygweg 21" placeholder="Adresse Absender" oninput="render()"></div>
-      <div><label>Ort</label><input type="text" id="f-stell-ort" value="3504 Oberhünigen" placeholder="Ort Absender" oninput="render()"></div>
+      <div class="f-addr-row">
+        <div class="f-addr-street"><label>Strasse</label><input type="text" id="f-stell-adresse" value="Stygweg" placeholder="Strasse" oninput="render()"></div>
+        <div class="f-addr-nr"><label>Nr.</label><input type="text" id="f-stell-hausnummer" value="21" placeholder="Nr." oninput="render()"></div>
+      </div>
+      <div class="f-addr-row">
+        <div class="f-addr-plz"><label>PLZ</label><input type="text" id="f-stell-plz" value="3504" placeholder="PLZ" oninput="render()"></div>
+        <div class="f-addr-city"><label>Ort</label><input type="text" id="f-stell-ort" value="Oberhünigen" placeholder="Ort" oninput="render()"></div>
+      </div>
       <div><label>Start-Rechnungsnummer</label><input type="number" id="f-stell-start-nr" placeholder="z.B. 100" min="1" value="1"></div>
       <button type="button" onclick="saveCurrentAbsender()" class="btn-save">Absender speichern</button>
     </div>
@@ -641,9 +653,17 @@
     </div>
     <div class="section-body">
       <div><label>Bank Name</label><input type="text" id="f-bank-name" value="Spar+Leihkasse Riggisberg AG" placeholder="Name Bank" oninput="render()"></div>
-      <div><label>Bank Strasse</label><input type="text" id="f-bank-adresse" value="Grabenstrasse 7" placeholder="Strasse Bank" oninput="render()"></div>
+      <div class="f-addr-row">
+        <div class="f-addr-street"><label>Bank Strasse</label><input type="text" id="f-bank-adresse" value="Grabenstrasse" placeholder="Strasse Bank" oninput="render()"></div>
+        <div class="f-addr-nr"><label>Nr.</label><input type="text" id="f-bank-hausnummer" value="7" placeholder="Nr." oninput="render()"></div>
+      </div>
+      <div class="f-addr-row">
+        <div class="f-addr-plz"><label>PLZ</label><input type="text" id="f-bank-plz" value="3132" placeholder="PLZ" oninput="render()"></div>
+        <div class="f-addr-city"><label>Ort</label><input type="text" id="f-bank-ort" value="Riggisberg" placeholder="Ort Bank" oninput="render()"></div>
+      </div>
+      <!-- Legacy: kept hidden for backward compat with archived invoices -->
+      <input type="hidden" id="f-bank-strasse" value="">
       <div><label>IBAN</label><input type="text" id="f-iban" value="CH93 0637 4730 0382 2750 4" placeholder="CH45 3453 4345 3301 24" oninput="render()"></div>
-      <div><label>Bank PLZ / ORT</label><input type="text" id="f-bank-strasse" value="3132 Riggisberg" placeholder="PLZ / ORT Bank" oninput="render()"></div>
     </div>
   </div>
 
@@ -681,9 +701,15 @@
           <div class="ii">
             <label>Empfänger</label>
             <select id="se-contact-select" onchange="applySimpleContact()"></select>
-            <input id="se-emp-name"    placeholder="Name"    oninput="syncField('f-emp-name',this);render()">
-            <input id="se-emp-strasse" placeholder="Strasse" class="sub" oninput="syncField('f-emp-strasse',this);render()">
-            <input id="se-emp-ort"     placeholder="PLZ Ort" class="sub" oninput="syncField('f-emp-ort',this);render()">
+            <input id="se-emp-name"       placeholder="Name"    oninput="syncField('f-emp-name',this);render()">
+            <div class="f-addr-row">
+              <input id="se-emp-strasse"    placeholder="Strasse"  class="sub f-addr-street" oninput="syncField('f-emp-strasse',this);render()">
+              <input id="se-emp-hausnummer" placeholder="Nr."      class="sub f-addr-nr"     oninput="syncField('f-emp-hausnummer',this);render()">
+            </div>
+            <div class="f-addr-row">
+              <input id="se-emp-plz"        placeholder="PLZ"      class="sub f-addr-plz"    oninput="syncField('f-emp-plz',this);render()">
+              <input id="se-emp-ort"        placeholder="Ort"      class="sub f-addr-city"   oninput="syncField('f-emp-ort',this);render()">
+            </div>
           </div>
           <div class="ii ro">
             <label>Absender</label>

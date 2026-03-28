@@ -32,6 +32,13 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .field-row { display:flex; gap:8px; }
 .field-row > * { flex:1; }
 
+/* Address split rows: Strasse+Nr / PLZ+Ort */
+.f-addr-row { display:flex; gap:8px; }
+.f-addr-street { flex:3; min-width:0; }
+.f-addr-nr     { flex:1; min-width:0; }
+.f-addr-plz    { flex:1; min-width:0; }
+.f-addr-city   { flex:3; min-width:0; }
+
 /* Contact picker */
 .contact-picker-wrap { display:flex; flex-direction:column; gap:6px; }
 .contact-picker-wrap select {

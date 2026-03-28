@@ -15,6 +15,38 @@ import { loadVorlagen } from '../templates.js';
 import { openModal, closeModal } from './modal.js';
 import { state } from '../state.js';
 
+// ── Sort state ───────────────────────────────────────────────────────────────
+let absenderSort   = { col: 'name', dir: 1 };
+let empfaengerSort = { col: 'name', dir: 1 };
+
+function sortRows(rows, col, dir) {
+  return rows.slice().sort(function(a, b) {
+    const av = (a[col] || '').toLowerCase();
+    const bv = (b[col] || '').toLowerCase();
+    return av < bv ? -dir : av > bv ? dir : 0;
+  });
+}
+
+function sortTh(label, col, current, onClickFn) {
+  const active = current.col === col;
+  const arrow  = active ? (current.dir === 1 ? ' \u25b2' : ' \u25bc') : '';
+  const style  = active ? ' style="color:var(--accent)"' : '';
+  return '<th class="th-sortable" onclick="' + onClickFn + '(\'' + col + '\')"'
+    + style + '>' + escHtml(label) + arrow + '</th>';
+}
+
+function sortAbsender(col) {
+  if (absenderSort.col === col) absenderSort.dir *= -1;
+  else absenderSort = { col: col, dir: 1 };
+  renderAbsenderTable();
+}
+
+function sortEmpfaenger(col) {
+  if (empfaengerSort.col === col) empfaengerSort.dir *= -1;
+  else empfaengerSort = { col: col, dir: 1 };
+  renderEmpfaengerTable();
+}
+
 // ── SVG icons (small, inline) ───────────────────────────────────────────────
 const SVG_EDIT = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
 const SVG_DEL  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
@@ -31,7 +63,8 @@ export async function renderAbsenderTable() {
     return;
   }
 
-  const tbody = rows.map(function(r) {
+  const sorted = sortRows(rows, absenderSort.col, absenderSort.dir);
+  const tbody = sorted.map(function(r) {
     const sid = escHtml(r.id);
     return '<tr onclick="_editAbsender(\'' + sid + '\')" style="cursor:pointer">'
       + '<td class="td-name">' + escHtml(r.name) + '</td>'
@@ -48,7 +81,12 @@ export async function renderAbsenderTable() {
 
   container.innerHTML = '<table>'
     + '<thead><tr>'
-    + '<th>Name</th><th>Strasse</th><th>Ort</th><th>Bank</th><th>IBAN</th><th></th>'
+    + sortTh('Name',    'name',      absenderSort, '_sortAbsender')
+    + sortTh('Strasse', 'strasse',   absenderSort, '_sortAbsender')
+    + sortTh('Ort',     'ort',       absenderSort, '_sortAbsender')
+    + sortTh('Bank',    'bank_name', absenderSort, '_sortAbsender')
+    + sortTh('IBAN',    'iban',      absenderSort, '_sortAbsender')
+    + '<th></th>'
     + '</tr></thead>'
     + '<tbody>' + tbody + '</tbody>'
     + '</table>';
@@ -71,18 +109,22 @@ export function openAbsenderModal(record) {
         title: 'Adresse',
         columns: 2,
         fields: [
-          { key: 'strasse', label: 'Strasse', value: record?.strasse || '' },
-          { key: 'ort',     label: 'PLZ / Ort', value: record?.ort || '' },
+          { key: 'strasse',    label: 'Strasse', value: record?.strasse    || '' },
+          { key: 'hausnummer', label: 'Nr.',     value: record?.hausnummer || '' },
+          { key: 'plz',        label: 'PLZ',     value: record?.plz        || '' },
+          { key: 'ort',        label: 'Ort',     value: record?.ort        || '' },
         ],
       },
       {
         title: 'Bankverbindung',
         columns: 2,
         fields: [
-          { key: 'bank_name',    label: 'Bank',         value: record?.bank_name || '', span: 2 },
-          { key: 'bank_strasse', label: 'Bank Strasse', value: record?.bank_strasse || '' },
-          { key: 'bank_ort',     label: 'Bank Ort',     value: record?.bank_ort || '' },
-          { key: 'iban',         label: 'IBAN',         value: record?.iban || '', span: 2 },
+          { key: 'bank_name',        label: 'Bank',         value: record?.bank_name        || '', span: 2 },
+          { key: 'bank_strasse',     label: 'Bank Strasse', value: record?.bank_strasse     || '' },
+          { key: 'bank_hausnummer',  label: 'Nr.',          value: record?.bank_hausnummer  || '' },
+          { key: 'bank_plz',         label: 'Bank PLZ',     value: record?.bank_plz         || '' },
+          { key: 'bank_ort',         label: 'Bank Ort',     value: record?.bank_ort         || '' },
+          { key: 'iban',             label: 'IBAN',         value: record?.iban             || '', span: 2 },
         ],
       },
       {
@@ -96,11 +138,13 @@ export function openAbsenderModal(record) {
     onSave: async function(values) {
       if (record?.id) values.id = record.id;
       values.start_nummer = parseInt(values.start_nummer, 10) || 1;
-      const ok = await saveAbsenderRecord(values);
-      if (ok) {
+      const result = await saveAbsenderRecord(values);
+      if (result.ok) {
         closeModal();
         await renderAbsenderTable();
         loadCompanies();
+      } else if (result.duplicate) {
+        window.showToast?.('Ein Absender mit diesem Namen existiert bereits.', 'warning');
       } else {
         window.showToast?.('Fehler beim Speichern.', 'error');
       }
@@ -138,7 +182,8 @@ export async function renderEmpfaengerTable() {
     return;
   }
 
-  const tbody = rows.map(function(r) {
+  const sorted = sortRows(rows, empfaengerSort.col, empfaengerSort.dir);
+  const tbody = sorted.map(function(r) {
     const sid = escHtml(r.id);
     return '<tr onclick="_editEmpfaenger(\'' + sid + '\')" style="cursor:pointer">'
       + '<td class="td-name">' + escHtml(r.name) + '</td>'
@@ -153,7 +198,10 @@ export async function renderEmpfaengerTable() {
 
   container.innerHTML = '<table>'
     + '<thead><tr>'
-    + '<th>Name</th><th>Strasse</th><th>Ort</th><th></th>'
+    + sortTh('Name',    'name',    empfaengerSort, '_sortEmpfaenger')
+    + sortTh('Strasse', 'strasse', empfaengerSort, '_sortEmpfaenger')
+    + sortTh('Ort',     'ort',     empfaengerSort, '_sortEmpfaenger')
+    + '<th></th>'
     + '</tr></thead>'
     + '<tbody>' + tbody + '</tbody>'
     + '</table>';
@@ -162,18 +210,23 @@ export async function renderEmpfaengerTable() {
 export function openEmpfaengerModal(record) {
   openModal({
     title: record ? 'Empf\u00E4nger bearbeiten' : 'Neuer Empf\u00E4nger',
+    columns: 2,
     fields: [
-      { key: 'name',    label: 'Name',    required: true, value: record?.name || '' },
-      { key: 'strasse', label: 'Strasse', value: record?.strasse || '' },
-      { key: 'ort',     label: 'Ort',     value: record?.ort || '' },
+      { key: 'name',       label: 'Name',    required: true, value: record?.name       || '', span: 2 },
+      { key: 'strasse',    label: 'Strasse', value: record?.strasse    || '' },
+      { key: 'hausnummer', label: 'Nr.',     value: record?.hausnummer || '' },
+      { key: 'plz',        label: 'PLZ',     value: record?.plz        || '' },
+      { key: 'ort',        label: 'Ort',     value: record?.ort        || '' },
     ],
     onSave: async function(values) {
       if (record?.id) values.id = record.id;
-      const ok = await saveEmpfaengerRecord(values);
-      if (ok) {
+      const result = await saveEmpfaengerRecord(values);
+      if (result.ok) {
         closeModal();
         await renderEmpfaengerTable();
         loadContacts();
+      } else if (result.duplicate) {
+        window.showToast?.('Ein Empf\u00E4nger mit diesem Namen existiert bereits.', 'warning');
       } else {
         window.showToast?.('Fehler beim Speichern.', 'error');
       }
@@ -296,9 +349,11 @@ function editVorlage(prefixedKey) {
 }
 
 // ── Window exports for inline onclick handlers ──────────────────────────────
-window._editAbsender    = editAbsender;
-window._deleteAbsender  = deleteAbsender;
-window._editEmpfaenger  = editEmpfaenger;
+window._editAbsender     = editAbsender;
+window._deleteAbsender   = deleteAbsender;
+window._sortAbsender     = sortAbsender;
+window._editEmpfaenger   = editEmpfaenger;
 window._deleteEmpfaenger = deleteEmpfaenger;
-window._deleteVorlage   = deleteVorlage;
-window._editVorlage     = editVorlage;
+window._sortEmpfaenger   = sortEmpfaenger;
+window._deleteVorlage    = deleteVorlage;
+window._editVorlage      = editVorlage;
