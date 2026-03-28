@@ -58,9 +58,10 @@ export async function fetchCloudTemplateRows() {
 export async function saveCloudTemplate(name, templateState) {
   const client = getClient();
   if (!client) return false;
+  const { data: { user } } = await client.auth.getUser();
   const { error } = await client
     .from('vorlagen')
-    .upsert({ name, data: templateState }, { onConflict: 'name' });
+    .upsert({ name, data: templateState, user_id: user.id }, { onConflict: 'name' });
   if (error) { console.error('Supabase save:', error.message); return false; }
   return true;
 }
@@ -108,17 +109,17 @@ export async function fetchAbsender() {
 
 export async function saveAbsenderRecord(record) {
   const client = getClient();
-  if (!client) return false;
+  if (!client) return { ok: false };
   if (record.id) {
     const { id, ...fields } = record;
     const { error } = await client.from('absender').update(fields).eq('id', id);
-    if (error) { console.error('saveAbsender (update):', error.message); return false; }
+    if (error) { console.error('saveAbsender (update):', error.message); return { ok: false, duplicate: error.code === '23505' }; }
   } else {
     const { data: { user } } = await client.auth.getUser();
     const { error } = await client.from('absender').insert({ ...record, user_id: user.id });
-    if (error) { console.error('saveAbsender (insert):', error.message); return false; }
+    if (error) { console.error('saveAbsender (insert):', error.message); return { ok: false, duplicate: error.code === '23505' }; }
   }
-  return true;
+  return { ok: true };
 }
 
 export async function deleteAbsenderRecord(id) {
@@ -143,17 +144,17 @@ export async function fetchEmpfaenger() {
 
 export async function saveEmpfaengerRecord(record) {
   const client = getClient();
-  if (!client) return false;
+  if (!client) return { ok: false };
   if (record.id) {
     const { id, ...fields } = record;
     const { error } = await client.from('empfaenger').update(fields).eq('id', id);
-    if (error) { console.error('saveEmpfaenger (update):', error.message); return false; }
+    if (error) { console.error('saveEmpfaenger (update):', error.message); return { ok: false, duplicate: error.code === '23505' }; }
   } else {
     const { data: { user } } = await client.auth.getUser();
     const { error } = await client.from('empfaenger').insert({ ...record, user_id: user.id });
-    if (error) { console.error('saveEmpfaenger (insert):', error.message); return false; }
+    if (error) { console.error('saveEmpfaenger (insert):', error.message); return { ok: false, duplicate: error.code === '23505' }; }
   }
-  return true;
+  return { ok: true };
 }
 
 export async function deleteEmpfaengerRecord(id) {
@@ -188,9 +189,10 @@ export async function saveRechnung(record) {
     if (error) { console.error('saveRechnung (update):', error.message); return null; }
     return data.id;
   }
+  const { data: { user } } = await client.auth.getUser();
   const { data, error } = await client
     .from('rechnungen')
-    .insert({ ...record, status: 'offen' })
+    .insert({ ...record, status: 'offen', user_id: user.id })
     .select('id')
     .single();
   if (error) { console.error('saveRechnung:', error.message); return null; }
