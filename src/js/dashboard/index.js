@@ -34,7 +34,7 @@ import { openAbsenderModal, openEmpfaengerModal, openVorlageEditor } from './sta
 document.addEventListener('click', function(e) {
   if (!currentDetailId) return;
   if (e.target.closest('#detail-panel')) return;
-  if (e.target.closest('#dash-table-container tbody tr')) return;
+  if (e.target.closest('#dash-table-container .ca-row')) return;
   closeDetailPanel();
 });
 

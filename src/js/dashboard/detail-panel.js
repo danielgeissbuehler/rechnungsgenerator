@@ -156,9 +156,8 @@ export async function openDetailPanel(id) {
   if (backdrop) backdrop.style.display = 'flex';
 
   // Highlight matching row
-  document.querySelectorAll('#dash-table-container tbody tr').forEach(function(tr) {
-    const attr = tr.getAttribute('onclick') || '';
-    tr.classList.toggle('row-selected', attr.indexOf(id) !== -1);
+  document.querySelectorAll('#dash-table-container .ca-row').forEach(function(row) {
+    row.classList.toggle('row-selected', row.dataset.id === id);
   });
 }
 
@@ -169,8 +168,8 @@ export function closeDetailPanel() {
   const backdrop = document.getElementById('detail-panel-backdrop');
   if (backdrop) backdrop.style.display = 'none';
 
-  document.querySelectorAll('#dash-table-container tbody tr').forEach(function(tr) {
-    tr.classList.remove('row-selected');
+  document.querySelectorAll('#dash-table-container .ca-row').forEach(function(row) {
+    row.classList.remove('row-selected');
   });
 
   setCurrentDetailId(null);

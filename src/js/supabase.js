@@ -204,7 +204,7 @@ export async function fetchRechnungen() {
   if (!client) return [];
   const { data, error } = await client
     .from('rechnungen')
-    .select('id, nummer, absender_name, empfaenger_name, betrag, waehrung, status, created_at')
+    .select('id, nummer, absender_name, empfaenger_name, betrag, waehrung, status, created_at, daten')
     .order('created_at', { ascending: false });
   if (error) { console.error('fetchRechnungen:', error.message); return []; }
   return data;

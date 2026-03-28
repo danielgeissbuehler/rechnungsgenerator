@@ -4,7 +4,7 @@
 
 import { escHtml, formatCHF, formatDate, setText } from '../utils.js';
 import { allRechnungen, filterState, sortState, currentDetailId } from './state.js';
-import { getStatusBadge } from './helpers.js';
+import { getStatusBadge, field } from './helpers.js';
 
 /**
  * Toggle sort column/direction and re-render the table.
@@ -41,6 +41,7 @@ export function renderInvoiceTable() {
         r.empfaenger_name || '',
         String(parseFloat(r.betrag) || 0),
         dateStr,
+        field(r, 'f-titel'),
       ].join(' ').toLowerCase();
       if (haystack.indexOf(q) === -1) return false;
     }
@@ -94,22 +95,38 @@ export function renderInvoiceTable() {
   const totalSum = list.reduce(function(s, r) { return s + (parseFloat(r.betrag) || 0); }, 0);
   const waehrung = (list[0] && list[0].waehrung) || 'CHF';
 
-  // 4. Rows — all user data sanitised via escHtml()
+  // SVG icon snippets (hardcoded, no user data)
+  const IC_BUILDING = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>';
+  const IC_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  const IC_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+  // 4. Card rows — all user data sanitised via escHtml()
   const rows = list.map(function(r) {
     const numDisplay    = r.nummer ? '#' + String(r.nummer).padStart(3, '0') : '\u2014';
+    const titel         = field(r, 'f-titel') || '';
     const dateDisplay   = formatDate(r.created_at);
     const amountDisplay = formatCHF(parseFloat(r.betrag) || 0, r.waehrung || 'CHF');
     const selectedClass = r.id === currentDetailId ? ' row-selected' : '';
+    const stateClass    = r.status === 'entwurf' ? ' ca-row-entwurf'
+                        : r.status === 'storniert' ? ' ca-row-storniert' : '';
     const safeId        = escHtml(r.id);
 
-    return '<tr class="' + selectedClass.trim() + '" onclick="openDetailPanel(\'' + safeId + '\')">'
-      + '<td class="td-num">'    + escHtml(numDisplay)                  + '</td>'
-      + '<td class="td-name">'   + escHtml(r.absender_name   || '\u2014') + '</td>'
-      + '<td class="td-loc">'    + escHtml(r.empfaenger_name || '\u2014') + '</td>'
-      + '<td class="td-amount">' + amountDisplay                        + '</td>'
-      + '<td class="td-date">'   + escHtml(dateDisplay)                 + '</td>'
-      + '<td>'                   + getStatusBadge(r.status)             + '</td>'
-      + '<td class="td-actions">'
+    return '<div class="ca-row' + selectedClass + stateClass + '" data-id="' + safeId + '" onclick="openDetailPanel(\'' + safeId + '\')">'
+      + '<div class="ca-num">' + escHtml(numDisplay) + '</div>'
+      + '<div class="ca-main">'
+      +   '<div class="ca-title">' + escHtml(titel || r.empfaenger_name || '\u2014') + '</div>'
+      +   '<div class="ca-sub">'
+      +     '<span class="ca-meta">' + IC_BUILDING + ' ' + escHtml(r.absender_name || '\u2014') + '</span>'
+      +     '<span class="ca-meta">' + IC_ARROW + ' ' + escHtml(r.empfaenger_name || '\u2014') + '</span>'
+      +     '<span class="ca-meta">' + IC_CAL + ' ' + escHtml(dateDisplay) + '</span>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="ca-amount">' + amountDisplay + '</div>'
+      + '<div class="ca-status">' + getStatusBadge(r.status) + '</div>'
+      + '<div class="ca-actions">'
       +   '<button class="row-action-btn" title="Bearbeiten"'
       +   ' onclick="event.stopPropagation();_rowEdit(\'' + safeId + '\')">'
       +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
@@ -146,46 +163,32 @@ export function renderInvoiceTable() {
       +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
       +     '</svg>'
       +   '</button>'
-      + '</td>'
-      + '</tr>';
+      + '</div>'
+      + '</div>';
   }).join('');
 
-  /**
-   * Build a sortable <th> cell.
-   * @param {string} col   — sort key (hardcoded, never user input)
-   * @param {string} label — display text (hardcoded, never user input)
-   * @returns {string}
-   */
-  function sortTh(col, label) {
+  /** Build a sort button for the sort bar. */
+  function sortBtn(col, label) {
     const active = sortState.col === col;
-    const arrow  = active ? (sortState.dir === 'asc' ? ' \u2191' : ' \u2193') : ' \u2195';
-    const cls    = active ? ' class="th-sort-active"' : '';
-    return '<th' + cls + ' style="cursor:pointer;user-select:none"'
-      + ' onclick="dashSortBy(\'' + col + '\')">'
-      + label
-      + '<span style="opacity:' + (active ? '1' : '.3') + ';font-size:10px;margin-left:3px">' + arrow + '</span>'
-      + '</th>';
+    const arrow  = active ? (sortState.dir === 'asc' ? ' \u2191' : ' \u2193') : '';
+    const cls    = active ? ' ca-sort-active' : '';
+    return '<span class="ca-sort-btn' + cls + '" onclick="dashSortBy(\'' + col + '\')">'
+      + label + arrow + '</span>';
   }
 
   /* innerHTML is used intentionally; all user data in rows is sanitised via escHtml().
-     The sortTh() helper only uses hardcoded string literals — no user input. */
-  container.innerHTML = '<table>'
-    + '<thead><tr>'
-    +   sortTh('nummer',         'Nr.')
-    +   sortTh('absender_name',  'Absender')
-    +   sortTh('empfaenger_name','Empf\u00E4nger')
-    +   sortTh('betrag',         'Betrag')
-    +   sortTh('created_at',     'Datum')
-    +   sortTh('status',         'Status')
-    +   '<th></th>'
-    + '</tr></thead>'
-    + '<tbody>' + rows + '</tbody>'
-    + '<tfoot>'
-    +   '<tr class="total-footer-row">'
-    +     '<td colspan="3">Total (' + list.length + ' Rechnungen)</td>'
-    +     '<td>' + formatCHF(totalSum, waehrung) + '</td>'
-    +     '<td colspan="3"></td>'
-    +   '</tr>'
-    + '</tfoot>'
-    + '</table>';
+     The sortBtn() helper only uses hardcoded string literals — no user input. */
+  container.innerHTML =
+      '<div class="ca-sort-bar">'
+    +   sortBtn('nummer', 'Nr.')
+    +   '<span>' + sortBtn('absender_name', 'Absender') + ' &middot; ' + sortBtn('empfaenger_name', 'Empf\u00E4nger') + '</span>'
+    +   sortBtn('betrag', 'Betrag')
+    +   sortBtn('status', 'Status')
+    +   sortBtn('created_at', 'Datum')
+    + '</div>'
+    + '<div class="ca-list">' + rows + '</div>'
+    + '<div class="ca-footer">'
+    +   '<span>Total (' + list.length + ' Rechnungen)</span>'
+    +   '<span>' + formatCHF(totalSum, waehrung) + '</span>'
+    + '</div>';
 }

@@ -566,6 +566,115 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
   background: var(--surface2);
 }
 
+/* ── Card-style invoice rows (Variante A) ── */
+.ca-sort-bar {
+  display: grid;
+  grid-template-columns: 60px 1fr auto 90px 100px;
+  gap: 0 16px;
+  padding: 8px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  align-items: center;
+}
+.ca-sort-btn {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.ca-sort-btn:hover { color: var(--accent); }
+.ca-sort-active { color: var(--accent); }
+
+.ca-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto 90px 100px;
+  gap: 0 16px;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  cursor: pointer;
+  transition: background .1s;
+}
+.ca-row:last-child { border-bottom: none; }
+.ca-row:hover { background: var(--surface2); }
+.ca-row.row-selected { background: var(--accent-lt); }
+
+.ca-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.ca-main {
+  min-width: 0;
+  overflow: hidden;
+}
+.ca-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ca-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 3px;
+}
+.ca-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ca-meta svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.ca-amount {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+}
+.ca-status { text-align: center; }
+
+.ca-actions {
+  white-space: nowrap;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+.ca-actions .row-action-btn { opacity: 0; }
+.ca-row:hover .ca-actions .row-action-btn { opacity: 1; }
+
+/* Entwurf: muted */
+.ca-row-entwurf .ca-num { color: var(--muted2); }
+.ca-row-entwurf .ca-title { color: var(--muted); }
+.ca-row-entwurf .ca-amount { color: var(--muted); }
+
+/* Storniert: line-through */
+.ca-row-storniert .ca-num { color: var(--muted2); }
+.ca-row-storniert .ca-title { text-decoration: line-through; color: var(--muted); }
+.ca-row-storniert .ca-amount { text-decoration: line-through; color: var(--muted); }
+
+.ca-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  border-top: 2px solid var(--border, #e5e7eb);
+  background: var(--surface2);
+}
+
 /* ── Badges ── */
 .badge {
   display: inline-block;
