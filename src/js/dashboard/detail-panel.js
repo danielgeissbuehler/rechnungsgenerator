@@ -6,6 +6,7 @@ import {
   fetchRechnungById,
   fetchRechnungen,
   updateRechnungStatus,
+  deleteRechnung,
 } from '../supabase.js';
 import { buildPagesFromData } from '../render.js';
 import { downloadPDF, printPDF } from '../pdf.js';
@@ -105,6 +106,27 @@ function buildDocPreview(r) {
           + '</div>'
         : '')
     + '</div>';
+}
+
+/**
+ * Show a confirmation dialog and delete the invoice with the given id.
+ * Closes the detail panel if open, then refreshes the table.
+ * @param {string} id - invoice UUID
+ */
+export async function deleteInvoice(id) {
+  const ok = await window.showConfirm(
+    'Rechnung löschen?',
+    'Diese Aktion kann nicht rückgängig gemacht werden.'
+  );
+  if (!ok) return;
+  try {
+    await deleteRechnung(id);
+    closeDetailPanel();
+    await loadRechnungen();
+  } catch (err) {
+    console.error('deleteInvoice:', err);
+    window.showToast?.('Fehler beim Löschen der Rechnung.', 'error');
+  }
 }
 
 /**
@@ -418,20 +440,7 @@ async function renderDetailPanel(r) {
 
   // Delete with confirmation
   window._dpDelete = async function(deleteId) {
-    const ok = await window.showConfirm(
-      'Rechnung löschen?',
-      'Diese Aktion kann nicht rückgängig gemacht werden.'
-    );
-    if (!ok) return;
-    try {
-      const { deleteRechnung } = await import('../supabase.js');
-      await deleteRechnung(deleteId);
-      closeDetailPanel();
-      await loadRechnungen();
-    } catch (err) {
-      console.error('_dpDelete:', err);
-      window.showToast?.('Fehler beim Löschen der Rechnung.', 'error');
-    }
+    await deleteInvoice(deleteId);
   };
 }
 

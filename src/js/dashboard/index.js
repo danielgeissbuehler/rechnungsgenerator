@@ -14,7 +14,7 @@ export { loadRechnungen } from './data.js';
 export { renderDashboardStats } from './stats.js';
 export { dashFilterChanged, dashSetStatusTab, toggleMultiselect, msCheckChanged } from './filters.js';
 export { renderInvoiceTable, dashSortBy } from './table.js';
-export { openDetailPanel, closeDetailPanel, handleStatusChange } from './detail-panel.js';
+export { openDetailPanel, closeDetailPanel, handleStatusChange, deleteInvoice } from './detail-panel.js';
 export { handleNeueRechnung, closeNeueRechnungModal, confirmNeueRechnung, handleKopieRechnung } from './new-invoice.js';
 export { openAbsenderModal, openEmpfaengerModal, openVorlageEditor } from './stammdaten.js';
 
@@ -24,7 +24,7 @@ import { loadRechnungen } from './data.js';
 import { renderDashboardStats } from './stats.js';
 import { dashFilterChanged, dashSetStatusTab, toggleMultiselect, msCheckChanged } from './filters.js';
 import { renderInvoiceTable, dashSortBy } from './table.js';
-import { openDetailPanel, closeDetailPanel, handleStatusChange } from './detail-panel.js';
+import { openDetailPanel, closeDetailPanel, handleStatusChange, deleteInvoice } from './detail-panel.js';
 import { handleNeueRechnung, closeNeueRechnungModal, confirmNeueRechnung, handleKopieRechnung } from './new-invoice.js';
 import { openAbsenderModal, openEmpfaengerModal, openVorlageEditor } from './stammdaten.js';
 
@@ -112,5 +112,5 @@ window._rowPrint = async function(id) {
 };
 
 window._rowDelete = async function(id) {
-  if (typeof window._dpDelete === 'function') await window._dpDelete(id);
+  await deleteInvoice(id);
 };
