@@ -90,6 +90,7 @@ supabase/
   schema.sql       — DB schema (run once in Supabase SQL editor)
   seed.sql         — Example seed data
   migration_v2_status.sql — Status column migration
+  migration_rls_fix.sql   — RLS policies scoped to user_id = auth.uid() (run once)
 ```
 
 ---
@@ -163,4 +164,23 @@ state = {
 
 ---
 
-## Current Branch: `feature/dashboard-v1`
+## Security Model
+
+### RLS Policies (Row-Level Security)
+All tables use `user_id = auth.uid()` — NOT `auth.uid() IS NOT NULL`.
+- Old weak pattern allowed any authenticated user to read/write all rows.
+- New pattern strictly scopes each user to their own data.
+- `migration_rls_fix.sql` must be run in Supabase SQL editor to apply this on live DB.
+
+### XSS Prevention
+- Toast messages use DOM construction (`textContent`) — never `innerHTML` for user-supplied strings.
+- `escHtml()` from `utils.js` is available for any HTML context that needs it.
+- The SVG icons in toasts are the only thing that goes through `innerHTML`.
+
+### Auth Gate
+- `initAuth()` in `auth.js` checks `isConfigured()` first — missing Supabase env vars shows a hard error, never opens the app unauthenticated.
+- Login/logout managed entirely through `#view-login` / `#app` visibility toggling (no redirects).
+
+---
+
+## Current Branch: `main` (feature/dashboard-v1 merged via PR #1)
