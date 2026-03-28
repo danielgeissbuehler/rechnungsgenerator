@@ -33,16 +33,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Inject Supabase credentials
-        env:
-          SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          sed -i "s|YOUR_SUPABASE_URL|${SUPABASE_URL}|g"           src/js/supabase.js
-          sed -i "s|YOUR_SUPABASE_ANON_KEY|${SUPABASE_ANON_KEY}|g" src/js/supabase.js
-
       - name: Build
         run: npm run build
+        env:
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
