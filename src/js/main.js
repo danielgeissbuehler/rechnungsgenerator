@@ -1,4 +1,5 @@
 import { F } from './field-ids.js';
+import { escHtml } from './utils.js';
 import { initAuth, handleLogin, handleLogout } from './auth.js';
 import { rteInit, rteCmd, rteCmdRaw, rteBlockBtn, rteInsertHr, rteCmd2, rteCmd2Raw, rteBlock2, rteInsertHr2, rteKeydown } from './rte.js';
 import { render, updatePreviewScale } from './render.js';
@@ -109,8 +110,13 @@ window.showToast = function(message, type, duration) {
 
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = '<span class="toast-icon ' + type + '">' + (iconSvgs[type] || '') + '</span>'
-    + '<span>' + message + '</span>';
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'toast-icon ' + type;
+  iconSpan.innerHTML = iconSvgs[type] || '';
+  const msgSpan = document.createElement('span');
+  msgSpan.textContent = message;
+  toast.appendChild(iconSpan);
+  toast.appendChild(msgSpan);
   container.appendChild(toast);
 
   setTimeout(function() {

@@ -4,7 +4,15 @@ let _onAuthReady = null;
 
 export async function initAuth() {
   if (!isConfigured()) {
-    showApp();
+    const err = document.createElement('div');
+    err.style.cssText = 'padding:2rem;font-family:sans-serif;color:#b91c1c';
+    const title = document.createElement('strong');
+    title.textContent = 'Konfigurationsfehler: Supabase ist nicht eingerichtet.';
+    const hint = document.createElement('p');
+    hint.textContent = 'Bitte VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY in der .env-Datei setzen.';
+    err.appendChild(title);
+    err.appendChild(hint);
+    document.body.replaceChildren(err);
     return;
   }
 

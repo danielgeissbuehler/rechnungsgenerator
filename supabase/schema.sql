@@ -105,11 +105,11 @@ ALTER TABLE empfaenger        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rechnungs_counter ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rechnungen        ENABLE ROW LEVEL SECURITY;
 
--- Vorlagen: öffentlich lesbar (bestehende Logik), schreiben nur auth
+-- Jeder User sieht und bearbeitet nur seine eigenen Zeilen (user_id = auth.uid())
 DROP POLICY IF EXISTS "public_access" ON vorlagen;
-CREATE POLICY "vorlagen_auth" ON vorlagen FOR ALL USING (auth.uid() IS NOT NULL);
+CREATE POLICY "vorlagen_auth"          ON vorlagen          FOR ALL USING (user_id = auth.uid());
 
-CREATE POLICY "absender_auth"          ON absender          FOR ALL USING (auth.uid() IS NOT NULL);
-CREATE POLICY "empfaenger_auth"        ON empfaenger        FOR ALL USING (auth.uid() IS NOT NULL);
-CREATE POLICY "rechnungs_counter_auth" ON rechnungs_counter FOR ALL USING (auth.uid() IS NOT NULL);
-CREATE POLICY "rechnungen_auth"        ON rechnungen        FOR ALL USING (auth.uid() IS NOT NULL);
+CREATE POLICY "absender_auth"          ON absender          FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "empfaenger_auth"        ON empfaenger        FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "rechnungs_counter_auth" ON rechnungs_counter FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "rechnungen_auth"        ON rechnungen        FOR ALL USING (user_id = auth.uid());
