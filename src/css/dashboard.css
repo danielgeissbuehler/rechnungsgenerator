@@ -655,6 +655,7 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
 }
 .ca-actions .row-action-btn { opacity: 0; }
 .ca-row:hover .ca-actions .row-action-btn { opacity: 1; }
+.ca-row:hover .ca-actions .row-action-btn:disabled { opacity: .35; }
 
 /* Entwurf: muted */
 .ca-row-entwurf .ca-num { color: var(--muted2); }

@@ -164,7 +164,7 @@ export function renderInvoiceTable() {
           +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
           +     '</svg>'
           +   '</button>'
-          : '<button class="row-action-btn row-action-btn-danger" title="Nur Entw\u00FCrfe k\u00F6nnen gel\u00F6scht werden" disabled>'
+          : '<button class="row-action-btn" title="Nur Entw\u00FCrfe k\u00F6nnen gel\u00F6scht werden" disabled>'
           +     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
           +       ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
           +       '<polyline points="3 6 5 6 21 6"/>'
