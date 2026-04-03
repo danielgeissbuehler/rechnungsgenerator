@@ -61,9 +61,9 @@ export async function confirmNeueRechnung() {
 
   if (typ === 'leer') {
     if (typeof window.neueRechnung === 'function') window.neueRechnung();
+    await window.speichereEntwurf?.();
     showEditor('new', 'Neue Rechnung');
     closeNeueRechnungModal();
-    window.speichereEntwurf?.();
     return;
   }
 
@@ -74,11 +74,12 @@ export async function confirmNeueRechnung() {
       window.showToast?.('Bitte eine Vorlage auswählen.', 'warning');
       return;
     }
-    // vorlageKey is already prefixed (e.g. 'cloud:Name' or 'local:Name')
+    // Clear stale IDs before loading template data
+    if (typeof window.neueRechnung === 'function') window.neueRechnung();
     loadTemplateByKey(vorlageKey);
+    await window.speichereEntwurf?.();
     showEditor('new', 'Aus Vorlage');
     closeNeueRechnungModal();
-    window.speichereEntwurf?.();
     return;
   }
 
@@ -90,9 +91,9 @@ export async function confirmNeueRechnung() {
       return;
     }
     if (typeof window.kopieRechnung === 'function') await window.kopieRechnung(kopieId);
+    await window.speichereEntwurf?.();
     showEditor('copy', 'Kopie');
     closeNeueRechnungModal();
-    window.speichereEntwurf?.();
     return;
   }
 }

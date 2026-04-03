@@ -201,6 +201,7 @@ export function autoSave() {
   const editor = document.getElementById('view-editor');
   if (!editor || getComputedStyle(editor).display === 'none') return;
   if (state.isReadonly) return;
+  if (state.currentRechnungId) return; // Viewing booked invoice — no draft save
   if (!isConfigured()) return;
   if (state.currentVorlageName) return; // Vorlage-Modus — kein Entwurf speichern
 
