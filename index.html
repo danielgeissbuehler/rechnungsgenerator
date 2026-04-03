@@ -695,17 +695,19 @@
       <div class="se-card-header">Adressierung</div>
       <div class="se-card-body">
         <div class="ig">
-          <div class="ii ro">
+          <div class="ii">
             <label>Empfänger</label>
             <div id="se-contact-select"></div>
-            <input id="se-emp-display-name"    class="sub" readonly>
-            <input id="se-emp-display-adresse" class="sub" readonly>
+            <input id="se-emp-display-name"    class="sub" placeholder="Name" oninput="syncEmpField(this,'name')">
+            <input id="se-emp-display-strasse" class="sub" placeholder="Strasse Nr." oninput="syncEmpField(this,'strasse')">
+            <input id="se-emp-display-ort"     class="sub" placeholder="PLZ Ort" oninput="syncEmpField(this,'ort')">
           </div>
-          <div class="ii ro">
+          <div class="ii">
             <label>Absender</label>
             <div id="se-company-select"></div>
-            <input id="se-stell-name"    class="sub" readonly>
-            <input id="se-stell-adresse" class="sub" readonly>
+            <input id="se-stell-name"    class="sub" placeholder="Name" oninput="syncStellField(this,'name')">
+            <input id="se-stell-strasse" class="sub" placeholder="Strasse Nr." oninput="syncStellField(this,'strasse')">
+            <input id="se-stell-ort"     class="sub" placeholder="PLZ Ort" oninput="syncStellField(this,'ort')">
           </div>
         </div>
       </div>

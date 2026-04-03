@@ -99,6 +99,9 @@ export function fillSimpleEditor() {
   setVisible('se-card-textblock2', state.visibility.textblock2);
   setVisible('se-card-bank',       state.visibility.bank);
 
+  // Datum-Defaults: heute / heute + 1 Monat (nur wenn leer)
+  _setDateDefaults();
+
   // Dynamische Sektionen aufbauen
   renderSimpleMeta();
   renderSimplePositions();
@@ -167,6 +170,23 @@ function _chToIso(ch) {
 function _isoToCh(iso) {
   const m = (iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
+}
+
+/** Setzt Datum (mf-value-0) auf heute und Zahlbar bis (mf-value-2) auf heute + 1 Monat, wenn leer. */
+function _setDateDefaults() {
+  const datumEl   = el('mf-value-0');
+  const zahlbarEl = el('mf-value-2');
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtCh = (d) => pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear();
+
+  if (datumEl && !datumEl.value) {
+    datumEl.value = fmtCh(now);
+  }
+  if (zahlbarEl && !zahlbarEl.value) {
+    const plus1m = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    zahlbarEl.value = fmtCh(plus1m);
+  }
 }
 
 /** Indices der Meta-Felder die einen Date-Picker erhalten. */
@@ -424,28 +444,56 @@ function _syncPositionToHidden(pos) {
 export function applySimpleContact() {}
 export function applySimpleCompany() {}
 
-/** Aktualisiert die readonly Empfänger-Anzeige aus den #f-emp-* Feldern. */
+/** Aktualisiert die Empfänger-Anzeige aus den #f-emp-* Feldern. */
 export function _refreshEmpfaengerDisplay() {
-  const nameEl = el('se-emp-display-name');
-  const addrEl = el('se-emp-display-adresse');
-  if (nameEl) nameEl.value = fVal(F.EMP_NAME);
-  if (addrEl) {
-    const strasse = [fVal(F.EMP_STRASSE), fVal(F.EMP_HAUSNUMMER)].filter(Boolean).join(' ');
-    const ort     = [fVal(F.EMP_PLZ), fVal(F.EMP_ORT)].filter(Boolean).join(' ');
-    addrEl.value  = [strasse, ort].filter(Boolean).join(', ');
-  }
+  const nameEl    = el('se-emp-display-name');
+  const strasseEl = el('se-emp-display-strasse');
+  const ortEl     = el('se-emp-display-ort');
+  if (nameEl)    nameEl.value    = fVal(F.EMP_NAME);
+  if (strasseEl) strasseEl.value = [fVal(F.EMP_STRASSE), fVal(F.EMP_HAUSNUMMER)].filter(Boolean).join(' ');
+  if (ortEl)     ortEl.value     = [fVal(F.EMP_PLZ), fVal(F.EMP_ORT)].filter(Boolean).join(' ');
 }
 
-/** Aktualisiert die readonly Absender-Anzeige aus den #f-stell-* Feldern. */
+/** Aktualisiert die Absender-Anzeige aus den #f-stell-* Feldern. */
 export function _refreshAbsenderDisplay() {
-  const nameEl  = el('se-stell-name');
-  const addrEl  = el('se-stell-adresse');
-  if (nameEl) nameEl.value = fVal(F.STELL_NAME);
-  if (addrEl) {
-    const strasse = [fVal(F.STELL_ADRESSE), fVal(F.STELL_HAUSNUMMER)].filter(Boolean).join(' ');
-    const ort     = [fVal(F.STELL_PLZ), fVal(F.STELL_ORT)].filter(Boolean).join(' ');
-    addrEl.value  = [strasse, ort].filter(Boolean).join(', ');
+  const nameEl    = el('se-stell-name');
+  const strasseEl = el('se-stell-strasse');
+  const ortEl     = el('se-stell-ort');
+  if (nameEl)    nameEl.value    = fVal(F.STELL_NAME);
+  if (strasseEl) strasseEl.value = [fVal(F.STELL_ADRESSE), fVal(F.STELL_HAUSNUMMER)].filter(Boolean).join(' ');
+  if (ortEl)     ortEl.value     = [fVal(F.STELL_PLZ), fVal(F.STELL_ORT)].filter(Boolean).join(' ');
+}
+
+/** Sync Empfänger sub-field → hidden #f-emp-* fields. */
+export function syncEmpField(input, field) {
+  const v = input.value;
+  if (field === 'name') {
+    const f = el(F.EMP_NAME); if (f) f.value = v;
+  } else if (field === 'strasse') {
+    const f = el(F.EMP_STRASSE); if (f) f.value = v;
+    const h = el(F.EMP_HAUSNUMMER); if (h) h.value = '';
+  } else if (field === 'ort') {
+    const parts = v.match(/^(\d{4})\s+(.*)$/);
+    const plz = el(F.EMP_PLZ);  if (plz) plz.value = parts ? parts[1] : '';
+    const ort = el(F.EMP_ORT);  if (ort) ort.value  = parts ? parts[2] : v;
   }
+  render();
+}
+
+/** Sync Absender sub-field → hidden #f-stell-* fields. */
+export function syncStellField(input, field) {
+  const v = input.value;
+  if (field === 'name') {
+    const f = el(F.STELL_NAME); if (f) f.value = v;
+  } else if (field === 'strasse') {
+    const f = el(F.STELL_ADRESSE); if (f) f.value = v;
+    const h = el(F.STELL_HAUSNUMMER); if (h) h.value = '';
+  } else if (field === 'ort') {
+    const parts = v.match(/^(\d{4})\s+(.*)$/);
+    const plz = el(F.STELL_PLZ);  if (plz) plz.value = parts ? parts[1] : '';
+    const ort = el(F.STELL_ORT);  if (ort) ort.value  = parts ? parts[2] : v;
+  }
+  render();
 }
 
 // _syncContactPicker / _syncCompanyPicker removed — replaced by SearchableSelect in contacts.js
