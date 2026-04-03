@@ -18,7 +18,7 @@ import { render } from './render.js';
 import { fmt } from './utils.js';
 import { F } from './field-ids.js';
 import { rteInline, rteBlock, rteInsertHrInEditor, rteKeydown } from './rte.js';
-import { initSimpleContactPicker, initSimpleCompanyPicker, syncSimpleContactValue, syncSimpleCompanyValue } from './contacts.js';
+import { initSimpleContactPicker, initSimpleCompanyPicker, syncSimpleContactValue, syncSimpleCompanyValue, setContactPickerValue } from './contacts.js';
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────────
 
@@ -108,6 +108,9 @@ export function fillSimpleEditor() {
   initSimpleCompanyPicker();
   syncSimpleContactValue();
   syncSimpleCompanyValue();
+
+  // Clear contact picker if no empfänger in template/state
+  if (!fVal(F.EMP_NAME)) setContactPickerValue('');
 }
 
 // ── Meta-Felder (Datum & Zeitraum) ────────────────────────────────────────────

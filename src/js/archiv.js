@@ -135,8 +135,16 @@ export async function ladeAusArchiv(id) {
 }
 
 export async function loescheAusArchiv(id) {
+  const r = await fetchRechnungById(id);
+  if (!r) { window.showToast?.('Rechnung nicht gefunden.', 'error'); return; }
+
+  if (r.status !== 'entwurf') {
+    window.showToast?.('Nur Entwürfe können gelöscht werden. Gebuchte Rechnungen müssen storniert werden.', 'error');
+    return;
+  }
+
   const confirmed = await window.showConfirm(
-    'Rechnung löschen?',
+    'Entwurf löschen?',
     'Diese Aktion kann nicht rückgängig gemacht werden.'
   );
   if (!confirmed) return;

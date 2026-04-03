@@ -115,12 +115,21 @@ function buildDocPreview(r) {
  * @param {string} id - invoice UUID
  */
 export async function deleteInvoice(id) {
-  const ok = await window.showConfirm(
-    'Rechnung löschen?',
-    'Diese Aktion kann nicht rückgängig gemacht werden.'
-  );
-  if (!ok) return;
   try {
+    const r = await fetchRechnungById(id);
+    if (!r) { window.showToast?.('Rechnung nicht gefunden.', 'error'); return; }
+
+    if (r.status !== 'entwurf') {
+      window.showToast?.('Nur Entwürfe können gelöscht werden. Gebuchte Rechnungen müssen storniert werden.', 'error');
+      return;
+    }
+
+    const ok = await window.showConfirm(
+      'Entwurf löschen?',
+      'Diese Aktion kann nicht rückgängig gemacht werden.'
+    );
+    if (!ok) return;
+
     await deleteRechnung(id);
     closeDetailPanel();
     await loadRechnungen();
@@ -296,14 +305,21 @@ async function renderDetailPanel(r) {
     +       '<rect x="6" y="14" width="12" height="8"/>'
     +     '</svg>'
     +   '</button>'
-    +   '<button class="icon-btn icon-btn-danger" title="L\u00F6schen" onclick="_dpDelete(\'' + safeId + '\')">'
-    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
-    +       '<polyline points="3 6 5 6 21 6"/>'
-    +       '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'
-    +       '<path d="M10 11v6"/><path d="M14 11v6"/>'
-    +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
-    +     '</svg>'
-    +   '</button>'
+    +   (s === 'entwurf'
+        ? '<button class="icon-btn icon-btn-danger" title="L\u00F6schen" onclick="_dpDelete(\'' + safeId + '\')">'
+        +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+        +       '<polyline points="3 6 5 6 21 6"/>'
+        +       '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'
+        +       '<path d="M10 11v6"/><path d="M14 11v6"/>'
+        +       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>'
+        +     '</svg>'
+        +   '</button>'
+        : '<button class="icon-btn" title="Nur Entw\u00FCrfe k\u00F6nnen gel\u00F6scht werden" disabled>'
+        +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+        +       '<circle cx="12" cy="12" r="10"/>'
+        +       '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>'
+        +     '</svg>'
+        +   '</button>')
     +   '<button class="icon-btn" title="Schliessen" onclick="closeDetailPanel()">'
     +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">'
     +       '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'

@@ -553,6 +553,7 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
 .row-action-btn:hover { background: #f4f6f9; color: #111827; }
 .row-action-btn-danger { color: var(--red, #ef4444); }
 .row-action-btn-danger:hover { background: #fef2f2; color: var(--red, #ef4444); border-color: #fca5a5; }
+.row-action-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
 .td-actions { white-space: nowrap; }
 .td-actions .row-action-btn { margin-right: 2px; }
@@ -768,6 +769,7 @@ body.sidebar-collapsed .sidebar-user-info { display: none; }
 .icon-btn svg { width: 14px; height: 14px; }
 .icon-btn-danger { color: var(--red, #ef4444); }
 .icon-btn-danger:hover { background: #fef2f2; border-color: #fca5a5; }
+.icon-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
 .dp-body {
   flex: 1;
