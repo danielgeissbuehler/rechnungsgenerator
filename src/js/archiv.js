@@ -35,7 +35,7 @@ export function setReadonly(isReadonly) {
 }
 
 // ── Buchen ────────────────────────────────────────────────────────────────────
-export async function bucheRechnung() {
+export async function bucheRechnung(draftId) {
   if (state.isReadonly) return;
 
   if (!isConfigured()) {
@@ -92,8 +92,9 @@ export async function bucheRechnung() {
   };
 
   // If this was a draft, update the existing row instead of inserting a new one
-  if (state.currentDraftId) {
-    record.id = state.currentDraftId;
+  const id_to_update = draftId || state.currentDraftId;
+  if (id_to_update) {
+    record.id = id_to_update;
   }
 
   const id = await saveRechnung(record);
