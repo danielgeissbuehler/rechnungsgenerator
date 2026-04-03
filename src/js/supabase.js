@@ -278,13 +278,15 @@ export async function saveEntwurf(record) {
  * Valid values: 'entwurf' | 'offen' | 'versendet' | 'bezahlt' | 'storniert'
  * Returns true on success, false on error.
  */
-export async function updateRechnungStatus(id, status) {
+export async function updateRechnungStatus(id, status, nummer) {
   const client = getClient();
   if (!client) return false;
   try {
+    const payload = { status };
+    if (nummer != null) payload.nummer = nummer;
     const { error } = await client
       .from('rechnungen')
-      .update({ status })
+      .update(payload)
       .eq('id', id);
     if (error) { console.error('updateRechnungStatus:', error.message); return false; }
     return true;

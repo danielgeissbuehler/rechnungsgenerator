@@ -257,24 +257,7 @@ test.describe('Bug 2: Auto-save must not fire when viewing booked invoice', () =
   });
 });
 
-test.describe('Status change updates existing invoice', () => {
-  test('handleStatusChange calls updateRechnungStatus with correct ID', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    const result = await page.evaluate(async () => {
-      if (typeof window.handleStatusChange !== 'function') {
-        return { error: 'handleStatusChange not found on window' };
-      }
-      return { exists: true, type: typeof window.handleStatusChange };
-    });
-
-    expect(result.exists).toBe(true);
-    expect(result.type).toBe('function');
-  });
-});
-
-test.describe('Bug 3: bucheRechnung must use explicit draftId when called from detail panel', () => {
+test.describe('Versenden: only PATCH existing invoice with status + nummer', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -284,56 +267,223 @@ test.describe('Bug 3: bucheRechnung must use explicit draftId when called from d
     });
   });
 
-  test('bucheRechnung accepts and uses draftId parameter', async ({ page }) => {
-    const result = await page.evaluate(() => {
-      // Verify bucheRechnung exists and accepts a parameter
-      if (typeof window.bucheRechnung !== 'function') {
-        return { error: 'bucheRechnung not found' };
-      }
-      // Check it has at least 1 parameter (draftId)
-      return { exists: true, length: window.bucheRechnung.length };
-    });
-
-    expect(result.exists).toBe(true);
-    // bucheRechnung should now accept draftId parameter
-    expect(result.length).toBeGreaterThanOrEqual(1);
-  });
-
-  test('detail panel entwurf button passes invoice ID to bucheRechnung', async ({ page }) => {
-    // Render the detail panel with a mock draft invoice and check that
-    // the "Rechnung versenden" button calls bucheRechnung with the ID
-    const passedId = await page.evaluate(async () => {
-      let capturedId = null;
-
-      // Mock bucheRechnung to capture the argument
-      const origBuche = window.bucheRechnung;
-      window.bucheRechnung = function(id) {
-        capturedId = id;
+  test('detail panel entwurf button calls handleStatusChange(id, versendet)', async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      let capturedArgs = null;
+      const origHandler = window.handleStatusChange;
+      window.handleStatusChange = function(id, status) {
+        capturedArgs = { id, status };
       };
 
-      // Mock showConfirm to auto-accept (bucheRechnung shows confirm dialog)
-      const origConfirm = window.showConfirm;
-      window.showConfirm = async () => false; // decline so it returns early
-
-      // Simulate: detail panel renders a draft with status 'entwurf'
-      // The button HTML is:
-      // onclick="window.bucheRechnung && window.bucheRechnung('some-id')"
-      // We just need to verify it passes the ID correctly
       const testId = 'test-draft-uuid-abc123';
-
-      // Create a button like the detail panel would
       const btn = document.createElement('button');
-      btn.setAttribute('onclick', "window.bucheRechnung && window.bucheRechnung('" + testId + "')");
+      btn.setAttribute('onclick', "handleStatusChange('" + testId + "','versendet')");
       document.body.appendChild(btn);
       btn.click();
       btn.remove();
 
-      window.bucheRechnung = origBuche;
-      window.showConfirm = origConfirm;
-
-      return capturedId;
+      window.handleStatusChange = origHandler;
+      return capturedArgs;
     });
 
-    expect(passedId).toBe('test-draft-uuid-abc123');
+    expect(result.id).toBe('test-draft-uuid-abc123');
+    expect(result.status).toBe('versendet');
+  });
+
+  test('versenden sends ONLY a PATCH with status + nummer, no INSERT, no new row', async ({ page }) => {
+    // Intercept all Supabase REST calls to verify:
+    // 1. Exactly ONE PATCH request is made (update, not insert)
+    // 2. No POST request (no new row created)
+    // 3. PATCH targets the correct UUID
+    // 4. PATCH payload contains only status + nummer
+    const requests = await page.evaluate(async () => {
+      const captured = [];
+
+      // Intercept fetch to capture Supabase calls
+      const origFetch = window.fetch;
+      window.fetch = async function(url, opts) {
+        const urlStr = typeof url === 'string' ? url : url.toString();
+        if (urlStr.includes('/rest/v1/rechnungen')) {
+          captured.push({
+            method: (opts && opts.method) || 'GET',
+            url: urlStr,
+            body: opts && opts.body ? JSON.parse(opts.body) : null,
+          });
+
+          // Mock successful responses
+          const method = (opts && opts.method) || 'GET';
+
+          if (method === 'GET' && urlStr.includes('id=eq.')) {
+            // fetchRechnungById — return mock draft
+            return new Response(JSON.stringify({
+              id: 'existing-uuid-999',
+              nummer: null,
+              absender_name: 'Test AG',
+              empfaenger_name: 'Kunde GmbH',
+              betrag: 100,
+              waehrung: 'CHF',
+              status: 'entwurf',
+              created_at: '2026-01-01T00:00:00Z',
+              daten: { fields: {}, positions: [], meta: [] },
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+
+          if (method === 'PATCH') {
+            // updateRechnungStatus — return success
+            return new Response('', { status: 204 });
+          }
+
+          if (method === 'GET') {
+            // fetchRechnungen — return empty list
+            return new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+        }
+
+        // For RPC calls (naechste_rechnungsnummer)
+        if (urlStr.includes('/rest/v1/rpc/naechste_rechnungsnummer')) {
+          captured.push({
+            method: (opts && opts.method) || 'POST',
+            url: urlStr,
+            body: opts && opts.body ? JSON.parse(opts.body) : null,
+          });
+          return new Response(JSON.stringify(42), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        return origFetch.apply(this, arguments);
+      };
+
+      // Mock showConfirm to auto-accept
+      const origConfirm = window.showConfirm;
+      window.showConfirm = async () => true;
+
+      // Mock showToast
+      const origToast = window.showToast;
+      window.showToast = () => {};
+
+      // Call handleStatusChange like the button would
+      try {
+        await window.handleStatusChange('existing-uuid-999', 'versendet');
+      } catch (e) {
+        // May fail on UI refresh — that's ok, we only care about the requests
+      }
+
+      window.fetch = origFetch;
+      window.showConfirm = origConfirm;
+      window.showToast = origToast;
+
+      return captured;
+    });
+
+    // 1. No POST to /rechnungen (no INSERT = no new invoice created)
+    const inserts = requests.filter(
+      r => r.method === 'POST' && r.url.includes('/rest/v1/rechnungen')
+    );
+    expect(inserts).toHaveLength(0);
+
+    // 2. Exactly one PATCH to /rechnungen (the status update)
+    const patches = requests.filter(r => r.method === 'PATCH');
+    expect(patches).toHaveLength(1);
+
+    // 3. PATCH targets the correct UUID
+    expect(patches[0].url).toContain('id=eq.existing-uuid-999');
+
+    // 4. PATCH body contains status and nummer, nothing else
+    expect(patches[0].body).toEqual({ status: 'versendet', nummer: 42 });
+
+    // 5. RPC was called to get the next invoice number
+    const rpcs = requests.filter(r => r.url.includes('naechste_rechnungsnummer'));
+    expect(rpcs).toHaveLength(1);
+  });
+
+  test('versenden for already-numbered invoice does NOT request a new number', async ({ page }) => {
+    const requests = await page.evaluate(async () => {
+      const captured = [];
+
+      const origFetch = window.fetch;
+      window.fetch = async function(url, opts) {
+        const urlStr = typeof url === 'string' ? url : url.toString();
+        if (urlStr.includes('/rest/v1/rechnungen')) {
+          captured.push({
+            method: (opts && opts.method) || 'GET',
+            url: urlStr,
+            body: opts && opts.body ? JSON.parse(opts.body) : null,
+          });
+
+          const method = (opts && opts.method) || 'GET';
+
+          if (method === 'GET' && urlStr.includes('id=eq.')) {
+            // Return invoice that ALREADY has a nummer
+            return new Response(JSON.stringify({
+              id: 'booked-uuid-888',
+              nummer: 7,
+              absender_name: 'Test AG',
+              empfaenger_name: 'Kunde GmbH',
+              betrag: 500,
+              waehrung: 'CHF',
+              status: 'offen',
+              created_at: '2026-01-01T00:00:00Z',
+              daten: { fields: {}, positions: [], meta: [] },
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+
+          if (method === 'PATCH') {
+            return new Response('', { status: 204 });
+          }
+
+          if (method === 'GET') {
+            return new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+        }
+
+        if (urlStr.includes('naechste_rechnungsnummer')) {
+          captured.push({ method: 'POST', url: urlStr });
+          return new Response(JSON.stringify(99), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        return origFetch.apply(this, arguments);
+      };
+
+      const origConfirm = window.showConfirm;
+      window.showConfirm = async () => true;
+      const origToast = window.showToast;
+      window.showToast = () => {};
+
+      try {
+        await window.handleStatusChange('booked-uuid-888', 'versendet');
+      } catch (e) {}
+
+      window.fetch = origFetch;
+      window.showConfirm = origConfirm;
+      window.showToast = origToast;
+
+      return captured;
+    });
+
+    // No RPC call — invoice already has a nummer
+    const rpcs = requests.filter(r => r.url.includes('naechste_rechnungsnummer'));
+    expect(rpcs).toHaveLength(0);
+
+    // PATCH body contains ONLY status, no nummer
+    const patches = requests.filter(r => r.method === 'PATCH');
+    expect(patches).toHaveLength(1);
+    expect(patches[0].body).toEqual({ status: 'versendet' });
   });
 });

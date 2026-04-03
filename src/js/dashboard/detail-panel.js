@@ -7,6 +7,7 @@ import {
   fetchRechnungen,
   updateRechnungStatus,
   deleteRechnung,
+  getNextInvoiceNumber,
 } from '../supabase.js';
 import { buildPagesFromData } from '../render.js';
 import { downloadPDF, printPDF } from '../pdf.js';
@@ -257,7 +258,7 @@ async function renderDetailPanel(r) {
       + '<button class="btn btn-danger" onclick="handleStatusChange(\'' + safeId + '\',\'storniert\')">Stornieren</button>';
   } else if (s === 'entwurf') {
     statusActions =
-      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="window.bucheRechnung && window.bucheRechnung(\'' + safeId + '\')">Rechnung versenden</button>';
+      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versendet\')">Rechnung versenden</button>';
   }
 
   const accordionBodyId = 'dp-pdf-accordion-body';
@@ -462,8 +463,20 @@ export async function handleStatusChange(id, newStatus) {
     if (!ok) return;
   }
 
+  // If invoice has no nummer yet, assign one before changing status
+  let nummer = null;
+  const current = await fetchRechnungById(id);
+  if (current && current.nummer == null) {
+    const absName = current.absender_name || '';
+    nummer = await getNextInvoiceNumber(absName);
+    if (nummer === null) {
+      window.showToast?.('Fehler beim Abrufen der Rechnungsnummer.', 'error');
+      return;
+    }
+  }
+
   try {
-    await updateRechnungStatus(id, newStatus);
+    await updateRechnungStatus(id, newStatus, nummer);
   } catch (err) {
     console.error('handleStatusChange:', err);
     window.showToast?.('Fehler beim Statuswechsel.', 'error');
