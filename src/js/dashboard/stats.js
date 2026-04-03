@@ -23,7 +23,7 @@ export function renderDashboardStats(list) {
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
   }).length;
 
-  const offenList  = list.filter(function(r) { return r.status === 'offen' || r.status === 'versendet'; });
+  const offenList  = list.filter(function(r) { return r.status === 'offen'; });
   const offenCount = offenList.length;
   const offenSum   = offenList.reduce(function(s, r) { return s + (parseFloat(r.betrag) || 0); }, 0);
 
@@ -34,7 +34,7 @@ export function renderDashboardStats(list) {
   const bezahltSum   = bezahltList.reduce(function(s, r) { return s + (parseFloat(r.betrag) || 0); }, 0);
 
   const ausstehendSum   = offenSum;
-  const offenBadgeCount = list.filter(function(r) { return r.status === 'offen'; }).length;
+  const offenBadgeCount = offenCount;
 
   setText('stat-total',       String(total));
   setText('stat-total-sub',   '+' + thisMonthCount + ' diesen Monat');

@@ -275,15 +275,16 @@ export async function saveEntwurf(record) {
 
 /**
  * Updates only the status column for a given invoice UUID.
- * Valid values: 'entwurf' | 'offen' | 'versendet' | 'bezahlt' | 'storniert'
+ * Valid values: 'entwurf' | 'offen' | 'bezahlt' | 'storniert'
  * Returns true on success, false on error.
  */
-export async function updateRechnungStatus(id, status, nummer) {
+export async function updateRechnungStatus(id, status, nummer, versendetAm) {
   const client = getClient();
   if (!client) return false;
   try {
     const payload = { status };
     if (nummer != null) payload.nummer = nummer;
+    if (versendetAm) payload.versendet_am = versendetAm;
     const { error } = await client
       .from('rechnungen')
       .update(payload)

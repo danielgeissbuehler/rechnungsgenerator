@@ -267,7 +267,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
     });
   });
 
-  test('detail panel entwurf button calls handleStatusChange(id, versendet)', async ({ page }) => {
+  test('detail panel entwurf button calls handleStatusChange(id, versenden)', async ({ page }) => {
     const result = await page.evaluate(async () => {
       let capturedArgs = null;
       const origHandler = window.handleStatusChange;
@@ -277,7 +277,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
 
       const testId = 'test-draft-uuid-abc123';
       const btn = document.createElement('button');
-      btn.setAttribute('onclick', "handleStatusChange('" + testId + "','versendet')");
+      btn.setAttribute('onclick', "handleStatusChange('" + testId + "','versenden')");
       document.body.appendChild(btn);
       btn.click();
       btn.remove();
@@ -287,7 +287,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
     });
 
     expect(result.id).toBe('test-draft-uuid-abc123');
-    expect(result.status).toBe('versendet');
+    expect(result.status).toBe('versenden');
   });
 
   test('versenden sends ONLY a PATCH with status + nummer, no INSERT, no new row', async ({ page }) => {
@@ -371,7 +371,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
 
       // Call handleStatusChange like the button would
       try {
-        await window.handleStatusChange('existing-uuid-999', 'versendet');
+        await window.handleStatusChange('existing-uuid-999', 'versenden');
       } catch (e) {
         // May fail on UI refresh — that's ok, we only care about the requests
       }
@@ -397,7 +397,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
     expect(patches[0].url).toContain('id=eq.existing-uuid-999');
 
     // 4. PATCH body contains status and nummer, nothing else
-    expect(patches[0].body).toEqual({ status: 'versendet', nummer: 42 });
+    expect(patches[0].body).toEqual({ status: 'offen', nummer: 42, versendet_am: expect.any(String) });
 
     // 5. RPC was called to get the next invoice number
     const rpcs = requests.filter(r => r.url.includes('naechste_rechnungsnummer'));
@@ -467,7 +467,7 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
       window.showToast = () => {};
 
       try {
-        await window.handleStatusChange('booked-uuid-888', 'versendet');
+        await window.handleStatusChange('booked-uuid-888', 'versenden');
       } catch (e) {}
 
       window.fetch = origFetch;
@@ -484,6 +484,6 @@ test.describe('Versenden: only PATCH existing invoice with status + nummer', () 
     // PATCH body contains ONLY status, no nummer
     const patches = requests.filter(r => r.method === 'PATCH');
     expect(patches).toHaveLength(1);
-    expect(patches[0].body).toEqual({ status: 'versendet' });
+    expect(patches[0].body).toEqual({ status: 'offen', versendet_am: expect.any(String) });
   });
 });

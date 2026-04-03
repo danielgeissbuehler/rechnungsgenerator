@@ -28,8 +28,6 @@ export function getStatusBadge(status) {
       return '<span class="badge badge-gray">Entwurf</span>';
     case 'offen':
       return '<span class="badge badge-amber">Offen</span>';
-    case 'versendet':
-      return '<span class="badge badge-blue" style="background:#dbeafe;color:#1e40af">Versendet</span>';
     case 'bezahlt':
       return '<span class="badge badge-green">Bezahlt</span>';
     case 'storniert':

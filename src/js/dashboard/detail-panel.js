@@ -248,17 +248,16 @@ async function renderDetailPanel(r) {
   var statusActions = '';
   var s = r && r.status;
   if (s === 'offen') {
-    statusActions =
-      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versendet\')">Rechnung versenden</button>'
-      + '<button class="btn btn-ghost" style="color:var(--green);border-color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
-      + '<button class="btn btn-danger" onclick="handleStatusChange(\'' + safeId + '\',\'storniert\')">Stornieren</button>';
-  } else if (s === 'versendet') {
-    statusActions =
+    if (!r.versendet_am) {
+      statusActions +=
+        '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versenden\')">Rechnung versenden</button>';
+    }
+    statusActions +=
       '<button class="btn btn-ghost" style="color:var(--green);border-color:var(--green)" onclick="handleStatusChange(\'' + safeId + '\',\'bezahlt\')">Als bezahlt markieren</button>'
       + '<button class="btn btn-danger" onclick="handleStatusChange(\'' + safeId + '\',\'storniert\')">Stornieren</button>';
   } else if (s === 'entwurf') {
     statusActions =
-      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versendet\')">Rechnung versenden</button>';
+      '<button class="btn btn-ghost" style="color:var(--amber);border-color:var(--amber)" onclick="handleStatusChange(\'' + safeId + '\',\'versenden\')">Rechnung versenden</button>';
   }
 
   const accordionBodyId = 'dp-pdf-accordion-body';
@@ -272,6 +271,7 @@ async function renderDetailPanel(r) {
     +   '<div class="dp-title">' + escHtml((r && r.empfaenger_name) || '\u2014') + '</div>'
     +   '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
     +     getStatusBadge(r && r.status)
+    +     (r.versendet_am ? '<span style="font-size:11px;color:var(--muted)">Versendet am ' + new Date(r.versendet_am).toLocaleDateString('de-CH') + '</span>' : '')
     +     '<span style="font-size:11px;color:var(--muted);font-family:var(--mono)">' + formatCHF(totalBetrag, waehrung) + '</span>'
     +   '</div>'
     + '</div>'
@@ -453,7 +453,7 @@ async function renderDetailPanel(r) {
  */
 export async function handleStatusChange(id, newStatus) {
   const labels = {
-    versendet:  { title: 'Rechnung versenden',      msg: 'Status auf «Versendet» setzen?', ok: 'Versenden',   theme: 'amber', icon: 'send' },
+    versenden:  { title: 'Rechnung versenden',      msg: 'Rechnung versenden und als offen markieren?', ok: 'Versenden',   theme: 'amber', icon: 'send' },
     bezahlt:    { title: 'Als bezahlt markieren',    msg: 'Status auf «Bezahlt» setzen?',   ok: 'Bestätigen',  theme: 'green', icon: 'check' },
     storniert:  { title: 'Rechnung stornieren',      msg: 'Diese Rechnung wirklich stornieren? Dies kann nicht rückgängig gemacht werden.', ok: 'Stornieren', theme: 'danger', icon: 'ban' },
   };
@@ -462,6 +462,11 @@ export async function handleStatusChange(id, newStatus) {
     const ok = await window.showConfirm(lbl.title, lbl.msg, lbl.ok, { theme: lbl.theme, icon: lbl.icon });
     if (!ok) return;
   }
+
+  // Map 'versenden' action → status 'offen' + versendet_am timestamp
+  const isVersenden = newStatus === 'versenden';
+  const dbStatus = isVersenden ? 'offen' : newStatus;
+  const versendetAm = isVersenden ? new Date().toISOString() : null;
 
   // If invoice has no nummer yet, assign one before changing status
   let nummer = null;
@@ -476,14 +481,14 @@ export async function handleStatusChange(id, newStatus) {
   }
 
   try {
-    await updateRechnungStatus(id, newStatus, nummer);
+    await updateRechnungStatus(id, dbStatus, nummer, versendetAm);
   } catch (err) {
     console.error('handleStatusChange:', err);
     window.showToast?.('Fehler beim Statuswechsel.', 'error');
     return;
   }
 
-  const toastLabels = { versendet: 'Rechnung versendet', bezahlt: 'Als bezahlt markiert', storniert: 'Rechnung storniert' };
+  const toastLabels = { versenden: 'Rechnung versendet', bezahlt: 'Als bezahlt markiert', storniert: 'Rechnung storniert' };
   window.showToast?.(toastLabels[newStatus] || 'Status geändert', 'success');
 
   // Re-fetch updated record and refresh panel
