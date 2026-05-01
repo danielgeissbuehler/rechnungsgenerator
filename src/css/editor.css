@@ -97,9 +97,9 @@ textarea { resize:vertical; line-height:1.5; min-height:34px; max-height:102px; 
 .col-align-btn:last-child { border-radius:0 3px 3px 0; }
 .col-align-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
 .col-align-btn.active + .col-align-btn { border-left:none; }
-.col-manual-wrap { display:flex; align-items:center; gap:4px; }
+.col-manual-wrap { display:flex; align-items:center; gap:5px; grid-column: 2 / -1; margin-top:1px; padding-left:4px; border-left:2px solid var(--blue); }
 .col-manual-wrap input[type="checkbox"] { width:auto; accent-color:var(--blue); cursor:pointer; }
-.col-manual-label { font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--label); cursor:pointer; white-space:nowrap; }
+.col-manual-label { font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--blue); cursor:pointer; white-space:nowrap; font-weight:600; }
 
 /* Table center alignment */
 .items-table thead th.c { text-align:center; }

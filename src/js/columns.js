@@ -56,7 +56,7 @@ export function renderColConfig() {
       manChk.addEventListener('change', () => toggleCol4Manual());
       const manLbl = document.createElement('label');
       manLbl.htmlFor = 'chk-col4-manual'; manLbl.className = 'col-manual-label';
-      manLbl.textContent = 'manuell';
+      manLbl.textContent = 'Total (Spalte 8) manuell';
       manWrap.append(manChk, manLbl);
       row.appendChild(manWrap);
     }
