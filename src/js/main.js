@@ -4,7 +4,7 @@ import { initAuth, handleLogin, handleLogout } from './auth.js';
 import { rteInit, rteCmd, rteCmdRaw, rteBlockBtn, rteInsertHr, rteCmd2, rteCmd2Raw, rteBlock2, rteInsertHr2, rteKeydown } from './rte.js';
 import { render, updatePreviewScale } from './render.js';
 import { addPosition } from './positions.js';
-import { renderColConfig, toggleCol, setColAlign } from './columns.js';
+import { renderColConfig, toggleCol, setColAlign, toggleCol4Manual } from './columns.js';
 import { toggleMetaField } from './meta.js';
 import { loadContacts, loadCompanies, applyContact, applyCompany, saveCurrentAbsender, saveCurrentEmpfaenger } from './contacts.js';
 import { loadVorlagen, autoSaveVorlage, renameVorlageDebounced } from './templates.js';
@@ -132,7 +132,7 @@ Object.assign(window, {
   render, addPosition, toggleSection, toggleVis, showTab, toggleSidebarCollapse, downloadPDF, printPDF,
   autoSaveVorlage, renameVorlageDebounced,
   applyContact, applyCompany, saveCurrentAbsender, saveCurrentEmpfaenger,
-  toggleCol, setColAlign, toggleMetaField,
+  toggleCol, setColAlign, toggleCol4Manual, toggleMetaField,
   rteCmd, rteCmdRaw, rteBlockBtn, rteInsertHr,
   rteCmd2, rteCmd2Raw, rteBlock2, rteInsertHr2, rteKeydown,
   handleLogin, handleLogout,

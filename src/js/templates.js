@@ -76,6 +76,7 @@ export function collectState() {
     textblock2: tb2 ? tb2.getHTML() : '',
     qtyTotal:   chk('chk-qty-total'),
     qrBill:     state.visibility.qrBill,
+    col4Manual: state.col4Manual,
   };
 }
 
@@ -114,6 +115,7 @@ export function applyState(stateData) {
   }
 
   if (stateData.colAlign) Object.assign(state.colAlign, stateData.colAlign);
+  state.col4Manual = stateData.col4Manual ?? false;
   renderColConfig();
 
   state.positions.length = 0;

@@ -46,6 +46,21 @@ export function renderColConfig() {
     });
 
     row.append(chk, lbl, inp, alignWrap);
+
+    if (n === 4) {
+      const manWrap = document.createElement('div');
+      manWrap.className = 'col-manual-wrap';
+      const manChk = document.createElement('input');
+      manChk.type = 'checkbox'; manChk.id = 'chk-col4-manual';
+      manChk.checked = !!state.col4Manual;
+      manChk.addEventListener('change', () => toggleCol4Manual());
+      const manLbl = document.createElement('label');
+      manLbl.htmlFor = 'chk-col4-manual'; manLbl.className = 'col-manual-label';
+      manLbl.textContent = 'manuell';
+      manWrap.append(manChk, manLbl);
+      row.appendChild(manWrap);
+    }
+
     container.appendChild(row);
   });
 }
@@ -58,6 +73,15 @@ export function setColAlign(n, align) {
 
 export function toggleCol(n) {
   state.visibility['col' + n] = document.getElementById('chk-col' + n).checked;
+  renderPositionsList();
+  render();
+}
+
+export function toggleCol4Manual() {
+  state.col4Manual = document.getElementById('chk-col4-manual').checked;
+  if (state.col4Manual) {
+    state.positions.forEach(p => { if (!p.total) p.total = Math.round(p.price * p.qty * 20) / 20; });
+  }
   renderPositionsList();
   render();
 }

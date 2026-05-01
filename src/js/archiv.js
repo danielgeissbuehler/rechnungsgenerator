@@ -74,7 +74,7 @@ export async function bucheRechnung(draftId) {
 
   // Collect total from positions
   const betrag = state.positions.reduce((sum, p) => {
-    return sum + (parseFloat(p.qty || 0) * parseFloat(p.price || 0));
+    return sum + (state.col4Manual ? (parseFloat(p.total) || 0) : parseFloat(p.qty || 0) * parseFloat(p.price || 0));
   }, 0);
 
   const waehrung = document.getElementById(F.CURRENCY)?.value || 'CHF';
@@ -179,7 +179,7 @@ export async function speichereEntwurf() {
   const empfaengerName = document.getElementById(F.EMP_NAME)?.value?.trim() || '';
 
   const betrag = state.positions.reduce((sum, p) => {
-    return sum + (parseFloat(p.qty || 0) * parseFloat(p.price || 0));
+    return sum + (state.col4Manual ? (parseFloat(p.total) || 0) : parseFloat(p.qty || 0) * parseFloat(p.price || 0));
   }, 0);
 
   const waehrung = document.getElementById(F.CURRENCY)?.value || 'CHF';

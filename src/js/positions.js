@@ -5,7 +5,7 @@ import { F } from './field-ids.js';
 
 export function addPosition(desc = '', price = 0, qty = 1) {
   const id = state.posId++;
-  state.positions.push({ id, desc, price: +price || 0, qty: qty === '' ? 1 : +qty, col5:'', col6:'', col7:'', col8:'' });
+  state.positions.push({ id, desc, price: +price || 0, qty: qty === '' ? 1 : +qty, col5:'', col6:'', col7:'', col8:'', total: 0 });
   state.expandedPositions.add(id);
   renderPositionsList();
   render();
@@ -32,7 +32,8 @@ export function buildNumText(pos, c2, c3, c4, currency) {
   const parts = [];
   if (c2) parts.push(fmt(pos.price));
   if (c3) parts.push('×' + pos.qty);
-  if (c4 && (c2 || c3)) parts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
+  if (c4 && state.col4Manual) parts.push('= ' + currency + '\u00A0' + fmt(parseFloat(pos.total) || 0));
+  else if (c4 && (c2 || c3)) parts.push('= ' + currency + '\u00A0' + fmt(pos.price * pos.qty));
   return parts.join(' ');
 }
 
@@ -208,10 +209,20 @@ export function renderPositionsList() {
         addField(val(F.COL_EXTRA8) || 'Spalte 7', i);
       }
       if (c4) {
-        const i = document.createElement('input'); i.type = 'text'; i.readOnly = true;
-        i.value = currency + ' ' + fmt(pos.price * pos.qty);
-        i.className = 'pos-total-readonly';
-        addField((val(F.COL_TOTAL) || 'Total') + ' (' + currency + ')', i);
+        if (state.col4Manual) {
+          const i = document.createElement('input'); i.type = 'number'; i.step = '0.05'; i.min = '0';
+          i.value = pos.total ?? 0;
+          i.addEventListener('input', function () {
+            updatePosition(pos.id, 'total', parseFloat(this.value) || 0);
+            numSpan.textContent = buildNumText(pos, c2, c3, c4, currency);
+          });
+          addField((val(F.COL_TOTAL) || 'Total') + ' (' + currency + ')', i);
+        } else {
+          const i = document.createElement('input'); i.type = 'text'; i.readOnly = true;
+          i.value = currency + ' ' + fmt(pos.price * pos.qty);
+          i.className = 'pos-total-readonly';
+          addField((val(F.COL_TOTAL) || 'Total') + ' (' + currency + ')', i);
+        }
       }
 
       if (grid.children.length) detail.appendChild(grid);

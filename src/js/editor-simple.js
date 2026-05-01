@@ -47,6 +47,7 @@ function getVisibleCols() {
 
 /** Berechnet Total einer Position. */
 function posTotal(pos) {
+  if (state.col4Manual) return parseFloat(pos.total) || 0;
   const p = parseFloat(pos.price) || 0;
   const q = parseFloat(pos.qty)   || 0;
   return p * q;
@@ -259,10 +260,32 @@ export function renderSimplePositions() {
 
     cols.forEach(c => {
       const td = document.createElement('td');
-      if (c.n === 4) {
+      if (c.n === 4 && !state.col4Manual) {
         // TOTAL: computed, readonly
         td.className = 'se-pos-total';
         td.textContent = fmtCHF(posTotal(pos));
+      } else if (c.n === 4 && state.col4Manual) {
+        // TOTAL: manual editable
+        const inp = document.createElement('input');
+        inp.className = 'se-pos-input r';
+        inp.type = 'number'; inp.step = '0.05'; inp.min = '0';
+        inp.value = pos.total ?? '';
+        inp.placeholder = '0.00';
+        if (readonly) {
+          inp.readOnly = true;
+        } else {
+          inp.addEventListener('input', (function(pid) {
+            return function() {
+              const p = state.positions.find(p => p.id === pid);
+              if (p) {
+                p.total = parseFloat(this.value) || 0;
+                _updateSimpleTotal();
+                render();
+              }
+            };
+          })(pos.id));
+        }
+        td.appendChild(inp);
       } else {
         // Editierbare Zelle
         const field = COL_FIELD[c.n];
@@ -335,7 +358,7 @@ function _updateSimpleTotal() {
 export function addSimplePosition() {
   if (state.isReadonly) return;
   state.posId++;
-  state.positions.push({ id: state.posId, desc: '', price: 0, qty: 1, col5: '', col6: '', col7: '', col8: '' });
+  state.positions.push({ id: state.posId, desc: '', price: 0, qty: 1, col5: '', col6: '', col7: '', col8: '', total: 0 });
   renderSimplePositions();
   render();
 }

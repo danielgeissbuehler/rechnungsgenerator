@@ -24,7 +24,9 @@ export async function render() {
   });
 
   if (state.visibility.qrBill) {
-    const total = state.positions.reduce((s, p) => s + p.price * p.qty, 0);
+    const total = state.col4Manual
+      ? state.positions.reduce((s, p) => s + (parseFloat(p.total) || 0), 0)
+      : state.positions.reduce((s, p) => s + p.price * p.qty, 0);
     const { buildQRPage } = await import('./qrbill.js');
     const qrHtml = await buildQRPage(Math.round(total * 20) / 20);
     if (qrHtml) {
@@ -94,6 +96,7 @@ export function buildPages() {
 
   const useCol1 = vis.col1, useCol2 = vis.col2, useCol3 = vis.col3, useCol4 = vis.col4;
   const useCol5 = vis.col5, useCol6 = vis.col6, useCol7 = vis.col7, useCol8 = vis.col8;
+  const col4Manual = state.col4Manual;
 
   const textblockEl   = document.getElementById(F.TEXTBLOCK);
   const textblockRaw  = textblockEl ? textblockEl.getHTML() : '';
@@ -103,7 +106,9 @@ export function buildPages() {
   const metaData = getMetaData();
 
   const showTitel = vis.titel && titel.trim().length > 0;
-  const total     = positions.reduce((s, p) => s + p.price * p.qty, 0);
+  const total     = col4Manual
+    ? positions.reduce((s, p) => s + (parseFloat(p.total) || 0), 0)
+    : positions.reduce((s, p) => s + p.price * p.qty, 0);
   const totalQty  = positions.reduce((s, p) => s + p.qty, 0);
 
   const aC = n => colAlign[n] === 'r' ? ' class="r"' : colAlign[n] === 'c' ? ' class="c"' : '';
@@ -141,7 +146,7 @@ export function buildPages() {
     ${useCol7 ? `<td${aC(7)}>${esc(p.col7||'')}</td>`    : ''}
     ${useCol3 ? `<td${aC(3)}>${fmtFull(p.qty)}</td>`     : ''}
     ${useCol8 ? `<td${aC(8)}>${esc(p.col8||'')}</td>`    : ''}
-    ${useCol4 ? `<td${aC(4)}>${fmt(Math.round(p.price * p.qty * 20) / 20)}</td>` : ''}
+    ${useCol4 ? `<td${aC(4)}>${fmt(Math.round((col4Manual ? (parseFloat(p.total) || 0) : p.price * p.qty) * 20) / 20)}</td>` : ''}
   </tr>`;
 
   const headingVisible = vis.heading && heading.trim().length > 0;
@@ -353,6 +358,7 @@ export async function buildPagesFromData(stateData) {
   const savedQty = document.getElementById('chk-qty-total')?.checked ?? false;
   const savedVis = { ...state.visibility };
   const savedCol = { ...state.colAlign };
+  const savedCol4Manual = state.col4Manual;
   const savedPos = state.positions.map(p => ({ ...p }));
 
   // ── Apply snapshot data ─────────────────────────────────────────────────
@@ -377,6 +383,7 @@ export async function buildPagesFromData(stateData) {
   });
   if (stateData.visibility) Object.assign(state.visibility, stateData.visibility);
   if (stateData.colAlign)   Object.assign(state.colAlign,   stateData.colAlign);
+  state.col4Manual = stateData.col4Manual ?? false;
   state.positions.length = 0;
   (stateData.positions || []).forEach(p => state.positions.push({ ...p }));
   setRTE(F.TEXTBLOCK,  stateData.textblock);
@@ -389,7 +396,9 @@ export async function buildPagesFromData(stateData) {
 
   // ── QR Bill (if enabled in snapshot) ───────────────────────────────────
   if (stateData.visibility && stateData.visibility.qrBill) {
-    const total = state.positions.reduce((s, p) => s + p.price * p.qty, 0);
+    const total = state.col4Manual
+      ? state.positions.reduce((s, p) => s + (parseFloat(p.total) || 0), 0)
+      : state.positions.reduce((s, p) => s + p.price * p.qty, 0);
     const { buildQRPage } = await import('./qrbill.js');
     const qrHtml = await buildQRPage(Math.round(total * 20) / 20);
     if (qrHtml) pages.push(qrHtml);
@@ -410,6 +419,7 @@ export async function buildPagesFromData(stateData) {
   });
   Object.assign(state.visibility, savedVis);
   Object.assign(state.colAlign,   savedCol);
+  state.col4Manual = savedCol4Manual;
   state.positions.length = 0;
   savedPos.forEach(p => state.positions.push(p));
   setRTE(F.TEXTBLOCK,  savedTb);
